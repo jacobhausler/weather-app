@@ -26,6 +26,41 @@ Self-hosted personal weather forecast application - a single-page React applicat
 - nginx for serving pages
 - GitHub Actions to build and publish to private GitHub Container Registry
 
+## Quick Start / Build Commands
+
+### Frontend
+```bash
+npm install                  # Install dependencies
+npm run dev                  # Development server (port 5173)
+npm run build                # Production build
+npm run preview              # Preview production build
+npm run type-check           # TypeScript checking
+npm run lint                 # ESLint
+```
+
+### Backend
+```bash
+cd server && npm install     # Install dependencies
+cd server && npm run dev     # Development with hot reload (port 3001)
+cd server && npm run build   # Compile TypeScript
+cd server && npm start       # Run production build
+cd server && npm run type-check  # TypeScript checking
+```
+
+### Docker
+```bash
+docker-compose up -d         # Run full application
+docker-compose logs -f       # View logs
+docker-compose down          # Stop application
+```
+
+### Key Notes
+- Backend runs on port 3001, frontend dev server on 5173
+- Vite dev server proxies `/api` requests to backend
+- Both frontend and backend need separate `npm install`
+- Type checking passes before committing
+- All builds must pass before deployment
+
 ## Key Development Principles
 
 **SIMPLICITY IS PARAMOUNT**:
