@@ -1,7 +1,9 @@
 // API service for communicating with the backend
 import { WeatherData } from '../types/weather'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+// In development, use empty string to leverage Vite's proxy
+// In production, use the environment variable or empty string (nginx handles routing)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface ApiError {
   message: string
