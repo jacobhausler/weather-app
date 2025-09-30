@@ -553,22 +553,46 @@
 
 ---
 
-## Phase 9: Documentation & Polish
+## Phase 9: Documentation & Polish 🚧 IN PROGRESS (2025-09-30)
 
-### 9.1 Card Specifications
-- [ ] Create `/specs/cards/` directory
-- [ ] Write `alert-card.md` specification
-- [ ] Write `seven-day-forecast-card.md` specification
-- [ ] Write `current-conditions-card.md` specification
-- [ ] Write `hourly-forecast-card.md` specification
-- [ ] Write `header-layout.md` specification
-- [ ] Write `zip-input.md` specification
-- [ ] Write `refresh-button.md` specification
-- [ ] Write `theme-toggle.md` specification
-- [ ] Write `unit-toggle.md` specification
-- [ ] Write `error-banner.md` specification
-- [ ] Write `loading-states.md` specification
-- [ ] Write `forecast-day-modal.md` specification
+**Status**: Documentation audit completed. Major gaps identified in README.md, card specs, deployment docs, and API documentation.
+
+### 9.1 Card Specifications ⚠️ NEEDS MAJOR UPDATES
+- [x] Create `/specs/cards/` directory ✅ EXISTS
+- [x] Write `alert-card.md` specification ✅ EXISTS but needs updates
+- [x] Write `seven-day-forecast-card.md` specification ✅ EXISTS but needs updates
+- [x] Write `current-conditions-card.md` specification ✅ EXISTS but needs updates
+- [x] Write `hourly-forecast-card.md` specification ✅ EXISTS but needs updates
+- [x] Write `header-layout.md` specification ✅ EXISTS but needs updates
+- [x] Write `zip-input.md` specification ✅ EXISTS but needs updates
+- [x] Write `refresh-button.md` specification ✅ EXISTS but needs updates
+- [x] Write `theme-toggle.md` specification ✅ EXISTS but needs updates
+- [x] Write `unit-toggle.md` specification ✅ EXISTS but needs updates
+- [x] Write `error-banner.md` specification ✅ EXISTS but needs updates
+- [x] Write `loading-states.md` specification ✅ EXISTS but needs updates
+- [x] Write `forecast-day-modal.md` specification ✅ EXISTS but needs updates
+
+**🔴 CRITICAL ISSUE**: All 12 card specifications exist but are **severely outdated**. They describe props-based architecture but implementations use Zustand stores.
+
+**Major Inconsistencies Found**:
+1. **Props vs Store Pattern**: Every spec assumes props-based components, but all implementations use Zustand stores directly
+2. **Simplified Implementations**: Specs describe elaborate features (variants, callbacks, options) that aren't implemented
+3. **Interface Mismatches**: Specs define custom interfaces that differ from actual TypeScript types in `/types/weather`
+4. **Missing Features**: Unit conversion logic, library dependencies (Recharts, shadcn/ui), self-contained patterns not documented
+
+**Priority Updates Needed** (by component):
+- [ ] **alert-card.md**: Update Props (remove isLoading), fix Alert type, document actual severity styling, remove unimplemented features
+- [ ] **current-conditions-card.md**: Complete Props rewrite (observation/forecast split), document UV/sun integration, add unit conversion docs
+- [ ] **error-banner.md**: Document store usage (no props), simplify AppError interface, remove retry feature, document actual behavior
+- [ ] **forecast-day-modal.md**: Change to single period view, remove day/night comparison, remove hourly breakdown, add unit conversion
+- [ ] **header-layout.md**: Remove Props section, clarify layout-only nature, document child component integration
+- [ ] **hourly-forecast-card.md**: Document localStorage config, update control layout (Select + Button), add Recharts details, add stats section
+- [ ] **loading-states.md**: Clarify patterns vs components, document shadcn/ui Skeleton usage
+- [ ] **refresh-button.md**: Document store integration, add auto-refresh pause feature, remove variant options, update examples
+- [ ] **seven-day-forecast-card.md**: Remove onDayClick callback, document internal modal state, add unit conversion
+- [ ] **theme-toggle.md**: Remove Props/variants, document store integration, clarify system theme support
+- [ ] **unit-toggle.md**: Remove Props/variants, document store integration, document conversion helper functions
+- [ ] **zip-input.md**: Complete rewrite for store pattern, document API integration, add MapPin icon, document three-button layout
 
 ### 9.2 Code Documentation
 - [ ] Add JSDoc comments to key functions
@@ -577,12 +601,103 @@
 - [ ] Document component props with TypeScript interfaces
 - [ ] Add inline comments for complex logic
 
-### 9.3 User Documentation
-- [ ] Update README.md with project overview
-- [ ] Add setup instructions
-- [ ] Add development instructions (`npm run dev`)
-- [ ] Add build instructions (`npm run build`)
-- [ ] Add deployment instructions
+### 9.3 User Documentation ⚠️ CRITICAL GAPS
+
+**README.md Status**: Currently 2 lines (!) - needs complete rewrite
+
+**Missing Sections** (25 total):
+- [ ] 1. Project header with badges (build status, tests, license)
+- [ ] 2. Project overview/description (expand from 1 line)
+- [ ] 3. Features list (weather data, UI features, data management)
+- [ ] 4. Technology stack (frontend, backend, deployment, testing)
+- [ ] 5. Prerequisites (Node.js, npm, Docker versions)
+- [ ] 6. Installation & Quick Start (local dev + Docker)
+- [ ] 7. Configuration (environment variables, config files)
+- [ ] 8. Development (scripts, notes, dev workflow)
+- [ ] 9. **Testing** (1,114 tests completely undocumented!) 🔴 CRITICAL
+- [ ] 10. Building for production (build steps, verification, bundle sizes)
+- [ ] 11. Deployment (Docker, GHCR, manual, health checks)
+- [ ] 12. Architecture overview (system diagram, data flow, caching)
+- [ ] 13. **API documentation** (6 endpoints completely undocumented!) 🔴 CRITICAL
+- [ ] 14. File structure (organized directory tree)
+- [ ] 15. CI/CD pipeline (GitHub Actions workflow)
+- [ ] 16. Project development principles (from CLAUDE.md)
+- [ ] 17. Configuration options (server & client settings)
+- [ ] 18. Troubleshooting (common issues, solutions)
+- [ ] 19. Contributing (code style, PR process, requirements)
+- [ ] 20. License (ISC per package.json)
+- [ ] 21. Acknowledgments (NWS API, shadcn/ui, Claude Code)
+- [ ] 22. Support & resources (docs, external links)
+- [ ] 23. Screenshots/demo (UI screenshots, GIFs)
+- [ ] 24. Performance & resource usage (Docker limits, bundle sizes)
+- [ ] 25. Roadmap/future enhancements (Phase 10 items)
+
+**Existing Documentation to Reference**:
+- `DEPLOYMENT.md` (378 lines) - comprehensive Docker deployment guide
+- `TEST_SUITE_SUMMARY.md` (556 lines) - complete test documentation
+- `CLAUDE.md` (184 lines) - project guide for AI assistants
+- `TEST_PLAN.md` - testing strategy
+- `UNRAID-DEPLOY.md` - Unraid deployment guide
+
+### 9.4 Deployment Documentation ⚠️ NEEDS UPDATES
+
+**DEPLOYMENT.md Issues**:
+- [ ] Add `OPENWEATHER_API_KEY` environment variable (missing UV Index config)
+- [ ] Update GitHub Actions section to match actual workflow (current example is basic)
+- [ ] Add PostCSS requirement to prerequisites
+- [ ] Document tagging strategy (SHA + latest tags)
+- [ ] Add frontend environment variables section (VITE_* vars)
+- [ ] Clarify CORS_ORIGIN default behavior
+- [ ] Add reverse proxy/SSL section (many users need this)
+- [ ] Document both `/health` and `/api/health` endpoints
+- [ ] Add nginx customization guidance
+- [ ] Standardize container naming throughout
+
+**UNRAID-DEPLOY.md Issues**:
+- [ ] Add `OPENWEATHER_API_KEY` to optional environment variables
+- [ ] Template the image path (remove hardcoded `ghcr.io/jacobhausler/weather-app:latest`)
+- [ ] Fix health check command to match Dockerfile exactly
+- [ ] Add CORS_ORIGIN for consistency
+- [ ] Document SHA-based tags for version pinning
+- [ ] Add note about UV Index availability without API key
+
+### 9.5 API Documentation 🔴 MISSING
+
+**What Exists**:
+- ✅ `examples/NWS-API.md` - Comprehensive NWS external API documentation (excellent)
+- ✅ `CLAUDE.md` - Brief mention of backend endpoints (incomplete)
+
+**What's Missing** 🔴 CRITICAL:
+- [ ] **Backend REST API Reference** - No dedicated documentation for internal API!
+  - GET /api/health
+  - GET /api/health/detailed
+  - GET /api/weather/:zipcode
+  - POST /api/weather/:zipcode/refresh
+  - GET /api/weather/cache/stats
+  - POST /api/weather/cache/clear
+  - POST /api/weather/cache/clear/:zipcode
+  - GET /api/weather/background-jobs/status
+
+**Needs Documentation**:
+- [ ] Create `examples/BACKEND-API.md` or `docs/API.md`
+- [ ] Document request/response formats for all 8 endpoints
+- [ ] Document data transformation layer (NWS → frontend format)
+- [ ] Document caching implementation details (TTLs, keys, invalidation)
+- [ ] Document error handling patterns (status codes, error format)
+- [ ] Document background jobs (scheduled refresh, cached ZIPs)
+- [ ] Create integration guide for frontend developers
+
+### 9.6 Documentation Statistics
+
+**Current State**:
+- README.md: 2 lines (needs ~500+ lines)
+- Card specs: 12 files exist but severely outdated
+- Deployment docs: 2 files exist but need updates
+- API docs: External API documented, internal API missing
+- Test docs: Excellent (TEST_SUITE_SUMMARY.md - 556 lines)
+- Architecture docs: Partial (scattered across files)
+
+**Work Required**: ~40-60 hours of documentation work to bring all docs up to date with actual implementation
 
 ---
 
