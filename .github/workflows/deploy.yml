@@ -37,6 +37,11 @@ jobs:
       - name: Lint frontend
         run: npm run lint
 
+      - name: Test frontend
+        run: npm run test:run
+        env:
+          NODE_ENV: test
+
       - name: Build frontend
         run: npm run build
 
@@ -74,6 +79,12 @@ jobs:
       - name: Lint backend
         working-directory: ./server
         run: npm run lint
+
+      - name: Test backend
+        working-directory: ./server
+        run: npm run test:run
+        env:
+          NODE_ENV: test
 
       - name: Build backend
         working-directory: ./server

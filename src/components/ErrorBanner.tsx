@@ -41,7 +41,7 @@ export function ErrorBanner() {
     return null
   }
 
-  const hasDetails = errorInfo.details !== undefined
+  const hasDetails = errorInfo.details !== undefined && errorInfo.details !== null
 
   const getUserFriendlyMessage = (message: string): string => {
     // Convert technical errors to user-friendly messages

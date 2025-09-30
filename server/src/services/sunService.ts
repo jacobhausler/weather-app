@@ -30,12 +30,25 @@ export function getSunTimes(
   // Calculate sun times for the given location and date
   const times = SunCalc.getTimes(date, lat, lon);
 
+  // Helper function to safely convert Date to ISO string
+  // At extreme latitudes, some times (like civil dawn/dusk) may be invalid (NaN)
+  // during periods of midnight sun or polar night
+  const safeToISO = (d: Date): string => {
+    if (isNaN(d.getTime())) {
+      // Return a marker for invalid times
+      // This can happen at extreme latitudes where the sun doesn't reach
+      // the required angle below the horizon
+      return '';
+    }
+    return d.toISOString();
+  };
+
   return {
-    sunrise: times.sunrise.toISOString(),
-    sunset: times.sunset.toISOString(),
-    solarNoon: times.solarNoon.toISOString(),
-    civilDawn: times.dawn.toISOString(),
-    civilDusk: times.dusk.toISOString(),
+    sunrise: safeToISO(times.sunrise),
+    sunset: safeToISO(times.sunset),
+    solarNoon: safeToISO(times.solarNoon),
+    civilDawn: safeToISO(times.dawn),
+    civilDusk: safeToISO(times.dusk),
   };
 }
 

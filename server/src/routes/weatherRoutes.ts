@@ -188,6 +188,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           200: {
             type: 'object',
             description: 'Complete weather data package',
+            additionalProperties: true,
           },
           400: {
             type: 'object',
@@ -522,6 +523,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           200: {
             type: 'object',
             description: 'Fresh weather data package',
+            additionalProperties: true,
           },
           400: {
             type: 'object',
