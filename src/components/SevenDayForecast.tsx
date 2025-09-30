@@ -3,6 +3,7 @@ import { ForecastPeriod } from '@/types/weather'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ForecastModal } from './ForecastModal'
 import { Droplets, Wind } from 'lucide-react'
+import { useUnitStore, getTempUnit } from '@/stores/unitStore'
 
 interface SevenDayForecastProps {
   forecast: ForecastPeriod[]
@@ -14,10 +15,33 @@ interface DayForecast {
 }
 
 export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
+  const { unitSystem } = useUnitStore()
   const [selectedPeriod, setSelectedPeriod] = useState<ForecastPeriod | null>(
     null
   )
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Convert temperature from Fahrenheit (NWS default) to current unit system
+  const convertTemperature = (tempF: number) => {
+    if (unitSystem === 'metric') {
+      return Math.round(((tempF - 32) * 5) / 9)
+    }
+    return tempF
+  }
+
+  // Convert wind speed from mph (NWS format like "10 mph") to current unit system
+  const convertWindSpeed = (windSpeed?: string) => {
+    if (!windSpeed) return 'N/A'
+    const match = windSpeed.match(/(\d+)/)
+    if (!match || !match[1]) return windSpeed
+
+    const speedMph = parseInt(match[1], 10)
+    if (unitSystem === 'metric') {
+      const speedKmh = Math.round(speedMph * 1.60934)
+      return windSpeed.replace(/\d+/, speedKmh.toString()).replace('mph', 'km/h')
+    }
+    return windSpeed
+  }
 
   // Combine day and night forecasts
   const groupedForecast: DayForecast[] = []
@@ -48,6 +72,8 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
     return name.replace(' Night', '').replace(' Afternoon', '')
   }
 
+  const tempUnit = getTempUnit(unitSystem)
+
   return (
     <>
       <Card>
@@ -58,8 +84,10 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
           <div className="overflow-x-auto">
             <div className="flex gap-4 pb-2">
               {sevenDays.map((dayForecast, index) => {
-                const highTemp = dayForecast.day.temperature
+                const highTemp = convertTemperature(dayForecast.day.temperature)
                 const lowTemp = dayForecast.night?.temperature
+                  ? convertTemperature(dayForecast.night.temperature)
+                  : undefined
 
                 return (
                   <button
@@ -84,10 +112,10 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold">{highTemp}°</span>
+                      <span className="text-lg font-bold">{highTemp}{tempUnit}</span>
                       {lowTemp !== undefined && (
                         <span className="text-sm text-muted-foreground">
-                          {lowTemp}°
+                          {lowTemp}{tempUnit}
                         </span>
                       )}
                     </div>
@@ -110,7 +138,7 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
                         <Wind className="h-3 w-3" />
                         <span className="text-[10px]">
                           {dayForecast.day.windDirection}{' '}
-                          {dayForecast.day.windSpeed}
+                          {convertWindSpeed(dayForecast.day.windSpeed)}
                         </span>
                       </div>
                     </div>

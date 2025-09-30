@@ -375,6 +375,23 @@ export interface GeocodeResult {
   zipCode: string;
 }
 
+// Sun times type
+export interface SunTimes {
+  sunrise: string; // ISO 8601 timestamp
+  sunset: string; // ISO 8601 timestamp
+  solarNoon: string; // ISO 8601 timestamp
+  civilDawn: string; // ISO 8601 timestamp
+  civilDusk: string; // ISO 8601 timestamp
+}
+
+// UV Index data type
+export interface UVIndexData {
+  value: number;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+}
+
 // Complete weather package type
 export interface WeatherPackage {
   location: {
@@ -396,6 +413,8 @@ export interface WeatherPackage {
   hourlyForecast: HourlyForecastResponse;
   currentConditions: ObservationResponse | null;
   alerts: AlertResponse;
+  sunTimes: SunTimes;
+  uvIndex: UVIndexData | null;
   metadata: {
     fetchedAt: string;
     cacheExpiry: string;

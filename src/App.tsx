@@ -84,6 +84,8 @@ function App() {
               observation={weatherData.currentObservation}
               todayForecast={todayForecast}
               tonightForecast={tonightForecast}
+              uvIndex={weatherData.uvIndex}
+              sunTimes={weatherData.sunTimes}
             />
 
             {/* Hourly Forecast Card */}

@@ -1,33 +1,19 @@
-import { useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useWeatherStore } from '@/stores/weatherStore'
-import { apiService } from '@/services/api'
+import { useWeatherData } from '@/hooks/useWeatherData'
 import { cn } from '@/lib/utils'
 
 export function RefreshButton() {
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const { currentZipCode, setWeatherData, setError, isLoading } =
-    useWeatherStore()
+  const { currentZipCode, isLoading, refreshWeather, isAutoRefreshPaused } = useWeatherData()
 
   const handleRefresh = async () => {
-    if (!currentZipCode || isLoading || isRefreshing) {
+    if (!currentZipCode || isLoading) {
       return
     }
-
-    setIsRefreshing(true)
-    try {
-      const data = await apiService.refreshWeather(currentZipCode)
-      setWeatherData(data)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to refresh weather data'
-      setError(message)
-    } finally {
-      setIsRefreshing(false)
-    }
+    await refreshWeather()
   }
 
-  const disabled = !currentZipCode || isLoading || isRefreshing
+  const disabled = !currentZipCode || isLoading
 
   return (
     <Button
@@ -35,16 +21,32 @@ export function RefreshButton() {
       size="icon"
       onClick={handleRefresh}
       disabled={disabled}
-      className="relative"
-      aria-label="Refresh weather data"
+      className={cn(
+        'relative',
+        isAutoRefreshPaused && !disabled && 'text-yellow-600 dark:text-yellow-400'
+      )}
+      title={
+        isAutoRefreshPaused
+          ? 'Auto-refresh paused due to errors. Click to retry.'
+          : 'Refresh weather data'
+      }
+      aria-label={
+        isAutoRefreshPaused
+          ? 'Auto-refresh paused - Click to retry'
+          : 'Refresh weather data'
+      }
     >
-      <RefreshCw
-        className={cn(
-          'h-5 w-5',
-          isRefreshing && 'animate-spin',
-          disabled && 'opacity-50'
-        )}
-      />
+      {isAutoRefreshPaused && !disabled ? (
+        <AlertCircle className="h-5 w-5" />
+      ) : (
+        <RefreshCw
+          className={cn(
+            'h-5 w-5',
+            isLoading && 'animate-spin',
+            disabled && 'opacity-50'
+          )}
+        />
+      )}
     </Button>
   )
 }

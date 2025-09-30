@@ -6,6 +6,9 @@
 import { FastifyPluginAsync } from 'fastify';
 import { nwsService } from '../services/nwsService.js';
 import { geocodeZip } from '../services/geocodingService.js';
+import { getSunTimes } from '../services/sunService.js';
+import { uvService } from '../services/uvService.js';
+import { getBackgroundJobsStatus } from '../services/backgroundJobs.js';
 import type { WeatherPackage } from '../types/weather.types.js';
 
 // Route parameter schema
@@ -164,11 +167,13 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           hourlyForecastResult,
           currentConditionsResult,
           alertsResult,
+          uvIndexResult,
         ] = await Promise.allSettled([
           nwsService.getForecast(gridId, gridX, gridY),
           nwsService.getHourlyForecast(gridId, gridX, gridY),
           nwsService.getCurrentConditions(gridId, gridX, gridY),
           nwsService.getActiveAlerts(lat, lon),
+          uvService.getUVIndex(lat, lon),
         ]);
 
         // Check if critical data (forecast) failed
@@ -211,7 +216,17 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           );
         }
 
-        // Step 5: Build complete weather package
+        if (uvIndexResult.status === 'rejected') {
+          fastify.log.warn(
+            { error: uvIndexResult.reason, zipcode },
+            'Failed to fetch UV Index'
+          );
+        }
+
+        // Step 5: Calculate sunrise/sunset times
+        const sunTimes = getSunTimes(lat, lon, new Date(), timeZone);
+
+        // Step 6: Build complete weather package
         const now = new Date();
         const cacheExpiry = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour
 
@@ -244,6 +259,9 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
                   title: 'Active Alerts',
                   updated: now.toISOString(),
                 },
+          sunTimes,
+          uvIndex:
+            uvIndexResult.status === 'fulfilled' ? uvIndexResult.value : null,
           metadata: {
             fetchedAt: now.toISOString(),
             cacheExpiry: cacheExpiry.toISOString(),
@@ -334,6 +352,306 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
   );
+
+  /**
+   * POST /api/weather/:zipcode/refresh
+   * Clear cache and fetch fresh weather data for a specific ZIP code
+   *
+   * This endpoint:
+   * 1. Validates the ZIP code format
+   * 2. Clears all cached data for the location
+   * 3. Fetches fresh data from NWS API
+   * 4. Returns the updated weather package
+   *
+   * Used by the manual refresh button in the UI to force a data update.
+   */
+  fastify.post<{ Params: ZipCodeParams }>(
+    '/weather/:zipcode/refresh',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['zipcode'],
+          properties: {
+            zipcode: {
+              type: 'string',
+              pattern: '^\\d{5}$',
+              description: '5-digit US ZIP code',
+            },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            description: 'Fresh weather data package',
+          },
+          400: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+              statusCode: { type: 'number' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+              statusCode: { type: 'number' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+              statusCode: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { zipcode } = request.params;
+
+      try {
+        // Step 1: Validate ZIP code format
+        if (!/^\d{5}$/.test(zipcode)) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'Invalid ZIP code format. Must be 5 digits.',
+            statusCode: 400,
+          });
+        }
+
+        fastify.log.info({ zipcode }, 'Refreshing weather data for ZIP code');
+
+        // Step 2: Geocode ZIP code to get coordinates
+        let coordinates;
+        try {
+          coordinates = await geocodeZip(zipcode);
+          fastify.log.debug(
+            { zipcode, coordinates },
+            'Successfully geocoded ZIP code for refresh'
+          );
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Geocoding failed';
+
+          if (errorMessage.includes('No geocoding results found')) {
+            return reply.code(404).send({
+              error: 'Not Found',
+              message: `ZIP code ${zipcode} not found. Please verify the ZIP code is valid.`,
+              statusCode: 404,
+            });
+          }
+
+          if (errorMessage.includes('Invalid ZIP code format')) {
+            return reply.code(400).send({
+              error: 'Bad Request',
+              message: errorMessage,
+              statusCode: 400,
+            });
+          }
+
+          throw error;
+        }
+
+        const { lat, lon } = coordinates;
+
+        // Step 3: Clear cache for this location
+        nwsService.clearLocationCache(lat, lon);
+        fastify.log.debug(
+          { zipcode, lat, lon },
+          'Cache cleared for location'
+        );
+
+        // Step 4: Get fresh point data
+        let pointData;
+        try {
+          pointData = await nwsService.getPointData(lat, lon);
+          fastify.log.debug(
+            {
+              zipcode,
+              gridId: pointData.properties.gridId,
+              gridX: pointData.properties.gridX,
+              gridY: pointData.properties.gridY,
+            },
+            'Retrieved fresh NWS grid coordinates'
+          );
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to get point data';
+
+          if (errorMessage.includes('not found')) {
+            return reply.code(404).send({
+              error: 'Not Found',
+              message:
+                'Weather data not available for this location. The location may be outside the United States.',
+              statusCode: 404,
+            });
+          }
+
+          throw error;
+        }
+
+        const { gridId, gridX, gridY, forecastOffice, timeZone } =
+          pointData.properties;
+
+        // Step 5: Fetch all weather data in parallel
+        const [
+          forecastResult,
+          hourlyForecastResult,
+          currentConditionsResult,
+          alertsResult,
+          uvIndexResult,
+        ] = await Promise.allSettled([
+          nwsService.getForecast(gridId, gridX, gridY),
+          nwsService.getHourlyForecast(gridId, gridX, gridY),
+          nwsService.getCurrentConditions(gridId, gridX, gridY),
+          nwsService.getActiveAlerts(lat, lon),
+          uvService.getUVIndex(lat, lon),
+        ]);
+
+        // Check if critical data failed
+        if (forecastResult.status === 'rejected') {
+          fastify.log.error(
+            { error: forecastResult.reason, zipcode },
+            'Failed to fetch forecast data during refresh'
+          );
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: 'Failed to fetch forecast data. Please try again later.',
+            statusCode: 500,
+          });
+        }
+
+        if (hourlyForecastResult.status === 'rejected') {
+          fastify.log.error(
+            { error: hourlyForecastResult.reason, zipcode },
+            'Failed to fetch hourly forecast data during refresh'
+          );
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: 'Failed to fetch hourly forecast data. Please try again later.',
+            statusCode: 500,
+          });
+        }
+
+        // Log warnings for non-critical failures
+        if (currentConditionsResult.status === 'rejected') {
+          fastify.log.warn(
+            { error: currentConditionsResult.reason, zipcode },
+            'Failed to fetch current conditions during refresh'
+          );
+        }
+
+        if (alertsResult.status === 'rejected') {
+          fastify.log.warn(
+            { error: alertsResult.reason, zipcode },
+            'Failed to fetch alerts during refresh'
+          );
+        }
+
+        if (uvIndexResult.status === 'rejected') {
+          fastify.log.warn(
+            { error: uvIndexResult.reason, zipcode },
+            'Failed to fetch UV Index during refresh'
+          );
+        }
+
+        // Step 6: Calculate sunrise/sunset times
+        const sunTimes = getSunTimes(lat, lon, new Date(), timeZone);
+
+        // Step 7: Build fresh weather package
+        const now = new Date();
+        const cacheExpiry = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour
+
+        const weatherPackage: WeatherPackage = {
+          location: {
+            zipCode: zipcode,
+            coordinates: { lat, lon },
+            displayName: `ZIP ${zipcode}`,
+            gridInfo: {
+              gridId,
+              gridX,
+              gridY,
+              forecastOffice,
+            },
+            timeZone,
+          },
+          forecast: forecastResult.value,
+          hourlyForecast: hourlyForecastResult.value,
+          currentConditions:
+            currentConditionsResult.status === 'fulfilled'
+              ? currentConditionsResult.value
+              : null,
+          alerts:
+            alertsResult.status === 'fulfilled'
+              ? alertsResult.value
+              : {
+                  '@context': undefined,
+                  type: 'FeatureCollection',
+                  features: [],
+                  title: 'Active Alerts',
+                  updated: now.toISOString(),
+                },
+          sunTimes,
+          uvIndex:
+            uvIndexResult.status === 'fulfilled' ? uvIndexResult.value : null,
+          metadata: {
+            fetchedAt: now.toISOString(),
+            cacheExpiry: cacheExpiry.toISOString(),
+          },
+        };
+
+        fastify.log.info(
+          {
+            zipcode,
+            forecastPeriods: weatherPackage.forecast.properties.periods.length,
+            hourlyPeriods: weatherPackage.hourlyForecast.properties.periods.length,
+            hasCurrentConditions: weatherPackage.currentConditions !== null,
+            alertCount: weatherPackage.alerts.features.length,
+          },
+          'Successfully refreshed weather package'
+        );
+
+        return reply.code(200).send(weatherPackage);
+      } catch (error) {
+        // Catch-all error handler
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error occurred';
+
+        fastify.log.error(
+          { error, zipcode, errorMessage },
+          'Unexpected error refreshing weather data'
+        );
+
+        return reply.code(500).send({
+          error: 'Internal Server Error',
+          message:
+            'An unexpected error occurred while refreshing weather data. Please try again later.',
+          statusCode: 500,
+        });
+      }
+    }
+  );
+
+  /**
+   * GET /api/weather/background-jobs/status
+   * Get status of background refresh jobs
+   */
+  fastify.get('/weather/background-jobs/status', async (_request, reply) => {
+    const status = getBackgroundJobsStatus();
+    const cacheStats = nwsService.getCacheStats();
+
+    return reply.code(200).send({
+      backgroundJobs: status,
+      cache: cacheStats,
+      timestamp: new Date().toISOString(),
+    });
+  });
 };
 
 export default weatherRoutes;

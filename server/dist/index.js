@@ -7,6 +7,7 @@ import cors from '@fastify/cors';
 import { config } from 'dotenv';
 import weatherRoutes from './routes/weatherRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
+import { initBackgroundJobs, stopBackgroundJobs } from './services/backgroundJobs.js';
 // Load environment variables
 config();
 // Server configuration
@@ -34,6 +35,8 @@ const fastify = Fastify({
     disableRequestLogging: false,
     requestIdHeader: 'x-request-id',
 });
+// Background jobs task reference
+let backgroundJobsTask = null;
 /**
  * Register plugins and routes
  */
@@ -59,6 +62,12 @@ async function registerPlugins() {
 async function closeGracefully(signal) {
     fastify.log.info(`Received signal to terminate: ${signal}`);
     try {
+        // Stop background jobs first
+        if (backgroundJobsTask) {
+            stopBackgroundJobs(backgroundJobsTask);
+            backgroundJobsTask = null;
+        }
+        // Then close the server
         await fastify.close();
         fastify.log.info('Server closed successfully');
         process.exit(0);
@@ -80,6 +89,9 @@ async function start() {
         fastify.log.info(`Server running in ${NODE_ENV} mode on http://${HOST}:${PORT}`);
         fastify.log.info(`Health check available at http://${HOST}:${PORT}/api/health`);
         fastify.log.info(`Weather API available at http://${HOST}:${PORT}/api/weather/:zipcode`);
+        // Initialize background jobs
+        backgroundJobsTask = initBackgroundJobs();
+        fastify.log.info('Background refresh jobs started (5-minute cycle)');
         // Register graceful shutdown handlers
         process.on('SIGTERM', () => closeGracefully('SIGTERM'));
         process.on('SIGINT', () => closeGracefully('SIGINT'));

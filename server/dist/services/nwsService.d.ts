@@ -69,6 +69,11 @@ export declare class NWSService {
         hits: number;
         misses: number;
     };
+    /**
+     * Fetch and cache weather data for coordinates (background refresh)
+     * Used by background jobs to pre-warm cache for configured locations
+     */
+    prefetchWeatherData(lat: number, lon: number): Promise<void>;
 }
 export declare const nwsService: NWSService;
 //# sourceMappingURL=nwsService.d.ts.map

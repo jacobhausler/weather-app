@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { format } from 'date-fns'
 import { Cloud, Droplets, Wind } from 'lucide-react'
+import { useUnitStore, getTempUnit } from '@/stores/unitStore'
 
 interface ForecastModalProps {
   period: ForecastPeriod | null
@@ -15,7 +16,31 @@ interface ForecastModalProps {
 }
 
 export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
+  const { unitSystem } = useUnitStore()
+
   if (!period) return null
+
+  // Convert temperature from Fahrenheit (NWS default) to current unit system
+  const convertTemperature = (tempF: number) => {
+    if (unitSystem === 'metric') {
+      return Math.round(((tempF - 32) * 5) / 9)
+    }
+    return tempF
+  }
+
+  // Convert wind speed from mph (NWS format like "10 mph") to current unit system
+  const convertWindSpeed = (windSpeed?: string) => {
+    if (!windSpeed) return 'N/A'
+    const match = windSpeed.match(/(\d+)/)
+    if (!match || !match[1]) return windSpeed
+
+    const speedMph = parseInt(match[1], 10)
+    if (unitSystem === 'metric') {
+      const speedKmh = Math.round(speedMph * 1.60934)
+      return windSpeed.replace(/\d+/, speedKmh.toString()).replace('mph', 'km/h')
+    }
+    return windSpeed
+  }
 
   const formatTime = (dateString: string) => {
     try {
@@ -24,6 +49,9 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
       return dateString
     }
   }
+
+  const tempUnit = getTempUnit(unitSystem)
+  const convertedTemp = convertTemperature(period.temperature)
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -42,7 +70,7 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
             />
             <div>
               <div className="text-4xl font-bold">
-                {period.temperature}°{period.temperatureUnit}
+                {convertedTemp}{tempUnit}
               </div>
               {period.temperatureTrend && (
                 <div className="text-sm text-muted-foreground">
@@ -62,7 +90,7 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
               <div>
                 <div className="text-xs text-muted-foreground">Wind</div>
                 <div className="font-medium">
-                  {period.windDirection} {period.windSpeed}
+                  {period.windDirection} {convertWindSpeed(period.windSpeed)}
                 </div>
               </div>
             </div>

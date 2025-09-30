@@ -10,7 +10,6 @@
  * - Returns ZIP code centroid coordinates
  */
 import axios from 'axios';
-// @ts-ignore - NodeCache uses CommonJS and has issues with NodeNext module resolution
 import NodeCache from 'node-cache';
 // Constants
 const ZIPPOPOTAM_API_BASE = 'http://api.zippopotam.us/us';
@@ -19,7 +18,6 @@ const ZIP_REGEX = /^\d{5}$/;
 const REQUEST_TIMEOUT = 10000; // 10 seconds
 const USER_AGENT = 'WeatherApp/1.0 (HAUS Weather Station)';
 // Cache instance
-// @ts-ignore
 const geocodeCache = new NodeCache({
     stdTTL: CACHE_TTL,
     checkperiod: 600, // Check for expired entries every 10 minutes

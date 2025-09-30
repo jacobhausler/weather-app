@@ -1,4 +1,4 @@
-import { Observation, ForecastPeriod } from '@/types/weather'
+import { Observation, ForecastPeriod, UVIndex, SunTimes } from '@/types/weather'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Thermometer,
@@ -6,20 +6,18 @@ import {
   Wind,
   Eye,
   Cloud,
+  Sun,
+  Sunrise,
+  Sunset,
 } from 'lucide-react'
+import { useUnitStore, convertTemp, convertSpeed, convertDistance, getTempUnit, getSpeedUnit, getDistanceUnit } from '@/stores/unitStore'
 
 interface CurrentConditionsProps {
   observation?: Observation
   todayForecast?: ForecastPeriod
   tonightForecast?: ForecastPeriod
-}
-
-const convertCelsiusToFahrenheit = (celsius: number) => {
-  return Math.round((celsius * 9) / 5 + 32)
-}
-
-const convertMetersToMiles = (meters: number) => {
-  return (meters * 0.000621371).toFixed(1)
+  uvIndex?: UVIndex | null
+  sunTimes?: SunTimes
 }
 
 const getWindDirection = (degrees: number | null) => {
@@ -35,47 +33,80 @@ const getFeelsLike = (temp: number, heatIndex: number | null, windChill: number 
   return temp
 }
 
+const getUVIndexLabel = (value: number): string => {
+  if (value <= 2) return 'Low'
+  if (value <= 5) return 'Moderate'
+  if (value <= 7) return 'High'
+  if (value <= 10) return 'Very High'
+  return 'Extreme'
+}
+
+const getUVIndexColor = (value: number): string => {
+  if (value <= 2) return 'text-green-600 dark:text-green-400'
+  if (value <= 5) return 'text-yellow-600 dark:text-yellow-400'
+  if (value <= 7) return 'text-orange-600 dark:text-orange-400'
+  if (value <= 10) return 'text-red-600 dark:text-red-400'
+  return 'text-purple-600 dark:text-purple-400'
+}
+
 export function CurrentConditions({
   observation,
   todayForecast,
   tonightForecast,
+  uvIndex,
+  sunTimes,
 }: CurrentConditionsProps) {
+  const { unitSystem } = useUnitStore()
+
   if (!observation && !todayForecast) {
     return null
   }
 
+  // Format sunrise/sunset times
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString)
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
+
+  // Temperature conversions
   const currentTemp = observation?.temperature.value
-    ? convertCelsiusToFahrenheit(observation.temperature.value)
+    ? Math.round(convertTemp(observation.temperature.value, unitSystem))
     : todayForecast?.temperature
 
   const dewpoint = observation?.dewpoint.value
-    ? convertCelsiusToFahrenheit(observation.dewpoint.value)
+    ? Math.round(convertTemp(observation.dewpoint.value, unitSystem))
     : null
 
   const humidity = observation?.relativeHumidity.value
 
+  // Wind speed conversions (NWS provides m/s)
   const windSpeed = observation?.windSpeed.value
-    ? Math.round(observation.windSpeed.value * 2.237) // m/s to mph
+    ? Math.round(convertSpeed(observation.windSpeed.value, unitSystem))
     : null
 
   const windGust = observation?.windGust.value
-    ? Math.round(observation.windGust.value * 2.237)
+    ? Math.round(convertSpeed(observation.windGust.value, unitSystem))
     : null
 
   const windDir = observation?.windDirection.value
     ? getWindDirection(observation.windDirection.value)
     : null
 
+  // Visibility conversion
   const visibility = observation?.visibility.value
-    ? convertMetersToMiles(observation.visibility.value)
+    ? convertDistance(observation.visibility.value, unitSystem).toFixed(1)
     : null
 
   const heatIndex = observation?.heatIndex.value
-    ? convertCelsiusToFahrenheit(observation.heatIndex.value)
+    ? Math.round(convertTemp(observation.heatIndex.value, unitSystem))
     : null
 
   const windChill = observation?.windChill.value
-    ? convertCelsiusToFahrenheit(observation.windChill.value)
+    ? Math.round(convertTemp(observation.windChill.value, unitSystem))
     : null
 
   const feelsLike = currentTemp
@@ -83,6 +114,11 @@ export function CurrentConditions({
     : null
 
   const cloudCover = observation?.cloudLayers?.[0]?.amount || 'N/A'
+
+  // Get unit labels
+  const tempUnit = getTempUnit(unitSystem)
+  const speedUnit = getSpeedUnit(unitSystem)
+  const distanceUnit = getDistanceUnit(unitSystem)
 
   return (
     <Card>
@@ -104,14 +140,14 @@ export function CurrentConditions({
               <div>
                 <div className="text-5xl font-bold">
                   {currentTemp !== null && currentTemp !== undefined
-                    ? `${currentTemp}°F`
+                    ? `${currentTemp}${tempUnit}`
                     : 'N/A'}
                 </div>
                 {feelsLike !== null &&
                   feelsLike !== undefined &&
                   feelsLike !== currentTemp && (
                     <div className="text-sm text-muted-foreground">
-                      Feels like {feelsLike}°F
+                      Feels like {feelsLike}{tempUnit}
                     </div>
                   )}
               </div>
@@ -129,13 +165,13 @@ export function CurrentConditions({
                 <div>
                   <span className="text-muted-foreground">High: </span>
                   <span className="font-semibold">
-                    {todayForecast.temperature}°
+                    {todayForecast.temperature}{tempUnit}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Low: </span>
                   <span className="font-semibold">
-                    {tonightForecast.temperature}°
+                    {tonightForecast.temperature}{tempUnit}
                   </span>
                 </div>
               </div>
@@ -147,7 +183,7 @@ export function CurrentConditions({
             <WeatherDetailItem
               icon={<Thermometer className="h-4 w-4" />}
               label="Dewpoint"
-              value={dewpoint !== null ? `${dewpoint}°F` : 'N/A'}
+              value={dewpoint !== null ? `${dewpoint}${tempUnit}` : 'N/A'}
             />
 
             <WeatherDetailItem
@@ -161,7 +197,7 @@ export function CurrentConditions({
               label="Wind"
               value={
                 windSpeed !== null
-                  ? `${windDir || 'N/A'} ${windSpeed} mph`
+                  ? `${windDir || 'N/A'} ${windSpeed} ${speedUnit}`
                   : 'N/A'
               }
             />
@@ -170,14 +206,14 @@ export function CurrentConditions({
               <WeatherDetailItem
                 icon={<Wind className="h-4 w-4" />}
                 label="Gusts"
-                value={`${windGust} mph`}
+                value={`${windGust} ${speedUnit}`}
               />
             )}
 
             <WeatherDetailItem
               icon={<Eye className="h-4 w-4" />}
               label="Visibility"
-              value={visibility ? `${visibility} mi` : 'N/A'}
+              value={visibility ? `${visibility} ${distanceUnit}` : 'N/A'}
             />
 
             <WeatherDetailItem
@@ -185,6 +221,26 @@ export function CurrentConditions({
               label="Cloud Cover"
               value={cloudCover}
             />
+
+            {uvIndex && uvIndex.value !== null && uvIndex.value !== undefined && (
+              <UVIndexItem value={uvIndex.value} />
+            )}
+
+            {sunTimes && (
+              <>
+                <WeatherDetailItem
+                  icon={<Sunrise className="h-4 w-4" />}
+                  label="Sunrise"
+                  value={formatTime(sunTimes.sunrise)}
+                />
+
+                <WeatherDetailItem
+                  icon={<Sunset className="h-4 w-4" />}
+                  label="Sunset"
+                  value={formatTime(sunTimes.sunset)}
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -211,7 +267,7 @@ export function CurrentConditions({
                 <div className="font-semibold">{tonightForecast.name}</div>
                 <div className="text-sm text-muted-foreground">
                   {tonightForecast.shortForecast} -{' '}
-                  {tonightForecast.temperature}°F
+                  {tonightForecast.temperature}{tempUnit}
                 </div>
               </div>
             </div>
@@ -235,6 +291,29 @@ function WeatherDetailItem({ icon, label, value }: WeatherDetailItemProps) {
       <div className="min-w-0 flex-1">
         <div className="text-xs text-muted-foreground">{label}</div>
         <div className="truncate text-sm font-medium">{value}</div>
+      </div>
+    </div>
+  )
+}
+
+interface UVIndexItemProps {
+  value: number
+}
+
+function UVIndexItem({ value }: UVIndexItemProps) {
+  const label = getUVIndexLabel(value)
+  const colorClass = getUVIndexColor(value)
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border p-3">
+      <div className="text-muted-foreground">
+        <Sun className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-xs text-muted-foreground">UV Index</div>
+        <div className={`truncate text-sm font-medium ${colorClass}`}>
+          {value.toFixed(1)} ({label})
+        </div>
       </div>
     </div>
   )

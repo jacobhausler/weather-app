@@ -227,6 +227,28 @@ export class NWSService {
             misses: stats.misses,
         };
     }
+    /**
+     * Fetch and cache weather data for coordinates (background refresh)
+     * Used by background jobs to pre-warm cache for configured locations
+     */
+    async prefetchWeatherData(lat, lon) {
+        try {
+            // Get point data
+            const pointData = await this.getPointData(lat, lon);
+            const { gridId, gridX, gridY } = pointData.properties;
+            // Fetch all weather data in parallel to warm cache
+            await Promise.allSettled([
+                this.getForecast(gridId, gridX, gridY),
+                this.getHourlyForecast(gridId, gridX, gridY),
+                this.getCurrentConditions(gridId, gridX, gridY),
+                this.getActiveAlerts(lat, lon),
+            ]);
+        }
+        catch (error) {
+            // Log error but don't throw - background refresh should be silent
+            console.error(`Failed to prefetch weather data for ${lat},${lon}:`, error);
+        }
+    }
 }
 // Export singleton instance
 export const nwsService = new NWSService();

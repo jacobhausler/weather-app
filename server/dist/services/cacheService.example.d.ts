@@ -5,12 +5,12 @@
  * DO NOT import this file in production code - it's for reference only.
  */
 import { CacheDataType } from './cacheService.js';
-declare function fetchPointsData(lat: number, lon: number): Promise<any>;
-declare function fetch7DayForecast(office: string, gridX: number, gridY: number): Promise<any>;
-declare function fetchCurrentObservations(stationId: string): Promise<any>;
-declare function fetchStationMetadata(stationId: string): Promise<any>;
+declare function fetchPointsData(lat: number, lon: number): Promise<unknown>;
+declare function fetch7DayForecast(office: string, gridX: number, gridY: number): Promise<unknown>;
+declare function fetchCurrentObservations(stationId: string): Promise<unknown>;
+declare function fetchStationMetadata(stationId: string): Promise<unknown>;
 declare function fetchAlerts(lat: number, lon: number): Promise<unknown>;
-declare function cacheWithAutoTTL(dataType: CacheDataType, key: string, value: any): void;
+declare function cacheWithAutoTTL(dataType: CacheDataType, key: string, value: unknown): void;
 declare function cacheMultipleForecasts(): void;
 declare function monitorCache(): void;
 declare function invalidateForecastCache(office: string, gridX: number, gridY: number): void;

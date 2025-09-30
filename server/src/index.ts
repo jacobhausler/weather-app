@@ -6,8 +6,10 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { config } from 'dotenv';
+import type { ScheduledTask } from 'node-cron';
 import weatherRoutes from './routes/weatherRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
+import { initBackgroundJobs, stopBackgroundJobs } from './services/backgroundJobs.js';
 
 // Load environment variables
 config();
@@ -40,6 +42,9 @@ const fastify = Fastify({
   requestIdHeader: 'x-request-id',
 });
 
+// Background jobs task reference
+let backgroundJobsTask: ScheduledTask | null = null;
+
 /**
  * Register plugins and routes
  */
@@ -69,6 +74,13 @@ async function closeGracefully(signal: string) {
   fastify.log.info(`Received signal to terminate: ${signal}`);
 
   try {
+    // Stop background jobs first
+    if (backgroundJobsTask) {
+      stopBackgroundJobs(backgroundJobsTask);
+      backgroundJobsTask = null;
+    }
+
+    // Then close the server
     await fastify.close();
     fastify.log.info('Server closed successfully');
     process.exit(0);
@@ -96,6 +108,10 @@ async function start() {
     fastify.log.info(
       `Weather API available at http://${HOST}:${PORT}/api/weather/:zipcode`
     );
+
+    // Initialize background jobs
+    backgroundJobsTask = initBackgroundJobs();
+    fastify.log.info('Background refresh jobs started (5-minute cycle)');
 
     // Register graceful shutdown handlers
     process.on('SIGTERM', () => closeGracefully('SIGTERM'));

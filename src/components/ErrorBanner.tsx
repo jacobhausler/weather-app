@@ -64,7 +64,7 @@ export function ErrorBanner() {
   const severity = errorInfo.message.includes('429') ? 'warning' : 'error'
 
   return (
-    <div className="fixed left-0 right-0 top-0 z-50 px-4 pt-4">
+    <div className="fixed left-0 right-0 top-16 z-50 px-4 pt-4">
       <Alert
         variant="destructive"
         className={`relative shadow-lg ${severity === 'warning' ? 'border-yellow-500 bg-yellow-50 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200' : ''}`}
