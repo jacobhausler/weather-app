@@ -11,7 +11,6 @@
  */
 
 import axios, { AxiosError } from 'axios';
-// @ts-ignore - NodeCache uses CommonJS and has issues with NodeNext module resolution
 import NodeCache from 'node-cache';
 
 // Types
@@ -49,7 +48,6 @@ const REQUEST_TIMEOUT = 10000; // 10 seconds
 const USER_AGENT = 'WeatherApp/1.0 (HAUS Weather Station)';
 
 // Cache instance
-// @ts-ignore
 const geocodeCache = new NodeCache({
   stdTTL: CACHE_TTL,
   checkperiod: 600, // Check for expired entries every 10 minutes

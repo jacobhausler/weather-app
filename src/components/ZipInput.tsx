@@ -45,8 +45,9 @@ export function ZipInput() {
       setWeatherData(data)
       addRecentZipCode(zipCode)
       setInputValue('')
-    } catch (error: any) {
-      setError(error.message || 'Failed to fetch weather data')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch weather data'
+      setError(message)
     } finally {
       setLoading(false)
     }

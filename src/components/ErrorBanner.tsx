@@ -6,7 +6,7 @@ import { useWeatherStore } from '@/stores/weatherStore'
 
 interface ErrorInfo {
   message: string
-  details?: any
+  details?: unknown
 }
 
 export function ErrorBanner() {

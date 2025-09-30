@@ -1,11 +1,12 @@
 // API service for communicating with the backend
+import { WeatherData } from '../types/weather'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
 export interface ApiError {
   message: string
   status?: number
-  details?: any
+  details?: unknown
 }
 
 class ApiService {
@@ -40,11 +41,11 @@ class ApiService {
     }
   }
 
-  async getWeatherByZip(zipCode: string): Promise<any> {
+  async getWeatherByZip(zipCode: string): Promise<WeatherData> {
     return this.fetchWithError(`${this.baseUrl}/api/weather/${zipCode}`)
   }
 
-  async refreshWeather(zipCode: string): Promise<any> {
+  async refreshWeather(zipCode: string): Promise<WeatherData> {
     return this.fetchWithError(`${this.baseUrl}/api/weather/${zipCode}/refresh`, {
       method: 'POST'
     })

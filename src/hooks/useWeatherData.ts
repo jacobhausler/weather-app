@@ -36,8 +36,8 @@ export function useWeatherData() {
       setWeatherData(data)
       setZipCode(zipCode)
       addRecentZipCode(zipCode)
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch weather data'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch weather data'
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -74,8 +74,8 @@ export function useWeatherData() {
     try {
       const data: WeatherData = await apiService.refreshWeather(currentZipCode)
       setWeatherData(data)
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to refresh weather data'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh weather data'
       setError(errorMessage)
     } finally {
       setLoading(false)

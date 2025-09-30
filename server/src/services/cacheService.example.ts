@@ -20,7 +20,7 @@ async function fetchPointsData(lat: number, lon: number) {
   const cacheKey = CacheKeyGenerator.points(lat, lon);
 
   // Check cache first
-  const cached = cacheService.get<any>(cacheKey);
+  const cached = cacheService.get<unknown>(cacheKey);
   if (cached) {
     console.log('Cache hit for points data');
     return cached;
@@ -45,7 +45,7 @@ async function fetch7DayForecast(office: string, gridX: number, gridY: number) {
   const cacheKey = CacheKeyGenerator.forecast7Day(office, gridX, gridY);
 
   // Check cache first
-  const cached = cacheService.get<any>(cacheKey);
+  const cached = cacheService.get<unknown>(cacheKey);
   if (cached) {
     return cached;
   }
@@ -70,7 +70,7 @@ async function fetchCurrentObservations(stationId: string) {
   const cacheKey = CacheKeyGenerator.observation(stationId);
 
   // Check cache first
-  const cached = cacheService.get<any>(cacheKey);
+  const cached = cacheService.get<unknown>(cacheKey);
   if (cached) {
     return cached;
   }
@@ -95,7 +95,7 @@ async function fetchStationMetadata(stationId: string) {
   const cacheKey = CacheKeyGenerator.station(stationId);
 
   // Check cache first
-  const cached = cacheService.get<any>(cacheKey);
+  const cached = cacheService.get<unknown>(cacheKey);
   if (cached) {
     return cached;
   }
@@ -132,7 +132,7 @@ async function fetchAlerts(lat: number, lon: number) {
 // EXAMPLE 6: Using getTTLForDataType Helper
 // ============================================================================
 
-function cacheWithAutoTTL(dataType: CacheDataType, key: string, value: any) {
+function cacheWithAutoTTL(dataType: CacheDataType, key: string, value: unknown) {
   const ttl = getTTLForDataType(dataType);
 
   // Skip caching if TTL is 0 (like alerts)

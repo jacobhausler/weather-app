@@ -19,8 +19,9 @@ export function RefreshButton() {
     try {
       const data = await apiService.refreshWeather(currentZipCode)
       setWeatherData(data)
-    } catch (error: any) {
-      setError(error.message || 'Failed to refresh weather data')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to refresh weather data'
+      setError(message)
     } finally {
       setIsRefreshing(false)
     }

@@ -67,7 +67,7 @@ export interface NWSObservationResponse {
     timestamp: string
     textDescription: string
     icon: string
-    presentWeather: Array<any>
+    presentWeather: Array<unknown>
     temperature: {
       value: number | null
       unitCode: string
@@ -169,7 +169,7 @@ export interface NWSAlertsResponse {
         UGC: string[]
       }
       affectedZones: string[]
-      references: Array<any>
+      references: Array<unknown>
       sent: string
       effective: string
       onset: string
@@ -188,7 +188,7 @@ export interface NWSAlertsResponse {
       description: string
       instruction: string
       response: string
-      parameters: Record<string, any>
+      parameters: Record<string, unknown>
     }
   }>
 }
