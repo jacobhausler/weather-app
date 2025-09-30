@@ -57,7 +57,8 @@ docker-compose down          # Stop application
 ### Key Notes
 - Backend runs on port 3001, frontend dev server on 5173
 - Vite dev server proxies `/api` requests to backend
-- Both frontend and backend need separate `npm install`
+- Both frontend and backend have separate package.json files and need separate `npm install`
+- PostCSS configuration required for proper Tailwind CSS processing
 - Type checking passes before committing
 - All builds must pass before deployment
 
@@ -125,8 +126,8 @@ docker-compose down          # Stop application
 ### Refresh Behavior
 - Page loads: Fetch from server
 - Client-side: Background refresh every 1 minute (non-interrupting)
-- Server-side: Refresh data every 5 minutes for configured ZIP codes
-- Manual refresh available via button
+- Server-side: Background refresh runs every 5 minutes for cached ZIP codes (75454, 75070, 75035)
+- Manual refresh available via button or `POST /api/weather/:zipcode/refresh` endpoint for cache clearing
 
 ### Error Handling
 - Global error banner with details for API failures
@@ -142,6 +143,17 @@ User-Agent: WeatherApp/1.0 (contact@example.com)
 ```
 
 Base URL: `https://api.weather.gov`
+
+## External APIs and Services
+
+### UV Index Data
+- **OpenWeatherMap API**: Optional integration for UV Index data (requires API key)
+- UV data not available from NWS API directly
+
+### Sunrise/Sunset Data
+- **SunCalc Library**: JavaScript library for calculating sunrise/sunset times from coordinates
+- **Sunrise-sunset.org API**: Alternative free API, no authentication required
+- Format: `https://api.sunrise-sunset.org/json?lat={lat}&lng={lng}&formatted=0`
 
 ## File Organization
 

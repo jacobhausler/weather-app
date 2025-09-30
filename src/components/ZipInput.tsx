@@ -81,7 +81,8 @@ export function ZipInput() {
     // Limit to 5 digits
     if (value.length <= 5) {
       setInputValue(value)
-      if (validationError && value.length === 0) {
+      // Clear error when input is empty or becomes valid
+      if (validationError && (value.length === 0 || validateZipCode(value))) {
         setValidationError(null)
       }
     }

@@ -3,7 +3,7 @@
  * Provides astronomical calculations for a given location and date
  */
 
-import * as SunCalc from 'suncalc';
+import SunCalc from 'suncalc';
 
 export interface SunTimes {
   sunrise: string; // ISO 8601 timestamp

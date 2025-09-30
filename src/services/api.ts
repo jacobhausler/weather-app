@@ -52,7 +52,7 @@ class ApiService {
   }
 
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    return this.fetchWithError(`${this.baseUrl}/health`)
+    return this.fetchWithError(`${this.baseUrl}/api/health`)
   }
 }
 

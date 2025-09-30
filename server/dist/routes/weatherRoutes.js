@@ -7,6 +7,141 @@ import { geocodeZip } from '../services/geocodingService.js';
 import { getSunTimes } from '../services/sunService.js';
 import { uvService } from '../services/uvService.js';
 import { getBackgroundJobsStatus } from '../services/backgroundJobs.js';
+/**
+ * Transform backend WeatherPackage to frontend WeatherData format
+ * Converts nested API response structures to flattened arrays expected by frontend
+ */
+function transformWeatherPackage(pkg) {
+    return {
+        zipCode: pkg.location.zipCode,
+        coordinates: {
+            latitude: pkg.location.coordinates.lat,
+            longitude: pkg.location.coordinates.lon,
+        },
+        gridPoint: {
+            gridId: pkg.location.gridInfo.gridId,
+            gridX: pkg.location.gridInfo.gridX,
+            gridY: pkg.location.gridInfo.gridY,
+            forecast: pkg.forecast.properties.periods[0]?.shortForecast || '',
+            forecastHourly: pkg.hourlyForecast.properties.periods[0]?.shortForecast || '',
+            observationStations: pkg.currentConditions?.properties.station || '',
+        },
+        // Extract forecast periods array directly
+        forecast: pkg.forecast.properties.periods.map(period => ({
+            number: period.number,
+            name: period.name,
+            startTime: period.startTime,
+            endTime: period.endTime,
+            isDaytime: period.isDaytime,
+            temperature: period.temperature,
+            temperatureUnit: period.temperatureUnit,
+            temperatureTrend: period.temperatureTrend,
+            probabilityOfPrecipitation: {
+                value: period.probabilityOfPrecipitation?.value ?? null,
+            },
+            windSpeed: period.windSpeed,
+            windDirection: period.windDirection,
+            icon: period.icon,
+            shortForecast: period.shortForecast,
+            detailedForecast: period.detailedForecast,
+        })),
+        // Extract hourly forecast periods array directly
+        hourlyForecast: pkg.hourlyForecast.properties.periods.map(period => ({
+            number: period.number,
+            startTime: period.startTime,
+            endTime: period.endTime,
+            isDaytime: period.isDaytime,
+            temperature: period.temperature,
+            temperatureUnit: period.temperatureUnit,
+            probabilityOfPrecipitation: {
+                value: period.probabilityOfPrecipitation?.value ?? null,
+            },
+            dewpoint: {
+                value: period.dewpoint?.value ?? 0,
+                unitCode: period.dewpoint?.unitCode || 'wmoUnit:degC',
+            },
+            relativeHumidity: {
+                value: period.relativeHumidity?.value ?? 0,
+            },
+            windSpeed: period.windSpeed,
+            windDirection: period.windDirection,
+            icon: period.icon,
+            shortForecast: period.shortForecast,
+        })),
+        // Transform current conditions to current observation
+        currentObservation: pkg.currentConditions ? {
+            timestamp: pkg.currentConditions.properties.timestamp,
+            temperature: {
+                value: pkg.currentConditions.properties.temperature?.value ?? null,
+                unitCode: pkg.currentConditions.properties.temperature?.unitCode || 'wmoUnit:degC',
+            },
+            dewpoint: {
+                value: pkg.currentConditions.properties.dewpoint?.value ?? null,
+                unitCode: pkg.currentConditions.properties.dewpoint?.unitCode || 'wmoUnit:degC',
+            },
+            windDirection: {
+                value: pkg.currentConditions.properties.windDirection?.value ?? null,
+            },
+            windSpeed: {
+                value: pkg.currentConditions.properties.windSpeed?.value ?? null,
+                unitCode: pkg.currentConditions.properties.windSpeed?.unitCode || 'wmoUnit:km_h-1',
+            },
+            windGust: {
+                value: pkg.currentConditions.properties.windGust?.value ?? null,
+                unitCode: pkg.currentConditions.properties.windGust?.unitCode || 'wmoUnit:km_h-1',
+            },
+            barometricPressure: {
+                value: pkg.currentConditions.properties.barometricPressure?.value ?? null,
+                unitCode: pkg.currentConditions.properties.barometricPressure?.unitCode || 'wmoUnit:Pa',
+            },
+            visibility: {
+                value: pkg.currentConditions.properties.visibility?.value ?? null,
+                unitCode: pkg.currentConditions.properties.visibility?.unitCode || 'wmoUnit:m',
+            },
+            relativeHumidity: {
+                value: pkg.currentConditions.properties.relativeHumidity?.value ?? null,
+            },
+            heatIndex: {
+                value: pkg.currentConditions.properties.heatIndex?.value ?? null,
+                unitCode: pkg.currentConditions.properties.heatIndex?.unitCode || 'wmoUnit:degC',
+            },
+            windChill: {
+                value: pkg.currentConditions.properties.windChill?.value ?? null,
+                unitCode: pkg.currentConditions.properties.windChill?.unitCode || 'wmoUnit:degC',
+            },
+            cloudLayers: pkg.currentConditions.properties.cloudLayers?.map(layer => ({
+                base: {
+                    value: layer.base?.value ?? null,
+                    unitCode: layer.base?.unitCode || 'wmoUnit:m',
+                },
+                amount: layer.amount,
+            })),
+        } : undefined,
+        // Extract alerts array directly from features
+        alerts: pkg.alerts.features.map(feature => ({
+            id: feature.properties.id,
+            areaDesc: feature.properties.areaDesc,
+            event: feature.properties.event,
+            headline: feature.properties.headline || '',
+            description: feature.properties.description,
+            severity: feature.properties.severity,
+            urgency: feature.properties.urgency,
+            onset: feature.properties.onset,
+            expires: feature.properties.expires,
+            status: feature.properties.status,
+            messageType: feature.properties.messageType,
+            category: feature.properties.category,
+        })),
+        uvIndex: pkg.uvIndex ? {
+            value: pkg.uvIndex.value,
+            timestamp: pkg.uvIndex.timestamp,
+            latitude: pkg.uvIndex.latitude,
+            longitude: pkg.uvIndex.longitude,
+        } : null,
+        sunTimes: pkg.sunTimes,
+        lastUpdated: pkg.metadata.fetchedAt,
+    };
+}
 const weatherRoutes = async (fastify) => {
     /**
      * GET /api/weather/:zipcode
@@ -210,7 +345,9 @@ const weatherRoutes = async (fastify) => {
                 hasCurrentConditions: weatherPackage.currentConditions !== null,
                 alertCount: weatherPackage.alerts.features.length,
             }, 'Successfully fetched complete weather package');
-            return reply.code(200).send(weatherPackage);
+            // Transform to frontend-expected format
+            const transformedData = transformWeatherPackage(weatherPackage);
+            return reply.code(200).send(transformedData);
         }
         catch (error) {
             // Catch-all error handler
@@ -469,7 +606,9 @@ const weatherRoutes = async (fastify) => {
                 hasCurrentConditions: weatherPackage.currentConditions !== null,
                 alertCount: weatherPackage.alerts.features.length,
             }, 'Successfully refreshed weather package');
-            return reply.code(200).send(weatherPackage);
+            // Transform to frontend-expected format
+            const transformedData = transformWeatherPackage(weatherPackage);
+            return reply.code(200).send(transformedData);
         }
         catch (error) {
             // Catch-all error handler

@@ -2,7 +2,7 @@
  * Sun Service - Calculates sunrise/sunset times using SunCalc library
  * Provides astronomical calculations for a given location and date
  */
-import * as SunCalc from 'suncalc';
+import SunCalc from 'suncalc';
 /**
  * Calculate sun times for a given location and date
  * @param lat Latitude

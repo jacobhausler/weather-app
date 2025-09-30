@@ -49,7 +49,17 @@ export function ThemeToggle() {
     setTheme(newTheme)
   }
 
-  const isDark = document.documentElement.classList.contains('dark')
+  // Determine effective theme from state, not DOM
+  const getEffectiveTheme = () => {
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+      return prefersDark ? 'dark' : 'light'
+    }
+    return theme
+  }
+
+  const isDark = getEffectiveTheme() === 'dark'
 
   return (
     <Button
