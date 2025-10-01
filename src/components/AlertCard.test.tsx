@@ -275,6 +275,7 @@ describe('AlertCard', () => {
     })
 
     it('should not render area section when areaDesc is undefined', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { areaDesc, ...alertWithoutArea } = mockAlert
       const noAreaAlert: Alert = alertWithoutArea as Alert
 

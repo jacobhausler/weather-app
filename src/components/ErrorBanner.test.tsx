@@ -4,6 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { ErrorBanner } from './ErrorBanner';
 import { useWeatherStore } from '@/stores/weatherStore';
 
+// Type for error objects with details
+interface ErrorWithDetails {
+  message: string;
+  details?: unknown;
+}
+
 describe('ErrorBanner', () => {
   beforeEach(() => {
     // Clear the store state before each test
@@ -236,22 +242,22 @@ describe('ErrorBanner', () => {
     });
 
     it('should show details button when error has details', () => {
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'API Error',
         details: { code: 500, info: 'Internal Server Error' },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('Show details')).toBeInTheDocument();
     });
 
     it('should expand details when button is clicked', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'API Error',
         details: { code: 500, info: 'Internal Server Error' },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
 
       const showDetailsButton = screen.getByText('Show details');
@@ -262,11 +268,11 @@ describe('ErrorBanner', () => {
 
     it('should collapse details when button is clicked again', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'API Error',
         details: { code: 500, info: 'Internal Server Error' },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
 
       const showDetailsButton = screen.getByText('Show details');
@@ -283,7 +289,7 @@ describe('ErrorBanner', () => {
 
     it('should display details as formatted JSON', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'API Error',
         details: {
           status: 500,
@@ -291,7 +297,7 @@ describe('ErrorBanner', () => {
           path: '/api/weather/12345',
         },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
 
       const showDetailsButton = screen.getByText('Show details');
@@ -306,11 +312,11 @@ describe('ErrorBanner', () => {
 
     it('should toggle chevron icons when expanding/collapsing', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'API Error',
         details: { code: 500 },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
 
       expect(screen.getByText('Show details')).toBeInTheDocument();
@@ -333,22 +339,22 @@ describe('ErrorBanner', () => {
     });
 
     it('should handle object error messages', () => {
-      const errorObject = { message: 'Object error message' };
-      useWeatherStore.setState({ error: errorObject as any });
+      const errorObject: ErrorWithDetails = { message: 'Object error message' };
+      useWeatherStore.setState({ error: errorObject as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('Object error message')).toBeInTheDocument();
     });
 
     it('should handle non-standard error types gracefully', () => {
       // The component converts non-string errors to strings
-      const weirdError = { message: '12345' };
-      useWeatherStore.setState({ error: weirdError as any });
+      const weirdError: ErrorWithDetails = { message: '12345' };
+      useWeatherStore.setState({ error: weirdError as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('12345')).toBeInTheDocument();
     });
 
     it('should handle errors with complex details', () => {
-      const complexError = {
+      const complexError: ErrorWithDetails = {
         message: 'Complex error',
         details: {
           nested: {
@@ -359,7 +365,7 @@ describe('ErrorBanner', () => {
           },
         },
       };
-      useWeatherStore.setState({ error: complexError as any });
+      useWeatherStore.setState({ error: complexError as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('Complex error')).toBeInTheDocument();
     });
@@ -368,11 +374,11 @@ describe('ErrorBanner', () => {
   describe('Component State Management', () => {
     it('should reset expansion state when error changes', async () => {
       const user = userEvent.setup({ delay: null });
-      const error1 = {
+      const error1: ErrorWithDetails = {
         message: 'First error',
         details: { code: 500 },
       };
-      useWeatherStore.setState({ error: error1 as any });
+      useWeatherStore.setState({ error: error1 as unknown as string });
       const { rerender } = render(<ErrorBanner />);
 
       // Expand details
@@ -381,11 +387,11 @@ describe('ErrorBanner', () => {
       expect(await screen.findByText(/"code": 500/)).toBeInTheDocument();
 
       // Change error
-      const error2 = {
+      const error2: ErrorWithDetails = {
         message: 'Second error',
         details: { code: 404 },
       };
-      useWeatherStore.setState({ error: error2 as any });
+      useWeatherStore.setState({ error: error2 as unknown as string });
       rerender(<ErrorBanner />);
 
       // Details should be collapsed again
@@ -396,11 +402,11 @@ describe('ErrorBanner', () => {
 
     it('should reset expansion state when error is cleared', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'Error with details',
         details: { code: 500 },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       const { rerender } = render(<ErrorBanner />);
 
       // Expand details
@@ -416,7 +422,7 @@ describe('ErrorBanner', () => {
       expect(screen.queryByText('Weather Service Error')).not.toBeInTheDocument();
 
       // Set error again
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       rerender(<ErrorBanner />);
 
       // Details should be collapsed
@@ -467,11 +473,11 @@ describe('ErrorBanner', () => {
 
     it('should support keyboard navigation for details toggle', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithDetails = {
+      const errorWithDetails: ErrorWithDetails = {
         message: 'Error with details',
         details: { code: 500 },
       };
-      useWeatherStore.setState({ error: errorWithDetails as any });
+      useWeatherStore.setState({ error: errorWithDetails as unknown as string });
       render(<ErrorBanner />);
 
       const detailsButton = screen.getByText('Show details');
@@ -533,22 +539,22 @@ describe('ErrorBanner', () => {
     });
 
     it('should handle error with undefined details field', () => {
-      const errorWithUndefinedDetails = {
+      const errorWithUndefinedDetails: ErrorWithDetails = {
         message: 'Error message',
         details: undefined,
       };
-      useWeatherStore.setState({ error: errorWithUndefinedDetails as any });
+      useWeatherStore.setState({ error: errorWithUndefinedDetails as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('Error message')).toBeInTheDocument();
       expect(screen.queryByText('Show details')).not.toBeInTheDocument();
     });
 
     it('should handle error with null details field', () => {
-      const errorWithNullDetails = {
+      const errorWithNullDetails: ErrorWithDetails = {
         message: 'Error message',
         details: null,
       };
-      useWeatherStore.setState({ error: errorWithNullDetails as any });
+      useWeatherStore.setState({ error: errorWithNullDetails as unknown as string });
       render(<ErrorBanner />);
       expect(screen.getByText('Error message')).toBeInTheDocument();
       expect(screen.queryByText('Show details')).not.toBeInTheDocument();
@@ -556,11 +562,11 @@ describe('ErrorBanner', () => {
 
     it('should handle error with empty object details', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithEmptyDetails = {
+      const errorWithEmptyDetails: ErrorWithDetails = {
         message: 'Error message',
         details: {},
       };
-      useWeatherStore.setState({ error: errorWithEmptyDetails as any });
+      useWeatherStore.setState({ error: errorWithEmptyDetails as unknown as string });
       render(<ErrorBanner />);
 
       const showButton = screen.getByText('Show details');
@@ -571,11 +577,11 @@ describe('ErrorBanner', () => {
 
     it('should handle error with array details', async () => {
       const user = userEvent.setup({ delay: null });
-      const errorWithArrayDetails = {
+      const errorWithArrayDetails: ErrorWithDetails = {
         message: 'Error message',
         details: [1, 2, 3, 'error'],
       };
-      useWeatherStore.setState({ error: errorWithArrayDetails as any });
+      useWeatherStore.setState({ error: errorWithArrayDetails as unknown as string });
       render(<ErrorBanner />);
 
       const showButton = screen.getByText('Show details');
