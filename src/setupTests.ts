@@ -51,27 +51,25 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock IntersectionObserver (used by some UI components)
-global.IntersectionObserver = class IntersectionObserver implements globalThis.IntersectionObserver {
-  readonly root: Element | Document | null = null;
-  readonly rootMargin: string = '';
-  readonly thresholds: ReadonlyArray<number> = [];
-
+global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
   observe() {}
-  takeRecords(): IntersectionObserverEntry[] {
+  takeRecords() {
     return [];
   }
   unobserve() {}
-};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
 
 // Mock ResizeObserver (used by chart components)
-global.ResizeObserver = class ResizeObserver implements globalThis.ResizeObserver {
+global.ResizeObserver = class ResizeObserver {
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
-};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
 
 // Suppress console errors in tests (optional - uncomment if needed)
 // const originalError = console.error;
