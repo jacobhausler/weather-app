@@ -15,6 +15,9 @@ export function ErrorBanner() {
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null)
 
   useEffect(() => {
+    // Reset expansion state whenever error changes
+    setIsExpanded(false)
+
     if (error) {
       // Parse error message
       try {
@@ -33,7 +36,6 @@ export function ErrorBanner() {
     }
 
     setErrorInfo(null)
-    setIsExpanded(false)
     return undefined
   }, [error, clearError])
 

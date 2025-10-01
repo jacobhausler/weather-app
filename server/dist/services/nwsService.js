@@ -4,6 +4,7 @@
  */
 import axios from 'axios';
 import NodeCache from 'node-cache';
+import { logger } from '../utils/logger.js';
 // Cache TTL values (in seconds)
 const CACHE_TTL = {
     POINTS: 24 * 60 * 60, // 24 hours
@@ -178,13 +179,13 @@ export class NWSService {
             // Get list of stations
             const stationsData = await this.getStations(gridId, gridX, gridY);
             if (!stationsData.features || stationsData.features.length === 0) {
-                console.warn('No observation stations found for this location');
+                logger.warn('No observation stations found for this location');
                 return null;
             }
             // Try to get observation from the first station
             const firstStation = stationsData.features[0];
             if (!firstStation?.properties?.stationIdentifier) {
-                console.warn('Invalid station data received');
+                logger.warn('Invalid station data received');
                 return null;
             }
             const stationId = firstStation.properties.stationIdentifier;
@@ -192,7 +193,7 @@ export class NWSService {
             return observation;
         }
         catch (error) {
-            console.error('Error fetching current conditions:', error);
+            logger.error('Error fetching current conditions:', error);
             // Return null instead of throwing - current conditions are not critical
             return null;
         }
@@ -246,7 +247,7 @@ export class NWSService {
         }
         catch (error) {
             // Log error but don't throw - background refresh should be silent
-            console.error(`Failed to prefetch weather data for ${lat},${lon}:`, error);
+            logger.error(`Failed to prefetch weather data for ${lat},${lon}:`, error);
         }
     }
 }

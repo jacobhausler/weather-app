@@ -571,7 +571,6 @@ describe('ZipInput', () => {
     });
 
     it('should handle empty submission gracefully', async () => {
-      const user = userEvent.setup();
       render(<ZipInput />);
       const form = screen.getByPlaceholderText('Enter ZIP code').closest('form');
 

@@ -4,16 +4,20 @@
 
 The main header/navigation bar for the Weather Station application. Contains the application title, manual refresh button, and ZIP code input. Provides consistent branding and core navigation controls across all application states. Fixed at the top of the page for persistent access to key functions.
 
-## Props/API Interface
+This is a **pure layout component** with no props - it composes child components (RefreshButton and ZipInput) which manage their own state and interactions.
+
+## Component Interface
 
 ```typescript
-interface HeaderLayoutProps {
-  title?: string;           // Default: "HAUS Weather Station"
-  onRefresh: () => void;    // Callback for manual refresh
-  isRefreshing?: boolean;   // Loading state for refresh
-  className?: string;
-}
+// No props - pure layout component
+export function Header(): JSX.Element
 ```
+
+The Header component:
+- Has no props or configuration options
+- Acts solely as a layout container
+- Composes RefreshButton and ZipInput components directly
+- Child components handle their own data, state, and user interactions
 
 ## Layout and Visual Design
 
@@ -29,21 +33,19 @@ interface HeaderLayoutProps {
 - **Center**: Application title
 - **Right**: ZIP code input component
 
-### Desktop Layout (≥1024px)
+### Desktop Layout (≥768px)
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  [Refresh]         HAUS Weather Station         [75454] [Go]│
 └─────────────────────────────────────────────────────────────┘
 ```
 
+**Implementation**: Three-column layout using flexbox with `justify-between`:
+- Left column: RefreshButton
+- Center column: Title (text-3xl font-bold)
+- Right column: ZipInput (min-width: 280px)
+
 ### Mobile Layout (<768px)
-```
-┌────────────────────────────────────────┐
-│  [🔄]    HAUS Weather Station          │
-│                              [ZIP] [Go] │
-└────────────────────────────────────────┘
-```
-OR (stacked alternative):
 ```
 ┌────────────────────────────────────────┐
 │  [🔄] HAUS Weather Station             │
@@ -52,313 +54,366 @@ OR (stacked alternative):
 └────────────────────────────────────────┘
 ```
 
-### Styling Guidelines
-- **Height**: Fixed height (e.g., 64px desktop, 56px mobile)
-- **Background**: Themed background (light/dark mode support)
-- **Border**: Bottom border for visual separation
-- **Shadow**: Subtle shadow for depth (optional)
-- **Position**: Sticky or fixed at top of viewport
-- **Z-index**: High value to stay above content when scrolling
-- **Typography**:
-  - Title: Bold, larger font (e.g., 1.5rem desktop, 1.25rem mobile)
-  - Consistent with app's type scale
+**Implementation**: Two-row stacked layout:
+- Row 1: RefreshButton + centered title (flex layout with gap-2)
+- Row 2: ZipInput (full width)
+- Vertical spacing: gap-4 between rows
+
+### Styling Guidelines (Actual Implementation)
+
+**Container Styling**:
+- **Position**: Sticky at top (`sticky top-0`)
+- **Z-index**: 40 (`z-40`) to stay above content when scrolling
+- **Width**: Full width (`w-full`)
+- **Border**: Bottom border (`border-b`)
+- **Background**: Semi-transparent with backdrop blur
+  - `bg-background/95` - 95% opacity
+  - `backdrop-blur` - blur effect
+  - `supports-[backdrop-filter]:bg-background/60` - 60% opacity when backdrop-filter is supported
+- **Padding**: Container has `mx-auto px-4 py-4` (16px horizontal, 16px vertical)
+
+**Typography**:
+- Desktop title: `text-3xl font-bold` (1.875rem, 30px)
+- Mobile title: `text-2xl font-bold` (1.5rem, 24px)
+- Both use bold weight for prominence
+
+**Responsive Behavior**:
+- Breakpoint: `md` (768px) - not 1024px
+- Mobile: Two-row stacked layout with `flex-col gap-4`
+- Desktop: Three-column layout with `justify-between gap-4`
 
 ### Visual States
-- **Normal**: Default appearance
-- **Refreshing**: Refresh icon animates (spinning)
-- **Collapsed** (scroll): Optional - reduce height on scroll (mobile)
+- **Normal**: Default appearance with semi-transparent background
+- **Refreshing**: RefreshButton component handles its own spinning animation
+- **Scrolling**: Header remains visible due to sticky positioning with backdrop blur
 
 ## Component Integration
 
-The header contains or integrates with:
-1. **Refresh Button** (see refresh-button.md)
-2. **Title** (static text element)
-3. **ZIP Code Input** (see zip-input.md)
+The Header component directly composes the following child components:
 
-These are composed within the header layout but maintain their individual specifications.
+1. **RefreshButton** (`./RefreshButton`)
+   - Imported and rendered directly
+   - Manages its own state and refresh logic
+   - See refresh-button.md for specifications
+
+2. **Title** (static text element)
+   - Hard-coded as "HAUS Weather Station"
+   - Not configurable via props
+   - Rendered as `<h1>` element
+
+3. **ZipInput** (`./ZipInput`)
+   - Imported and rendered directly
+   - Manages its own state and submission logic
+   - See zip-input.md for specifications
+
+**Key Principle**: The Header component is purely for layout. It does NOT:
+- Accept callbacks from parent components
+- Manage state for child components
+- Pass props to child components
+- Handle business logic
+
+All child components are self-contained and manage their own interactions with global state/stores.
 
 ## Data Requirements
 
-### Props Data
-- Title text (configurable via props, default provided)
-- Refresh callback function
-- Refresh loading state
+### No Props
+- The Header component accepts no props
+- All configuration is handled by child components
 
 ### No API Calls
-- Header itself makes no API calls
-- Coordinates actions via callbacks
-- Child components handle their own data needs
+- Header makes no API calls
+- Header has no data requirements
+- Child components access stores/hooks directly for their data needs
 
 ## User Interactions
 
 ### Title
-- **Non-interactive** by default
-- Optional: Click to return to home/default view (future enhancement)
-- Acts as branding element
+- **Non-interactive** - acts solely as branding element
+- No click handlers or hover states
+- Provides visual identity for the application
 
 ### Layout Interactions
-- Header remains accessible while scrolling
-- Child components (refresh button, ZIP input) handle their own interactions
-- Maintains visibility of critical controls
+- Header remains accessible while scrolling (sticky positioning)
+- Child components (RefreshButton, ZipInput) handle all user interactions independently
+- Header provides no interaction handling itself
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Full horizontal layout
-- Title centered with ample spacing
-- Controls positioned at left and right edges
-- Comfortable padding and spacing
+### Desktop (≥768px)
+**Implementation**: Uses `hidden md:block` to show only on md+ screens
 
-### Tablet (768px - 1023px)
-- Similar to desktop but adjusted spacing
-- May reduce title font size slightly
-- Maintain three-column layout
+- Three-column horizontal layout using flexbox
+- `flex items-center justify-between gap-4`
+- Left: RefreshButton in flex container
+- Center: Title with `text-3xl font-bold`
+- Right: ZipInput with `min-w-[280px]` to ensure sufficient space
+- Space-between distributes available space automatically
 
 ### Mobile (<768px)
-**Option 1 - Single Row**:
-- Refresh button (left)
-- Title (center, may truncate if needed)
-- ZIP input (right, compact form)
+**Implementation**: Uses `md:hidden` to show only on small screens
 
-**Option 2 - Two Rows**:
-- Row 1: Refresh button + Title
-- Row 2: ZIP input (full width)
+- Two-row stacked layout: `flex flex-col gap-4`
+- **Row 1**: Refresh button and title
+  - `flex items-center gap-2`
+  - RefreshButton on left
+  - Title with `flex-1 text-center text-2xl font-bold`
+- **Row 2**: Full-width ZipInput
+- 16px (1rem) gap between rows
 
-**Recommended**: Option 1 for simplicity, with title truncation if needed
-
-### Very Small Screens (<375px)
-- Consider abbreviating title (e.g., "HAUS Weather")
-- Ensure all controls remain accessible
-- May stack to two rows if necessary
+### Breakpoint Strategy
+- Single breakpoint at `md` (768px)
+- Two completely separate layout structures (not progressive enhancement)
+- Mobile-first approach with desktop as override
 
 ## Accessibility Considerations
 
-### Semantic HTML
+### Semantic HTML (Actual Implementation)
 ```html
-<header role="banner">
-  <nav aria-label="Primary navigation">
-    <button aria-label="Refresh weather data">
-      <!-- Refresh button -->
-    </button>
-
-    <h1>HAUS Weather Station</h1>
-
-    <div role="search" aria-label="ZIP code search">
-      <!-- ZIP input component -->
+<header class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur...">
+  <div class="container mx-auto px-4 py-4">
+    <!-- Mobile or Desktop layout divs -->
+    <div>
+      <!-- RefreshButton component -->
+      <h1>HAUS Weather Station</h1>
+      <!-- ZipInput component -->
     </div>
-  </nav>
+  </div>
 </header>
 ```
 
-### ARIA Attributes
-- `role="banner"` on header element
-- Title as `<h1>` for proper document structure
-- Child components have appropriate ARIA labels
+**Notes**:
+- Uses semantic `<header>` element
+- Title properly wrapped in `<h1>` for document structure
+- No explicit `role="banner"` (implicit from `<header>`)
+- No `<nav>` wrapper (header is not primary navigation)
+- Child components handle their own ARIA attributes
 
 ### Keyboard Navigation
-- Tab order: Refresh button → ZIP input → Submit button
-- Skip link for keyboard users to jump to main content (optional)
-- Focus indicators visible on all interactive elements
+- Natural tab order based on DOM structure
+- Mobile: RefreshButton → ZipInput
+- Desktop: RefreshButton → ZipInput
+- Child components provide their own focus indicators
+- No skip links implemented in current version
 
 ### Screen Reader Support
-- Header announced as "banner" landmark
-- Title read as main heading
-- Controls announced clearly with their purpose
-- Refresh state announced when loading
+- `<header>` provides implicit "banner" landmark
+- `<h1>` properly identifies main heading
+- Child components (RefreshButton, ZipInput) provide their own ARIA labels and announcements
+- Header itself provides no additional ARIA annotations
 
 ### Visual Considerations
-- High contrast between text and background
-- Works in both light and dark modes
-- Focus indicators meet WCAG standards
-- Sufficient touch target sizes (44x44px minimum)
+- Background adapts to light/dark mode via `bg-background` token
+- Semi-transparent background with backdrop blur for visual depth
+- Border provides visual separation from content
+- Child components handle their own touch targets and focus states
 
 ## Loading States
 
-### Normal State
-- All controls enabled and interactive
-- Static appearance
+The Header component itself has no loading states. All state management is delegated to child components:
 
-### Refreshing State
-- Refresh button shows spinning animation
-- Refresh button may be disabled during refresh
-- Other controls remain functional
-- No blocking modal or overlay
+- **RefreshButton**: Manages its own loading/spinning animation state
+- **ZipInput**: Manages its own submission/validation states
+- **Header**: Remains static regardless of application state
 
-### Error State
-- Header remains functional
-- Error handling delegated to error banner component
-- Header itself doesn't show error states
+The header provides a stable, always-visible container for its child components.
 
 ## Example Usage
 
 ```tsx
-import { HeaderLayout } from '@/components/layout/HeaderLayout';
-import { useWeatherData } from '@/hooks/useWeatherData';
+import { Header } from '@/components/Header'
 
 function App() {
-  const { refresh, isRefreshing } = useWeatherData();
-
   return (
-    <div className="app">
-      <HeaderLayout
-        onRefresh={refresh}
-        isRefreshing={isRefreshing}
-      />
+    <div className="min-h-screen">
+      <Header />
       {/* Main content */}
     </div>
-  );
+  )
 }
 ```
 
-### Alternative with Composition
-```tsx
-import { Header } from '@/components/layout/Header';
-import { RefreshButton } from '@/components/RefreshButton';
-import { ZipInput } from '@/components/ZipInput';
-
-function App() {
-  return (
-    <Header>
-      <Header.Left>
-        <RefreshButton />
-      </Header.Left>
-
-      <Header.Center>
-        <h1>HAUS Weather Station</h1>
-      </Header.Center>
-
-      <Header.Right>
-        <ZipInput />
-      </Header.Right>
-    </Header>
-  );
-}
-```
+**Key Points**:
+- No props needed
+- No configuration required
+- Simply import and render
+- Child components self-configure via their own hooks/stores
 
 ## Edge Cases
 
 1. **Very Long Title**:
-   - Truncate with ellipsis on small screens
-   - Ensure critical controls remain visible
+   - Title is hard-coded as "HAUS Weather Station"
+   - Mobile uses `text-2xl`, desktop uses `text-3xl`
+   - On mobile row 1, title uses `flex-1 text-center` which handles overflow gracefully
+   - No ellipsis needed - title is short enough
 
 2. **Simultaneous Interactions**:
-   - User clicks refresh while entering ZIP
-   - Both should function independently
+   - RefreshButton and ZipInput function independently
+   - No shared state between components
+   - Both can be interacted with simultaneously without conflicts
 
 3. **Scrolling Behavior**:
-   - Header stays fixed/sticky
-   - Content scrolls beneath header
-   - Z-index prevents content overlapping header
+   - Sticky positioning (`sticky top-0`) keeps header visible
+   - `z-40` ensures header stays above content
+   - Backdrop blur creates visual separation from scrolling content
 
 4. **Theme Changes**:
-   - Smooth transition between light/dark modes
-   - All elements update consistently
+   - `bg-background` token automatically adapts to theme
+   - Border uses theme-aware `border` color
+   - Transition handled by parent theme provider
 
-5. **Print Styles**:
-   - Header should appear in printed output
-   - Consider simplified version for print
+5. **Orientation Change** (mobile):
+   - Layout based on viewport width, not orientation
+   - Automatically adapts on orientation change
+   - No special handling needed
 
-6. **Orientation Change** (mobile):
-   - Adjust layout smoothly on portrait/landscape switch
-   - Maintain functionality in both orientations
+## Actual Implementation Approach
 
-## Composition vs. Monolithic
+### Composition Pattern Used
+The Header component follows a **direct composition** pattern:
+- `Header` - Pure layout container (this component)
+- `RefreshButton` - Imported and rendered directly
+- `ZipInput` - Imported and rendered directly
 
-### Recommended Approach: Composition
-Break header into smaller components:
-- `Header` (container)
-- `RefreshButton` (separate component)
-- `ZipInput` (separate component)
+**Implementation Details**:
+```tsx
+import { RefreshButton } from './RefreshButton'
+import { ZipInput } from './ZipInput'
 
-**Advantages**:
-- Better separation of concerns
-- Easier testing
-- More reusable components
-- Clearer responsibilities
-
-### Container Responsibilities
-The header layout component:
-- Provides structural layout
-- Positions child components
-- Handles responsive behavior
-- Manages spacing and alignment
-- Does NOT handle business logic of children
-
-## Styling Approach
-
-### CSS Structure
-```css
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  padding: 0 1rem;
-  background: var(--header-bg);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.header-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-  flex-grow: 1;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  min-width: 120px; /* Ensure space for button */
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 200px; /* Ensure space for ZIP input */
-}
-
-@media (max-width: 768px) {
-  .header {
-    height: 56px;
-    padding: 0 0.5rem;
-  }
-
-  .header-title {
-    font-size: 1.25rem;
-  }
-
-  .header-right {
-    min-width: 150px;
-  }
+export function Header() {
+  return (
+    <header className="...">
+      {/* Layout divs with child components */}
+      <RefreshButton />
+      <h1>HAUS Weather Station</h1>
+      <ZipInput />
+    </header>
+  )
 }
 ```
 
+### Header Responsibilities
+The header component ONLY:
+- Provides structural layout (flexbox containers)
+- Positions child components responsively
+- Handles responsive breakpoints (mobile vs desktop)
+- Manages spacing and alignment (gap, padding)
+- Provides sticky positioning and visual styling
+
+The header does NOT:
+- Accept props from parent
+- Pass props to children
+- Manage state
+- Handle user interactions
+- Make API calls
+- Coordinate between child components
+
+## Styling Approach
+
+### Actual Tailwind CSS Implementation
+
+**Header Container**:
+```tsx
+<header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+```
+
+**Inner Container**:
+```tsx
+<div className="container mx-auto px-4 py-4">
+```
+
+**Mobile Layout** (visible on <768px):
+```tsx
+<div className="md:hidden">
+  <div className="flex flex-col gap-4">
+    {/* Row 1: Refresh + Title */}
+    <div className="flex items-center gap-2">
+      <RefreshButton />
+      <h1 className="flex-1 text-center text-2xl font-bold">
+        HAUS Weather Station
+      </h1>
+    </div>
+    {/* Row 2: ZIP input */}
+    <ZipInput />
+  </div>
+</div>
+```
+
+**Desktop Layout** (visible on ≥768px):
+```tsx
+<div className="hidden md:block">
+  <div className="flex items-center justify-between gap-4">
+    {/* Left */}
+    <div className="flex items-center">
+      <RefreshButton />
+    </div>
+    {/* Center */}
+    <h1 className="text-3xl font-bold">HAUS Weather Station</h1>
+    {/* Right */}
+    <div className="min-w-[280px]">
+      <ZipInput />
+    </div>
+  </div>
+</div>
+```
+
+**Key Tailwind Patterns**:
+- Responsive visibility: `md:hidden` / `hidden md:block`
+- Flexbox layouts: `flex`, `flex-col`, `items-center`, `justify-between`
+- Spacing: `gap-2`, `gap-4`, `px-4 py-4`
+- Sizing: `min-w-[280px]`, `flex-1`, `w-full`
+- Typography: `text-2xl`, `text-3xl`, `font-bold`, `text-center`
+- Positioning: `sticky top-0 z-40`
+- Effects: `backdrop-blur`, `bg-background/95`, `border-b`
+
 ## Performance Considerations
 
-- Avoid re-renders of header when unrelated state changes
-- Use React.memo for header component
-- Memoize callback functions passed to children
-- Optimize animations (use CSS transforms for smooth performance)
-- Lazy load child components if beneficial
+**Current Implementation**:
+- Header has no props, so no prop-change re-renders
+- Header has no state, so no state-change re-renders
+- Re-renders only when:
+  - Parent component re-renders (but Header itself is cheap to render)
+  - Child components re-render (isolated to their own subtrees)
+- No React.memo needed - component is trivial and has no props
+- No memoization needed - no callbacks or computed values
+- Backdrop blur uses CSS, not JavaScript
+- Two separate DOM structures for mobile/desktop (trade-off for simplicity)
+
+**Optimization Opportunities** (not currently implemented):
+- Could memoize Header with `React.memo()` to prevent parent re-renders
+- Could lazy load child components (unlikely to provide benefit)
 
 ## Testing Requirements
 
-- Render header with all child components
-- Verify layout at all responsive breakpoints
-- Test refresh callback invocation
-- Test with different title lengths
-- Verify sticky/fixed positioning behavior
-- Test keyboard navigation through header elements
-- Test with screen reader
-- Verify tab order
+**Layout Testing**:
+- Render header successfully
+- Verify both mobile and desktop layouts render
+- Verify proper responsive breakpoint switching at 768px
+- Verify sticky positioning behavior
+- Verify z-index keeps header above scrolling content
+- Test backdrop blur effect renders correctly
+
+**Component Integration**:
+- Verify RefreshButton renders in correct position
+- Verify ZipInput renders in correct position
+- Verify title renders with correct text
+- Verify child components are interactive
+
+**Responsive Testing**:
+- Test at <768px (mobile layout visible)
+- Test at ≥768px (desktop layout visible)
+- Verify only one layout visible at a time
+- Verify spacing and alignment at both breakpoints
+- Test on actual mobile devices
+
+**Accessibility Testing**:
+- Verify `<header>` semantic element
+- Verify `<h1>` for title
+- Test keyboard navigation through child components
+- Verify natural tab order (RefreshButton → ZipInput)
+- Test with screen reader (banner landmark announcement)
+
+**Visual Testing**:
 - Test in both light and dark modes
-- Verify z-index stacking context
-- Test with child components in various states
-- Verify proper spacing and alignment
-- Test on actual mobile devices (touch targets)
-- Test orientation changes on mobile
-- Verify print styles
+- Verify border and background colors adapt to theme
+- Verify backdrop blur visual effect
+- Test with different viewport widths

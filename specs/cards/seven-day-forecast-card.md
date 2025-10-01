@@ -2,33 +2,63 @@
 
 ## Purpose and Overview
 
-Displays a 7-day weather forecast in a horizontal row layout. Each day shows combined day/night forecast information including high/low temperatures, weather icons, precipitation probability, and wind details. Clicking on any day opens a modal with comprehensive forecast details.
+Displays a 7-day weather forecast in a horizontal row layout. Each day shows combined day/night forecast information including high/low temperatures, weather icons, precipitation probability, and wind details. Clicking on any day opens an internal modal with comprehensive forecast details.
 
 ## Props/API Interface
 
 ```typescript
-interface SevenDayForecastCardProps {
-  forecast: DailyForecast[];
-  isLoading?: boolean;
-  onDayClick: (day: DailyForecast) => void;
-  className?: string;
+interface SevenDayForecastProps {
+  forecast: ForecastPeriod[];
 }
 
-interface DailyForecast {
-  date: string;              // ISO 8601 date
-  dayOfWeek: string;         // e.g., "Monday", "Tue"
-  highTemp: number;          // Fahrenheit
-  lowTemp: number;           // Fahrenheit
-  dayIcon: string;           // NWS icon URL
-  nightIcon: string;         // NWS icon URL
-  shortForecast: string;     // e.g., "Partly Cloudy"
-  precipProbability: number; // 0-100
-  windSpeed: string;         // e.g., "10 to 15 mph"
-  windDirection: string;     // e.g., "NW", "South"
-  detailedForecast: string;  // Full forecast text
-  isDaytime: boolean;        // For first period only
+// ForecastPeriod is defined in @/types/weather
+interface ForecastPeriod {
+  number: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  isDaytime: boolean;
+  temperature: number;
+  temperatureUnit: string;
+  temperatureTrend?: string;
+  probabilityOfPrecipitation?: {
+    value: number | null;
+  };
+  windSpeed: string;
+  windDirection: string;
+  icon: string;
+  shortForecast: string;
+  detailedForecast: string;
 }
 ```
+
+## Dependencies and Imports
+
+```typescript
+// React
+import { useState } from 'react'
+
+// Types
+import { ForecastPeriod } from '@/types/weather'
+
+// UI Components (shadcn/ui)
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+// Icons (Lucide React)
+import { Droplets, Wind } from 'lucide-react'
+
+// State Management
+import { useUnitStore, getTempUnit } from '@/stores/unitStore'
+
+// Sub-components
+import { ForecastModal } from './ForecastModal'
+```
+
+### Key Dependencies
+- **shadcn/ui**: Card components for layout structure
+- **Lucide React**: Icons for precipitation and wind indicators
+- **Zustand**: Unit system state management via `useUnitStore`
+- **ForecastModal**: Internal modal component for detailed forecast view
 
 ## Layout and Visual Design
 
@@ -52,28 +82,29 @@ interface DailyForecast {
 ### Individual Day Cell
 Each day displays (top to bottom):
 1. **Day Label**: Day of week (e.g., "Mon", "Tuesday")
-   - Today: "Today" instead of day name
-   - Tomorrow: "Tomorrow" instead of day name
-2. **Weather Icon**: Primary icon (daytime or most representative)
-3. **High Temperature**: Larger, bold font
-4. **Low Temperature**: Smaller, muted color
-5. **Precipitation Probability**: Display if > 0% (e.g., "20%")
-6. **Wind Icon**: Small wind indicator
-7. **Wind Speed**: Abbreviated format (e.g., "10 mph")
+   - Today: "Today" instead of day name (index 0)
+   - Names are cleaned to remove " Night" and " Afternoon" suffixes
+2. **Weather Icon**: Primary icon from day period (64x64px)
+3. **Short Forecast**: Small muted text (e.g., "Partly Cloudy")
+4. **Temperatures**:
+   - High Temperature: Larger (text-lg), bold font
+   - Low Temperature: Smaller (text-sm), muted color (from night period if available)
+5. **Precipitation Probability**: Display if value exists (with Droplets icon)
+6. **Wind Info**: Wind direction + speed (with Wind icon, text-[10px])
 
 ### Styling Guidelines
-- Equal width columns for each day
-- Vertical centering of content within cells
-- Hover state: Subtle background change, cursor pointer
-- Active/Focus state: Border highlight
-- Card border and shadow consistent with other cards
-- Adequate spacing between elements within each day
+- Each day cell: `min-w-[140px]` with `flex flex-col items-center gap-2`
+- Button wrapper with `rounded-lg border p-4`
+- Hover state: `hover:bg-muted` with cursor pointer
+- Card uses shadcn/ui Card components (Card, CardHeader, CardTitle, CardContent)
+- Horizontal scroll container: `overflow-x-auto` with `flex gap-4 pb-2`
+- Icons: Lucide React icons (Droplets, Wind) at size `h-3 w-3`
 
 ### Icon Handling
-- Use NWS-provided weather icons from API response
-- Fallback to generic weather icons if NWS icons fail to load
-- Icons should be consistent size (e.g., 48x48px or 64x64px)
-- Consider showing both day and night icons or toggling between them
+- Weather icons: NWS-provided from API response (`icon` field in ForecastPeriod)
+- Icon size: 64x64px (`h-16 w-16`)
+- Alt text: Uses `shortForecast` field for accessibility
+- No fallback icons implemented (relies on NWS API reliability)
 
 ## Data Requirements
 
@@ -82,22 +113,34 @@ Each day displays (top to bottom):
 GET /gridpoints/{office}/{gridX},{gridY}/forecast
 ```
 
+Returns array of `ForecastPeriod` objects (passed directly as props).
+
 ### Data Transformation
-1. **Combine Day/Night Periods**: NWS returns separate periods for day and night
-   - Group consecutive day/night periods into single day forecast
-   - Extract high (from day period) and low (from night period)
-   - Use day icon as primary, store night icon for modal
 
-2. **Process 7 Days**:
-   - If first period is nighttime, combine with next day's daytime
-   - Ensure exactly 7 days are displayed
-   - Handle edge case where forecast doesn't have full 7 days
+The component performs the following transformations:
 
-3. **Format Data**:
-   - Convert date strings to day-of-week labels
-   - Parse temperature values (remove "°F")
-   - Extract precipitation probability from detailed forecast if not in period
-   - Parse wind speed and direction
+1. **Combine Day/Night Periods**:
+   - Iterates through forecast array
+   - Groups consecutive daytime periods with their following nighttime periods
+   - Creates `DayForecast` objects: `{ day: ForecastPeriod, night?: ForecastPeriod }`
+   - Skips standalone nighttime periods at start of forecast
+
+2. **Limit to 7 Days**:
+   - Takes first 7 grouped forecasts (`.slice(0, 7)`)
+   - Displays fewer if less than 7 available
+
+3. **Unit Conversion**:
+   - **Temperature**: Converts from Fahrenheit (NWS default) to Celsius if metric system selected
+     - Formula: `(tempF - 32) * 5 / 9`, rounded
+   - **Wind Speed**: Converts from mph to km/h if metric system selected
+     - Extracts numeric value from strings like "10 mph"
+     - Formula: `speedMph * 1.60934`, rounded
+     - Replaces "mph" with "km/h" in string
+
+4. **Day Name Formatting**:
+   - First day (index 0): Always displays "Today"
+   - Other days: Cleans name by removing " Night" and " Afternoon" suffixes
+   - Example: "Monday Night" → "Monday"
 
 ### Caching Strategy
 - Cache forecast data for 1 hour (server-side)
@@ -106,188 +149,232 @@ GET /gridpoints/{office}/{gridX},{gridY}/forecast
 
 ## User Interactions
 
+### Internal State Management
+The component manages its own modal state using React hooks:
+- `selectedPeriod`: Stores clicked `ForecastPeriod` (initially null)
+- `modalOpen`: Boolean state for modal visibility (initially false)
+
 ### Day Click
 - Click on any day cell to open forecast detail modal
-- Pass full `DailyForecast` object to modal
-- Modal displays comprehensive information (see forecast-day-modal.md)
-- Keyboard accessible: Enter/Space to activate
+- Clicking sets `selectedPeriod` to the day's `ForecastPeriod` and sets `modalOpen` to true
+- Modal component: `ForecastModal` (receives `period`, `open`, and `onClose` props)
+- Modal displays comprehensive forecast information
+- Keyboard accessible: Button elements support Enter/Space natively
 
 ### Hover State
-- Subtle background color change
-- Cursor changes to pointer
-- Optional: Show brief tooltip with short forecast text
+- Background color change: `hover:bg-muted`
+- Cursor changes to pointer (native button behavior)
+- Smooth transition with `transition-colors` class
 
 ### Touch Interaction (Mobile)
-- Tap to open modal
-- No hover state on touch devices
-- Ensure adequate touch target size (min 44x44px)
+- Tap to open modal (native button behavior)
+- Touch target size: Min 140px wide × adequate height (exceeds 44px minimum)
+- Horizontal scroll enabled via `overflow-x-auto` on container
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- 7 equal-width columns
-- Full day names (e.g., "Monday")
-- Comfortable spacing between elements
-- Icons at full size (64x64px)
+### Implementation Approach
+The component uses a **single responsive strategy** across all screen sizes:
 
-### Tablet (768px - 1023px)
-- 7 equal-width columns (may be slightly narrower)
-- Abbreviated day names (e.g., "Mon")
-- Slightly reduced icon size (48x48px)
-- Maintain readability
+- **Horizontal scroll layout**: All days rendered in flex row with `overflow-x-auto`
+- **Fixed minimum width**: Each day cell maintains `min-w-[140px]`
+- **Natural scrolling**: Native browser scroll behavior (no snap points)
+- **Consistent design**: Same layout/spacing across all breakpoints
+- **Icons**: Fixed size `h-16 w-16` (64x64px) on all devices
+- **Day names**: Full cleaned names on all devices (e.g., "Monday", "Today")
 
-### Mobile (<768px)
-- **Option 1**: Horizontal scroll with 7 columns
-  - Each day maintains minimum width
-  - Snap scrolling for better UX
-  - Scroll indicators at edges
-
-- **Option 2**: Show only 5 visible days with scroll
-  - Horizontal scroll to see remaining days
-  - Current day always visible
-
-- **Option 3**: Compact 7-column layout
-  - Very abbreviated labels ("M", "T", "W")
-  - Smaller fonts and icons
-  - Vertical stacking of info
-
-**Recommended**: Option 1 with horizontal scroll and snap points
+### All Screen Sizes
+- Container: `overflow-x-auto` with `flex gap-4 pb-2`
+- Day cells: `min-w-[140px]` ensures readability and prevents cramping
+- Horizontal scroll automatically appears when needed
+- Touch-friendly scrolling on mobile devices
+- No breakpoint-specific variations
 
 ## Accessibility Considerations
 
 ### Semantic HTML
 ```html
-<section aria-label="7-day weather forecast">
-  <h2>7-Day Forecast</h2>
-  <div role="list">
-    <button role="listitem" aria-label="Monday: Partly cloudy, high 82, low 65, 20% chance of rain">
-      <!-- Day content -->
-    </button>
-  </div>
-</section>
+<Card>
+  <CardHeader>
+    <CardTitle>7-Day Forecast</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="overflow-x-auto">
+      <div className="flex gap-4 pb-2">
+        <button onClick={handleClick} className="...">
+          <!-- Day content -->
+        </button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
 ```
 
-### ARIA Labels
-- Each day cell: Descriptive label with all key information
-- Example: "Monday: Partly cloudy with high of 82 degrees and low of 65 degrees. 20% chance of precipitation. Wind from northwest at 10 miles per hour."
-- Icon alt text should describe weather condition
+### Current Implementation
+- **Button elements**: Native semantic buttons for each day cell
+- **Alt text on images**: Uses `shortForecast` field (e.g., "Partly Cloudy")
+- **No explicit ARIA labels**: Relies on visible text and image alt text
+- **Icon labels**: Lucide icons (Droplets, Wind) are decorative, adjacent to text
 
 ### Keyboard Navigation
-- Tab through each day in logical order (left to right)
-- Arrow keys for navigation (optional enhancement)
-- Enter/Space to open day detail modal
-- Visible focus indicators
+- **Tab navigation**: Native button tab order (left to right)
+- **Activation**: Enter/Space to open modal (native button behavior)
+- **Focus indicators**: Browser default focus styles (could be enhanced)
+- **Modal**: ForecastModal handles its own keyboard interactions
 
-### Screen Reader Support
-- Announce temperatures with "degrees" unit
-- Announce precipitation with "percent" unit
-- Announce complete forecast summary for each day
-- Indicate which day is today/tomorrow
+### Screen Reader Considerations
+**Current gaps** (opportunities for enhancement):
+- No comprehensive ARIA labels summarizing all day information
+- Temperature units announced only as "°" symbol + unit letter
+- Precipitation and wind lack descriptive labels
+- "Today" label not explicitly announced as current day
 
 ### Color Considerations
-- Don't rely solely on color to convey information
-- Ensure sufficient contrast for temperature text
-- Precipitation percentage should be readable in both themes
+- Text contrast: Uses Tailwind's semantic colors (foreground/muted-foreground)
+- Theme support: Works in both light and dark modes
+- Information not color-dependent: All data has text labels
+- Icons: Supplementary to text, not primary information source
 
 ## Loading States
 
-### Initial Load
-```
-┌───────────────────────────────────────────────────────────┐
-│  7-Day Forecast                                           │
-├───────────────────────────────────────────────────────────┤
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
-│  │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│        │
-│  │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│        │
-│  │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│ │▓▓▓▓│        │
-│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘        │
-└───────────────────────────────────────────────────────────┘
-```
-- Skeleton screens with 7 placeholder day cells
-- Pulsing animation on skeleton elements
-- Maintain layout structure during loading
+### Current Implementation
+**No loading states implemented in this component.**
 
-### Refresh
-- Non-interrupting refresh (no skeleton replacement)
-- Data updates smoothly without layout shift
-- Optional: Subtle loading indicator in card header
+The component expects the parent to handle loading states:
+- Parent component should conditionally render the `SevenDayForecast` component only when data is available
+- Parent typically uses skeleton/loading components during initial fetch
+- Component renders immediately once `forecast` prop contains data
 
-### Error State
-- Display error message in card
-- Retry button
-- Preserve card structure
+### Refresh Behavior
+- Parent handles background refresh
+- Component re-renders with updated data
+- No visual loading indicators during refresh
+- Smooth data updates without interruption
+
+### Error Handling
+**No error states in this component.**
+- Parent component handles API errors
+- Errors typically displayed in global error banner
+- Component not rendered if forecast data unavailable
 
 ## Example Usage
 
 ```tsx
-import { SevenDayForecastCard } from '@/components/weather/SevenDayForecastCard';
-import { ForecastDayModal } from '@/components/weather/ForecastDayModal';
-import { useWeatherData } from '@/hooks/useWeatherData';
-import { useState } from 'react';
+import { SevenDayForecast } from '@/components/SevenDayForecast';
+import { useWeatherStore } from '@/stores/weatherStore';
 
-function WeatherDashboard({ zipCode }: { zipCode: string }) {
-  const { forecast, isLoading } = useWeatherData(zipCode);
-  const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null);
+function WeatherDashboard() {
+  const { weatherData } = useWeatherStore();
+
+  // Component only renders when forecast data is available
+  if (!weatherData?.forecast) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <>
-      <SevenDayForecastCard
-        forecast={forecast}
-        isLoading={isLoading}
-        onDayClick={setSelectedDay}
-        className="mb-4"
-      />
-      <ForecastDayModal
-        day={selectedDay}
-        isOpen={!!selectedDay}
-        onClose={() => setSelectedDay(null)}
-      />
-    </>
+    <SevenDayForecast forecast={weatherData.forecast} />
   );
 }
 ```
 
+**Key points:**
+- Component manages its own modal state internally
+- No `onDayClick` callback needed
+- `ForecastModal` is rendered internally by the component
+- Parent only needs to pass `forecast` array of `ForecastPeriod` objects
+- Parent handles loading/error states before rendering component
+
 ## Edge Cases
 
+### Handled by Implementation
+
 1. **Partial Data**: Fewer than 7 days available
-   - Display available days only
-   - Show message: "X-day forecast" instead of "7-day"
+   - Displays all available grouped days up to 7
+   - Title remains "7-Day Forecast" regardless of count
+   - No special messaging for partial forecasts
 
 2. **First Period is Night**:
-   - Combine with next day's daytime period
-   - Ensure proper high/low assignment
+   - Skipped during grouping loop
+   - Only creates `DayForecast` objects starting with daytime periods
+   - Nighttime-first scenarios handled gracefully
 
-3. **Missing Data Points**:
-   - Precipitation: Default to 0% if not available
-   - Wind: Show "Calm" if speed is 0 or missing
-   - Icon: Use fallback generic icon
+3. **Missing Night Period**:
+   - `night` field is optional in `DayForecast` interface
+   - Low temperature not displayed if night period missing
+   - Only high temperature shown in this case
 
-4. **Long Wind Descriptions**:
-   - Truncate or abbreviate (e.g., "10 to 15 mph" → "10-15 mph")
+4. **Missing Precipitation Data**:
+   - Only displays if `probabilityOfPrecipitation.value` exists and is not null
+   - No "0%" display, icon omitted entirely if data missing
 
-5. **Temperature Extremes**:
-   - Very high/low temps may need adjusted spacing
-   - Consider showing warning icon for extreme temps
+5. **Missing Wind Data**:
+   - `convertWindSpeed()` returns "N/A" if `windSpeed` is falsy
+   - Regex match failure returns original windSpeed string
+   - Always displays wind info (doesn't conditionally hide)
+
+### Not Currently Handled
+
+1. **Long Wind Descriptions**:
+   - No truncation or abbreviation
+   - Text wrapping handled by container width (`text-[10px]`)
+
+2. **Temperature Extremes**:
+   - No special handling for extreme values
+   - No warning icons or special styling
 
 ## Performance Considerations
 
-- Memoize day cell components
-- Use React.memo for individual day cells
-- Lazy load icons (with loading placeholder)
-- Optimize re-renders when unrelated state changes
-- Debounce horizontal scroll events on mobile
+### Current Implementation
+- **No memoization**: Component re-renders on any prop change
+- **No React.memo**: Day cells are inline button elements, not separate components
+- **Direct iteration**: Maps over `sevenDays` array inline
+- **State updates**: Two separate state variables (`selectedPeriod`, `modalOpen`)
+
+### Optimization Opportunities
+- Could memoize `groupedForecast` and `sevenDays` calculations
+- Could extract day cell to separate memoized component
+- Could combine modal state into single object
+- Unit store subscription causes re-renders when unit system changes
 
 ## Testing Requirements
 
-- Render with full 7 days of data
+### Component Behavior Tests
+- Render with full 14 periods (7 day/night pairs)
 - Render with partial data (< 7 days)
-- Render when first period is nighttime
-- Test day click interaction and modal opening
-- Test responsive layouts at all breakpoints
-- Verify keyboard navigation
-- Test with screen reader
-- Verify "Today" and "Tomorrow" labels
-- Test with missing optional data
-- Test horizontal scrolling on mobile
-- Verify color contrast in both themes
-- Test icon loading and fallback behavior
+- Render when first period is nighttime (should skip it)
+- Test day click opens modal with correct period data
+- Test modal close button functionality
+- Verify "Today" label for first day (index 0)
+- Verify day name cleaning (removes " Night", " Afternoon")
+
+### Data Transformation Tests
+- Verify day/night period grouping logic
+- Test temperature conversion (F to C) when metric mode enabled
+- Test wind speed conversion (mph to km/h) when metric mode enabled
+- Test temperature display in imperial mode (no conversion)
+- Test wind speed parsing from various formats
+
+### Unit System Integration Tests
+- Switch unit system and verify temperature updates
+- Switch unit system and verify wind speed updates
+- Verify temperature unit symbol changes (°F vs °C)
+- Verify wind speed unit changes (mph vs km/h)
+
+### Missing Data Tests
+- Test with missing precipitation data (should not display)
+- Test with missing night period (should only show high temp)
+- Test with null precipitation values
+- Test with missing/malformed wind speed strings
+
+### UI/Visual Tests
+- Verify horizontal scroll behavior on narrow viewports
+- Verify all days have min-width of 140px
+- Verify hover states on buttons
+- Test in light and dark modes
+- Verify icon sizes (64x64px)
+- Verify Lucide icon rendering (Droplets, Wind)
+
+### Integration Tests
+- Test with real NWS API response data
+- Verify NWS icon URLs load correctly
+- Test modal interaction workflow end-to-end

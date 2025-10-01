@@ -6,6 +6,7 @@
 
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
+import { logger } from '../utils/logger.js';
 
 // Cache TTL: 1 hour (UV changes slowly during the day)
 const CACHE_TTL = 60 * 60; // 1 hour in seconds
@@ -55,7 +56,7 @@ export class UVService {
     this.cache = new NodeCache({ stdTTL: CACHE_TTL, checkperiod: 120 });
 
     if (!this.isEnabled) {
-      console.warn(
+      logger.warn(
         'UV Index service disabled: OPENWEATHER_API_KEY not configured. UV Index will not be available.'
       );
     }
@@ -153,7 +154,7 @@ export class UVService {
           axiosError.response?.status === 401 ||
           axiosError.response?.status === 429
         ) {
-          console.error('UV Index fetch failed:', axiosError.message);
+          logger.error('UV Index fetch failed:', axiosError.message);
           return null;
         }
 
@@ -164,7 +165,7 @@ export class UVService {
         }
 
         // Final attempt failed
-        console.error(
+        logger.error(
           `Failed to fetch UV Index after ${MAX_RETRIES} attempts:`,
           axiosError.message
         );

@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { CurrentConditions } from './CurrentConditions'
 import { useUnitStore } from '@/stores/unitStore'
 import type { Observation, ForecastPeriod, UVIndex, SunTimes } from '@/types/weather'
@@ -684,7 +684,7 @@ describe('CurrentConditions', () => {
 
     it('should display N/A for null humidity', () => {
       const observation = createMockObservation({ relativeHumidity: { value: null } })
-      const { container } = render(<CurrentConditions observation={observation} />)
+      render(<CurrentConditions observation={observation} />)
 
       expect(screen.getByText('Humidity')).toBeInTheDocument()
       // Check that N/A appears in the component (may be multiple N/A values for different fields)

@@ -2,38 +2,34 @@
 
 ## Purpose and Overview
 
-A modal dialog that displays comprehensive forecast information for a selected day from the 7-day forecast. Triggered by clicking on a day in the Seven-Day Forecast Card. Shows detailed weather information including extended forecast text, hourly breakdown, and all available meteorological data.
+A modal dialog that displays comprehensive forecast information for a selected period from the forecast. Triggered by clicking on a day in the Seven-Day Forecast Card. Shows detailed weather information for a single forecast period (either daytime or nighttime) including extended forecast text and all available meteorological data.
 
 ## Props/API Interface
 
 ```typescript
-interface ForecastDayModalProps {
-  day: DailyForecast | null;
-  isOpen: boolean;
+interface ForecastModalProps {
+  period: ForecastPeriod | null;
+  open: boolean;
   onClose: () => void;
-  hourlyData?: HourlyForecastData[]; // Optional: filtered hourly data for this day
-  className?: string;
 }
 
-interface DailyForecast {
-  date: string;              // ISO 8601 date
-  dayOfWeek: string;         // e.g., "Monday"
-  highTemp: number;          // Fahrenheit
-  lowTemp: number;           // Fahrenheit
-  dayIcon: string;           // NWS icon URL
-  nightIcon: string;         // NWS icon URL
-  shortForecast: string;     // e.g., "Partly Cloudy"
-  nightShortForecast: string;
-  precipProbability: number; // 0-100
-  nightPrecipProbability: number;
+interface ForecastPeriod {
+  number: number;
+  name: string;              // e.g., "Monday Night", "Tuesday"
+  startTime: string;         // ISO 8601 timestamp
+  endTime: string;           // ISO 8601 timestamp
+  isDaytime: boolean;
+  temperature: number;       // Temperature value
+  temperatureUnit: string;   // "F" or "C"
+  temperatureTrend?: string; // Optional: "rising" or "falling"
+  probabilityOfPrecipitation?: {
+    value: number | null;    // 0-100
+  };
   windSpeed: string;         // e.g., "10 to 15 mph"
   windDirection: string;     // e.g., "NW"
-  nightWindSpeed: string;
-  nightWindDirection: string;
-  detailedForecast: string;  // Full day forecast text
-  nightDetailedForecast: string; // Full night forecast text
-  humidity?: number;         // If available
-  dewpoint?: number;         // If available
+  icon: string;              // NWS icon URL
+  shortForecast: string;     // e.g., "Partly Cloudy"
+  detailedForecast: string;  // Full forecast text
 }
 ```
 
@@ -42,38 +38,31 @@ interface DailyForecast {
 ### Modal Structure
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Monday, September 30                                    [X] │
+│  Monday Night                                            [X] │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌──────────────────────┐  ┌──────────────────────┐        │
-│  │      Daytime         │  │      Nighttime       │        │
-│  │                      │  │                      │        │
-│  │        ☀️            │  │        🌙            │        │
-│  │    Partly Cloudy     │  │    Mostly Clear      │        │
-│  │                      │  │                      │        │
-│  │      High: 85°F      │  │      Low: 65°F       │        │
-│  │      Precip: 20%     │  │      Precip: 10%     │        │
-│  │    Wind: NW 10 mph   │  │    Wind: N 5 mph     │        │
-│  └──────────────────────┘  └──────────────────────┘        │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  🌙  65°F                                             │  │
+│  │      (Trending rising)                               │  │
+│  │      Mostly Clear                                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │
+│  │ Wind         │ │ Precipitation│ │ Day/Night    │       │
+│  │ NW 10 mph    │ │ 10%          │ │ Night        │       │
+│  └──────────────┘ └──────────────┘ └──────────────┘       │
+│                                                             │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Time Period                                           │ │
+│  │  Monday, Sep 30, 6:00 PM - Tuesday, Oct 1, 6:00 AM    │ │
+│  └────────────────────────────────────────────────────────┘ │
 │                                                             │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Detailed Forecast                                     │ │
 │  │                                                        │ │
-│  │  Daytime: Partly cloudy with a high near 85.          │ │
-│  │  Northwest wind around 10 mph. Chance of              │ │
-│  │  precipitation is 20%.                                │ │
-│  │                                                        │ │
-│  │  Nighttime: Mostly clear with a low around 65.        │ │
-│  │  North wind around 5 mph becoming calm in the         │ │
-│  │  evening. Chance of precipitation is 10%.             │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                                                             │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Hourly Breakdown (Optional)                           │ │
-│  │                                                        │ │
-│  │  12a  1a  2a  3a  4a  5a  6a  7a  8a  9a  10a  11a    │ │
-│  │  70°  69°  68°  67°  66°  65°  66°  68°  72°  76°  80°│ │
-│  │  🌙  🌙  🌙  🌙  🌙  🌙  🌙  ☀️  ☀️  ☀️  ☀️          │ │
+│  │  Mostly clear with a low around 65. North wind        │ │
+│  │  around 5 mph becoming calm in the evening.           │ │
+│  │  Chance of precipitation is 10%.                      │ │
 │  └────────────────────────────────────────────────────────┘ │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -81,255 +70,236 @@ interface DailyForecast {
 
 ### Modal Overlay
 - Semi-transparent dark background (backdrop)
-- Click outside to close (optional)
+- Click outside to close
 - Escape key to close
 - Modal centered on screen
 - Smooth fade-in animation
+- Uses shadcn/ui Dialog component
 
 ### Header
-- **Date**: Full date display (e.g., "Monday, September 30, 2024")
-- **Close button**: X icon in top-right corner
+- **Period Name**: The forecast period name (e.g., "Monday Night", "Tuesday", "This Afternoon")
+- **Close button**: X icon in top-right corner (part of Dialog component)
 - Divider line below header
 
-### Day/Night Cards (Side-by-side)
-Two equal-width cards showing:
+### Weather Icon and Temperature Section
+Horizontal layout with:
+- **Weather Icon**: Large (96x96px) NWS icon showing forecast conditions
+- **Temperature**: Large (4xl text) converted to user's unit preference (°F or °C)
+  - Shows temperature trend if available (e.g., "Trending rising")
+- **Short Forecast**: Description below temperature (e.g., "Mostly Clear")
 
-**Daytime Card**:
-- Sun icon or "Daytime" label
-- Weather icon (large, centered)
-- Short forecast description
-- High temperature (prominent)
-- Precipitation probability
-- Wind speed and direction
+### Weather Details Grid
+3-column grid (responsive: 1 column on mobile, 3 on desktop) showing:
 
-**Nighttime Card**:
-- Moon icon or "Nighttime" label
-- Weather icon (large, centered)
-- Short forecast description
-- Low temperature (prominent)
-- Precipitation probability
-- Wind speed and direction
+1. **Wind Card**:
+   - Wind icon
+   - Label: "Wind"
+   - Value: Direction and speed (e.g., "NW 10 mph" or "NW 16 km/h")
+   - Speed converted based on unit preference
+
+2. **Precipitation Card** (conditionally rendered):
+   - Droplets icon
+   - Label: "Precipitation"
+   - Value: Probability percentage (e.g., "10%")
+   - Only shown if precipitation data exists and is not null
+
+3. **Day/Night Card**:
+   - Cloud icon
+   - Label: "Day/Night"
+   - Value: "Day" or "Night"
+
+### Time Period Section
+- Gray background card with padding
+- Section heading: "Time Period"
+- Formatted time range showing start and end times
+- Format: "Monday, Sep 30, 6:00 PM - Tuesday, Oct 1, 6:00 AM"
 
 ### Detailed Forecast Section
-- Full-width card below day/night cards
 - Section heading: "Detailed Forecast"
-- Two paragraphs:
-  - **Daytime**: Full detailed forecast text
-  - **Nighttime**: Full detailed forecast text
+- Full forecast text from NWS API
+- Single paragraph (not split by day/night)
 - Adequate line spacing for readability
 
-### Hourly Breakdown (Optional)
-- Full-width section at bottom
-- Section heading: "Hourly Breakdown"
-- Horizontal scrollable timeline of hours for the selected day
-- Each hour shows:
-  - Time label
-  - Temperature
-  - Weather icon (small)
-  - Optional: Precipitation probability
-
 ### Styling Guidelines
-- Modal max-width: ~600-700px
-- Adequate padding and spacing
-- Rounded corners on modal
-- Shadow for depth perception
+- Modal max-width: 2xl (672px)
+- Max height: 80vh with vertical scrolling
+- Adequate padding and spacing (space-y-6 between sections)
+- Rounded corners on modal and detail cards
+- Border on detail cards for definition
 - Consistent typography hierarchy
-- Weather icons sized appropriately
+- Weather icons sized 96x96px (h-24 w-24)
 - Scrollable content if modal exceeds viewport height
+- Muted colors for secondary text and icons
+- Responsive grid layout
 
 ## Data Requirements
 
 ### Data Sources
-- **Primary**: `DailyForecast` object passed from Seven-Day Forecast Card
-- **Optional**: Filtered `hourlyData` for the selected day (if displaying hourly breakdown)
+- **Primary**: Single `ForecastPeriod` object from NWS forecast data
+- **Unit Preferences**: Retrieved from Zustand unit store (imperial/metric)
 
 ### Data Processing
-1. **Date Formatting**:
-   - Convert ISO date to readable format: "Monday, September 30, 2024"
-   - Handle "Today" and "Tomorrow" labels if applicable
+1. **Date/Time Formatting**:
+   - Period name displayed as-is from NWS API (e.g., "Monday Night")
+   - Start/End times formatted using date-fns: "EEEE, MMM d, h:mm a"
+   - Handle invalid dates gracefully (return original string)
 
-2. **Temperature Display**:
-   - High from day period
-   - Low from night period
-   - Format with degree symbol and unit
+2. **Temperature Conversion**:
+   - NWS provides temperature in Fahrenheit
+   - Convert to Celsius if user preference is metric: `(°F - 32) × 5/9`
+   - Round to nearest integer
+   - Append appropriate unit symbol (°F or °C)
 
-3. **Forecast Text**:
-   - Day and night detailed forecasts
-   - Preserve paragraph structure
-   - Handle missing nighttime forecast (some APIs might not provide it)
+3. **Wind Speed Conversion**:
+   - NWS provides wind speed as string (e.g., "10 mph", "5 to 10 mph")
+   - Extract numeric value using regex
+   - Convert to km/h if metric: `mph × 1.60934`
+   - Replace speed value and unit in original string format
+   - Return "N/A" if wind speed unavailable or invalid
 
-4. **Hourly Data** (if included):
-   - Filter hourly forecast for the selected date (midnight to midnight)
-   - Format times appropriately
-   - Extract temperature and icon for each hour
+4. **Temperature Trend** (optional):
+   - Display if `temperatureTrend` field exists
+   - Show as "Trending {trend}" (e.g., "Trending rising")
 
 ### Missing Data Handling
-- If night forecast missing: Show only day forecast
-- If specific fields unavailable: Display "N/A" or omit field
-- Gracefully degrade if optional data not available
+- If precipitation probability is null/undefined: Hide precipitation card entirely
+- If temperature trend missing: Omit trend display
+- If wind speed invalid: Display "N/A"
+- Null period: Return null immediately (no rendering)
 
 ## User Interactions
 
 ### Opening Modal
-- Triggered by clicking a day in Seven-Day Forecast Card
-- Fade-in animation (200-300ms)
-- Focus trap: Tab navigation stays within modal
-- Initial focus on close button or modal container
+- Triggered by clicking a forecast period in Seven-Day Forecast Card
+- Controlled by `open` prop (boolean)
+- Fade-in animation handled by shadcn/ui Dialog
+- Focus management handled by Dialog component
 
 ### Closing Modal
 Multiple methods:
-1. Click close (X) button
+1. Click close (X) button in dialog header
 2. Press Escape key
-3. Click outside modal (on backdrop) - optional
-4. Navigate with keyboard to close button and press Enter/Space
+3. Click outside modal (on backdrop)
+4. All close actions trigger `onClose()` callback
+5. Close action handled by `onOpenChange` in Dialog component
 
 ### Modal Behavior
 - **Scrolling**:
-  - Body scroll locked when modal open
-  - Modal content scrollable if exceeds viewport
+  - Body scroll locked when modal open (Dialog default)
+  - Modal content scrollable with max-height: 80vh
+  - Overflow-y-auto on DialogContent
 - **Focus management**:
-  - Focus trapped within modal
-  - Return focus to trigger element on close
+  - Focus trapped within modal (Dialog default)
+  - Return focus to trigger element on close (Dialog default)
 - **Animations**:
-  - Fade-in on open
-  - Fade-out on close
-  - Smooth transitions
-
-### Hourly Breakdown (if present)
-- Horizontal scroll if hours exceed width
-- Snap scrolling for better UX (optional)
-- Tap/click on hour for more details (future enhancement)
+  - Fade-in on open (Dialog default)
+  - Fade-out on close (Dialog default)
+  - Smooth transitions (Dialog default)
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Modal at comfortable width (600-700px)
-- Day/night cards side-by-side
+### Desktop (≥640px)
+- Modal at 2xl width (672px max)
+- Weather details in 3-column grid
 - All content visible without much scrolling
-- Hover states on interactive elements
+- Hover states on close button
 
-### Tablet (768px - 1023px)
+### Mobile (<640px)
 - Modal width adjusted for viewport
-- Maintain side-by-side day/night cards if possible
-- Reduce padding slightly
-- Content may require scrolling
-
-### Mobile (<768px)
-- **Full-screen or near full-screen modal**
-- **Vertical layout**: Stack day/night cards
-  - Daytime card on top
-  - Nighttime card below
-- Reduced padding for compact display
+- Weather details in single-column layout (grid-cols-1)
 - Touch-friendly close button
-- Hourly breakdown with horizontal scroll
-- Modal takes up most of viewport height
+- Modal remains centered with appropriate margins
+- Vertical scrolling enabled for long content
 
 ## Accessibility Considerations
 
 ### Semantic HTML
-```html
-<div role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-content">
-    <h2 id="modal-title">Monday, September 30, 2024</h2>
-    <button aria-label="Close forecast details">
-      <X />
-    </button>
+Uses shadcn/ui Dialog component which provides:
+- Proper ARIA attributes automatically
+- Semantic HTML structure
+- Focus management
+- Keyboard navigation
 
-    <div class="day-night-container">
-      <section aria-label="Daytime forecast">
-        <!-- Day content -->
-      </section>
-      <section aria-label="Nighttime forecast">
-        <!-- Night content -->
-      </section>
+### Component Structure
+```tsx
+<Dialog open={open} onOpenChange={onClose}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{period.name}</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-6">
+      {/* Icon and temperature section */}
+      {/* Weather details grid */}
+      {/* Time period section */}
+      {/* Detailed forecast section */}
     </div>
-
-    <section aria-label="Detailed forecast text">
-      <!-- Detailed forecasts -->
-    </section>
-  </div>
-</div>
+  </DialogContent>
+</Dialog>
 ```
 
 ### ARIA Attributes
+- Provided automatically by shadcn/ui Dialog component
 - `role="dialog"` on modal container
 - `aria-modal="true"` to indicate modal state
-- `aria-labelledby` pointing to modal title
-- `aria-describedby` for modal description (optional)
-- Close button: Clear `aria-label`
+- `aria-labelledby` pointing to DialogTitle
+- Close button includes proper accessible label
 
 ### Focus Management
-- Trap focus within modal while open
-- Initial focus on close button or first focusable element
-- Restore focus to trigger element on close
+- Automatically handled by Dialog component
+- Focus trapped within modal while open
+- Returns focus to trigger element on close
 - Tab order follows logical reading order
 
 ### Keyboard Navigation
-- **Escape**: Close modal
-- **Tab**: Navigate through focusable elements
-- **Shift+Tab**: Navigate backwards
-- **Enter/Space**: Activate buttons
-- Focus visible indicators
+- **Escape**: Close modal (Dialog default)
+- **Tab**: Navigate through focusable elements (Dialog default)
+- **Shift+Tab**: Navigate backwards (Dialog default)
+- **Enter/Space**: Activate close button
 
 ### Screen Reader Support
-- Announce modal opening: "Forecast details for Monday, September 30"
-- Read content in logical order
-- Announce close button clearly
-- Provide context for each section
-- Announce temperatures with "degrees" unit
+- Dialog announces period name as title
+- Weather icons have alt text (shortForecast)
+- Labels provided for all data fields
+- Logical content reading order
+- Temperatures announced with unit
 
 ### Color Considerations
 - Sufficient contrast for all text on modal background
 - Works in both light and dark modes
+- Uses muted-foreground for secondary text
+- Border on detail cards for definition
 - Backdrop provides clear visual separation
 
 ## Loading States
 
-### Modal Loading
-If modal needs to fetch additional data on open:
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Monday, September 30                                    [X] │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│                    ⏳ Loading details...                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-- Centered spinner or loading message
-- Close button still functional
-
 ### Normal State
-- All data loaded before modal opens (preferred)
-- Smooth content display
+- All data loaded before modal opens
+- Period data passed as prop
+- No loading state needed within modal
+- If period is null, modal returns null (no render)
 
 ## Example Usage
 
 ```tsx
-import { ForecastDayModal } from '@/components/weather/ForecastDayModal';
-import { SevenDayForecastCard } from '@/components/weather/SevenDayForecastCard';
+import { ForecastModal } from '@/components/ForecastModal';
+import { SevenDayForecastCard } from '@/components/SevenDayForecastCard';
 import { useState } from 'react';
+import { ForecastPeriod } from '@/types/weather';
 
-function WeatherDashboard({ forecast, hourlyData }: Props) {
-  const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null);
-
-  // Filter hourly data for selected day
-  const selectedDayHourly = selectedDay
-    ? hourlyData.filter(h => isSameDay(h.timestamp, selectedDay.date))
-    : undefined;
+function WeatherDashboard({ forecast }: Props) {
+  const [selectedPeriod, setSelectedPeriod] = useState<ForecastPeriod | null>(null);
 
   return (
     <>
       <SevenDayForecastCard
         forecast={forecast}
-        onDayClick={setSelectedDay}
+        onPeriodClick={setSelectedPeriod}
       />
 
-      <ForecastDayModal
-        day={selectedDay}
-        isOpen={!!selectedDay}
-        onClose={() => setSelectedDay(null)}
-        hourlyData={selectedDayHourly}
+      <ForecastModal
+        period={selectedPeriod}
+        open={!!selectedPeriod}
+        onClose={() => setSelectedPeriod(null)}
       />
     </>
   );
@@ -338,54 +308,143 @@ function WeatherDashboard({ forecast, hourlyData }: Props) {
 
 ## Edge Cases
 
-1. **Missing Night Forecast**:
-   - Show only daytime card or
-   - Display message "Night forecast unavailable"
+1. **Null Period**:
+   - Component returns null immediately
+   - No rendering occurs
 
-2. **Same Temperature High/Low**:
-   - Display as is, don't hide
-   - Possible on certain days
+2. **Missing Precipitation Data**:
+   - Precipitation card not rendered
+   - Only show if value exists and is not null
 
-3. **No Hourly Data**:
-   - Omit hourly breakdown section entirely
-   - Modal functions normally
+3. **Missing Temperature Trend**:
+   - Omit trend display
+   - Only temperature shown
 
-4. **Very Long Forecast Text**:
-   - Allow scrolling within modal
-   - Consider max-height with scroll
+4. **Invalid Wind Speed Format**:
+   - Display "N/A" if regex match fails
+   - Display original string if no match found
 
-5. **Modal While Mobile Keyboard Open**:
-   - Handle viewport resize gracefully
-   - Ensure close button always visible
+5. **Very Long Forecast Text**:
+   - Modal scrolls vertically with max-height: 80vh
+   - Content remains readable
 
-6. **Rapid Open/Close**:
-   - Prevent animation conflicts
-   - Debounce if necessary
+6. **Invalid Date Strings**:
+   - Try-catch around date formatting
+   - Return original string if formatting fails
+
+7. **Unit Conversion Edge Cases**:
+   - Handle missing numeric values gracefully
+   - Round all converted values to integers
 
 ## Performance Considerations
 
-- Lazy load modal component (React.lazy)
-- Mount/unmount vs. show/hide (mount preferred for performance)
-- Memoize modal content
-- Optimize animations (use CSS transforms)
-- Avoid re-rendering when modal closed
-- Lightweight modal library or custom implementation
+- Uses shadcn/ui Dialog component (lightweight, optimized)
+- Modal remains mounted but hidden when closed (Dialog default)
+- Early return when period is null
+- Temperature and wind conversions performed inline (simple calculations)
+- date-fns format function used for date formatting
+- No heavy computations or data fetching within component
+- Responsive grid uses Tailwind CSS (no JavaScript overhead)
 
 ## Testing Requirements
 
-- Open and close modal with various methods
-- Test with complete and partial data
-- Test with missing night forecast
-- Test keyboard navigation (Tab, Escape)
+### Functional Testing
+- Open and close modal with various methods (X button, Escape, backdrop click)
+- Test with complete forecast period data
+- Test with missing precipitation data (card hidden)
+- Test with missing temperature trend (omitted)
+- Test with invalid wind speed format (shows "N/A")
+- Test with null period (no render)
+- Test with extremely long forecast text (scrolls properly)
+
+### Unit Conversion Testing
+- Test temperature conversion (F to C)
+- Test wind speed conversion (mph to km/h)
+- Test unit display updates when preference changes
+- Test with edge case values (0, negative, very large)
+
+### Keyboard Navigation
+- Test Escape key closes modal
+- Test Tab navigation through elements
+- Test Shift+Tab backwards navigation
+- Test Enter/Space on close button
+
+### Accessibility Testing
+- Test with screen reader
+- Verify ARIA attributes present
 - Test focus trap functionality
 - Test focus restoration on close
-- Test with screen reader
-- Test responsive layouts at all breakpoints
-- Verify day/night card stacking on mobile
-- Test scrolling behavior (modal content and hourly breakdown)
+- Verify semantic heading structure
+
+### Responsive Testing
+- Test at mobile breakpoint (<640px) - single column grid
+- Test at desktop breakpoint (≥640px) - 3 column grid
+- Test scrolling behavior with long content
+- Verify close button always accessible
+
+### Date/Time Testing
+- Test valid date formatting
+- Test invalid date strings (fallback to original)
+- Test time range display
+
+### Visual Testing
 - Verify backdrop click behavior
 - Test animation smoothness
-- Verify accessibility attributes
-- Test with extremely long forecast text
-- Test rapid open/close scenarios
 - Verify body scroll lock when modal open
+- Test in light and dark modes
+- Verify icon loading and display
+
+## Implementation Details
+
+### Dependencies
+- **shadcn/ui Dialog**: Modal/dialog component
+- **date-fns**: Date formatting (`format` function)
+- **lucide-react**: Icons (Cloud, Droplets, Wind)
+- **Zustand**: Unit preference state management
+
+### Key Functions
+
+#### Temperature Conversion
+```typescript
+const convertTemperature = (tempF: number) => {
+  if (unitSystem === 'metric') {
+    return Math.round(((tempF - 32) * 5) / 9)
+  }
+  return tempF
+}
+```
+
+#### Wind Speed Conversion
+```typescript
+const convertWindSpeed = (windSpeed?: string) => {
+  if (!windSpeed) return 'N/A'
+  const match = windSpeed.match(/(\d+)/)
+  if (!match || !match[1]) return windSpeed
+
+  const speedMph = parseInt(match[1], 10)
+  if (unitSystem === 'metric') {
+    const speedKmh = Math.round(speedMph * 1.60934)
+    return windSpeed.replace(/\d+/, speedKmh.toString()).replace('mph', 'km/h')
+  }
+  return windSpeed
+}
+```
+
+#### Date Formatting
+```typescript
+const formatTime = (dateString: string) => {
+  try {
+    return format(new Date(dateString), 'EEEE, MMM d, h:mm a')
+  } catch {
+    return dateString
+  }
+}
+```
+
+### Component File Location
+`/workspaces/weather-app/src/components/ForecastModal.tsx`
+
+### Related Types
+Defined in `/workspaces/weather-app/src/types/weather.ts`:
+- `ForecastPeriod`: Main data interface for forecast periods
+- Unit preferences from `/workspaces/weather-app/src/stores/unitStore.ts`

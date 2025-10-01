@@ -408,13 +408,13 @@ describe('AlertCard', () => {
 
     it('should render correctly with all severity and urgency combinations', () => {
       const severities: Alert['severity'][] = ['Extreme', 'Severe', 'Moderate', 'Minor', 'Unknown']
-      const urgencies: Alert['urgency'][] = ['Immediate', 'Expected', 'Future', 'Past', 'Unknown']
+      const urgencies: Array<'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown'> = ['Immediate', 'Expected', 'Future', 'Past', 'Unknown']
 
       const alerts: Alert[] = severities.map((severity, idx) => ({
         ...mockAlert,
         id: `alert-${idx}`,
         severity,
-        urgency: urgencies[idx],
+        urgency: urgencies[idx]!,
         headline: `Alert ${idx + 1}`
       }))
 

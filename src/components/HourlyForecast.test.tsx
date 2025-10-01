@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, within, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HourlyForecast } from './HourlyForecast'
 import { HourlyForecast as HourlyForecastType } from '@/types/weather'
@@ -314,7 +314,7 @@ describe('HourlyForecast', () => {
 
       const mockData = createMockHourlyForecast(24)
       // Set specific temperature
-      mockData[0].temperature = 72
+      mockData[0]!.temperature = 72
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -331,7 +331,7 @@ describe('HourlyForecast', () => {
 
       const mockData = createMockHourlyForecast(24)
       // 32°F should convert to 0°C
-      mockData[0].temperature = 32
+      mockData[0]!.temperature = 32
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -348,7 +348,8 @@ describe('HourlyForecast', () => {
 
       const mockData = [
         {
-          ...createMockHourlyForecast(1)[0],
+          ...createMockHourlyForecast(1)[0]!,
+          number: 1,
           temperature: 32, // 32°F = 0°C
         },
       ]
@@ -368,7 +369,8 @@ describe('HourlyForecast', () => {
 
       const mockData = [
         {
-          ...createMockHourlyForecast(1)[0],
+          ...createMockHourlyForecast(1)[0]!,
+          number: 1,
           temperature: 212, // 212°F = 100°C
         },
       ]
@@ -387,7 +389,8 @@ describe('HourlyForecast', () => {
 
       const mockData = [
         {
-          ...createMockHourlyForecast(1)[0],
+          ...createMockHourlyForecast(1)[0]!,
+          number: 1,
           temperature: 68, // 68°F = 20°C
         },
       ]
@@ -406,7 +409,8 @@ describe('HourlyForecast', () => {
 
       const mockData = [
         {
-          ...createMockHourlyForecast(1)[0],
+          ...createMockHourlyForecast(1)[0]!,
+          number: 1,
           temperature: 75, // 75°F = 23.888...°C, should round to 24
         },
       ]
@@ -426,7 +430,7 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(24)
-      mockData[0].windSpeed = '15 mph'
+      mockData[0]!.windSpeed = '15 mph'
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -443,7 +447,7 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(24)
-      mockData[0].windSpeed = '10 mph' // 10 mph ≈ 16 km/h
+      mockData[0]!.windSpeed = '10 mph' // 10 mph ≈ 16 km/h
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -463,9 +467,9 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(3)
-      mockData[0].windSpeed = '5 mph'
-      mockData[1].windSpeed = '10 to 15 mph'
-      mockData[2].windSpeed = '20 mph'
+      mockData[0]!.windSpeed = '5 mph'
+      mockData[1]!.windSpeed = '10 to 15 mph'
+      mockData[2]!.windSpeed = '20 mph'
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -484,7 +488,7 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(1)
-      mockData[0].windSpeed = ''
+      mockData[0]!.windSpeed = ''
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -504,7 +508,8 @@ describe('HourlyForecast', () => {
 
       const mockData = [
         {
-          ...createMockHourlyForecast(1)[0],
+          ...createMockHourlyForecast(1)[0]!,
+          number: 1,
           windSpeed: '10 mph', // 10 mph = 16.0934 km/h, rounds to 16
         },
       ]
@@ -531,7 +536,7 @@ describe('HourlyForecast', () => {
     it('should format precipitation data with percentage unit', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
-      mockData[0].probabilityOfPrecipitation = { value: 75 }
+      mockData[0]!.probabilityOfPrecipitation = { value: 75 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -545,7 +550,7 @@ describe('HourlyForecast', () => {
     it('should format humidity data with percentage unit', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
-      mockData[0].relativeHumidity = { value: 65 }
+      mockData[0]!.relativeHumidity = { value: 65 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -559,9 +564,9 @@ describe('HourlyForecast', () => {
     it('should handle null precipitation values', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(3)
-      mockData[0].probabilityOfPrecipitation = { value: null }
-      mockData[1].probabilityOfPrecipitation = undefined
-      mockData[2].probabilityOfPrecipitation = { value: 50 }
+      mockData[0]!.probabilityOfPrecipitation = { value: null }
+      mockData[1]!.probabilityOfPrecipitation = undefined
+      mockData[2]!.probabilityOfPrecipitation = { value: 50 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -575,7 +580,8 @@ describe('HourlyForecast', () => {
     it('should format time correctly in chart data', () => {
       const specificTime = new Date('2024-01-15T14:00:00Z')
       const mockData = [{
-        ...createMockHourlyForecast(1)[0],
+        ...createMockHourlyForecast(1)[0]!,
+        number: 1,
         startTime: specificTime.toISOString(),
       }]
 
@@ -590,11 +596,11 @@ describe('HourlyForecast', () => {
   describe('Min/Max/Avg calculations', () => {
     it('should calculate min temperature correctly', () => {
       const mockData = createMockHourlyForecast(5)
-      mockData[0].temperature = 50
-      mockData[1].temperature = 60
-      mockData[2].temperature = 40 // Minimum
-      mockData[3].temperature = 70
-      mockData[4].temperature = 55
+      mockData[0]!.temperature = 50
+      mockData[1]!.temperature = 60
+      mockData[2]!.temperature = 40 // Minimum
+      mockData[3]!.temperature = 70
+      mockData[4]!.temperature = 55
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -604,11 +610,11 @@ describe('HourlyForecast', () => {
 
     it('should calculate max temperature correctly', () => {
       const mockData = createMockHourlyForecast(5)
-      mockData[0].temperature = 50
-      mockData[1].temperature = 60
-      mockData[2].temperature = 40
-      mockData[3].temperature = 85 // Maximum
-      mockData[4].temperature = 55
+      mockData[0]!.temperature = 50
+      mockData[1]!.temperature = 60
+      mockData[2]!.temperature = 40
+      mockData[3]!.temperature = 85 // Maximum
+      mockData[4]!.temperature = 55
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -618,11 +624,11 @@ describe('HourlyForecast', () => {
 
     it('should calculate average temperature correctly', () => {
       const mockData = createMockHourlyForecast(5)
-      mockData[0].temperature = 50
-      mockData[1].temperature = 60
-      mockData[2].temperature = 70
-      mockData[3].temperature = 80
-      mockData[4].temperature = 90
+      mockData[0]!.temperature = 50
+      mockData[1]!.temperature = 60
+      mockData[2]!.temperature = 70
+      mockData[3]!.temperature = 80
+      mockData[4]!.temperature = 90
       // Average = (50+60+70+80+90)/5 = 70
 
       render(<HourlyForecast hourlyForecast={mockData} />)
@@ -633,9 +639,9 @@ describe('HourlyForecast', () => {
 
     it('should round average to nearest integer', () => {
       const mockData = createMockHourlyForecast(3)
-      mockData[0].temperature = 50
-      mockData[1].temperature = 51
-      mockData[2].temperature = 52
+      mockData[0]!.temperature = 50
+      mockData[1]!.temperature = 51
+      mockData[2]!.temperature = 52
       // Average = 51 (already integer)
 
       render(<HourlyForecast hourlyForecast={mockData} />)
@@ -647,11 +653,11 @@ describe('HourlyForecast', () => {
     it('should calculate stats for precipitation data', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(5)
-      mockData[0].probabilityOfPrecipitation = { value: 10 }
-      mockData[1].probabilityOfPrecipitation = { value: 20 }
-      mockData[2].probabilityOfPrecipitation = { value: 30 }
-      mockData[3].probabilityOfPrecipitation = { value: 40 }
-      mockData[4].probabilityOfPrecipitation = { value: 50 }
+      mockData[0]!.probabilityOfPrecipitation = { value: 10 }
+      mockData[1]!.probabilityOfPrecipitation = { value: 20 }
+      mockData[2]!.probabilityOfPrecipitation = { value: 30 }
+      mockData[3]!.probabilityOfPrecipitation = { value: 40 }
+      mockData[4]!.probabilityOfPrecipitation = { value: 50 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -674,11 +680,11 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(5)
-      mockData[0].windSpeed = '5 mph'
-      mockData[1].windSpeed = '10 mph'
-      mockData[2].windSpeed = '15 mph'
-      mockData[3].windSpeed = '20 mph'
-      mockData[4].windSpeed = '25 mph'
+      mockData[0]!.windSpeed = '5 mph'
+      mockData[1]!.windSpeed = '10 mph'
+      mockData[2]!.windSpeed = '15 mph'
+      mockData[3]!.windSpeed = '20 mph'
+      mockData[4]!.windSpeed = '25 mph'
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -694,11 +700,11 @@ describe('HourlyForecast', () => {
     it('should calculate stats for humidity data', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(5)
-      mockData[0].relativeHumidity = { value: 50 }
-      mockData[1].relativeHumidity = { value: 60 }
-      mockData[2].relativeHumidity = { value: 70 }
-      mockData[3].relativeHumidity = { value: 80 }
-      mockData[4].relativeHumidity = { value: 90 }
+      mockData[0]!.relativeHumidity = { value: 50 }
+      mockData[1]!.relativeHumidity = { value: 60 }
+      mockData[2]!.relativeHumidity = { value: 70 }
+      mockData[3]!.relativeHumidity = { value: 80 }
+      mockData[4]!.relativeHumidity = { value: 90 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -715,7 +721,7 @@ describe('HourlyForecast', () => {
 
     it('should handle single data point correctly', () => {
       const mockData = createMockHourlyForecast(1)
-      mockData[0].temperature = 72
+      mockData[0]!.temperature = 72
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -838,7 +844,7 @@ describe('HourlyForecast', () => {
 
       // Update with new data
       const mockData2 = createMockHourlyForecast(24)
-      mockData2[0].temperature = 100 // Different data
+      mockData2[0]!.temperature = 100 // Different data
 
       rerender(<HourlyForecast hourlyForecast={mockData2} />)
 
@@ -860,10 +866,10 @@ describe('HourlyForecast', () => {
     it('should handle zero values in all data types', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(3)
-      mockData[0].temperature = 0
-      mockData[0].probabilityOfPrecipitation = { value: 0 }
-      mockData[0].relativeHumidity = { value: 0 }
-      mockData[0].windSpeed = '0 mph'
+      mockData[0]!.temperature = 0
+      mockData[0]!.probabilityOfPrecipitation = { value: 0 }
+      mockData[0]!.relativeHumidity = { value: 0 }
+      mockData[0]!.windSpeed = '0 mph'
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -887,9 +893,9 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(3)
-      mockData[0].temperature = -10
-      mockData[1].temperature = -5
-      mockData[2].temperature = 0
+      mockData[0]!.temperature = -10
+      mockData[1]!.temperature = -5
+      mockData[2]!.temperature = 0
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -901,7 +907,7 @@ describe('HourlyForecast', () => {
     it('should handle 100% precipitation probability', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(1)
-      mockData[0].probabilityOfPrecipitation = { value: 100 }
+      mockData[0]!.probabilityOfPrecipitation = { value: 100 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -914,7 +920,7 @@ describe('HourlyForecast', () => {
     it('should handle 100% humidity', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(1)
-      mockData[0].relativeHumidity = { value: 100 }
+      mockData[0]!.relativeHumidity = { value: 100 }
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -932,7 +938,7 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(1)
-      mockData[0].windSpeed = '150 mph' // Hurricane force
+      mockData[0]!.windSpeed = '150 mph' // Hurricane force
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -949,8 +955,8 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(2)
-      mockData[0].temperature = -50 // Extreme cold
-      mockData[1].temperature = 130 // Extreme heat
+      mockData[0]!.temperature = -50 // Extreme cold
+      mockData[1]!.temperature = 130 // Extreme heat
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
@@ -969,9 +975,9 @@ describe('HourlyForecast', () => {
       })
 
       const mockData = createMockHourlyForecast(3)
-      mockData[0].windSpeed = 'calm'
-      mockData[1].windSpeed = 'variable'
-      mockData[2].windSpeed = '5 mph'
+      mockData[0]!.windSpeed = 'calm'
+      mockData[1]!.windSpeed = 'variable'
+      mockData[2]!.windSpeed = '5 mph'
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 

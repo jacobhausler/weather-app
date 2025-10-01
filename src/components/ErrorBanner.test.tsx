@@ -14,7 +14,7 @@ describe('ErrorBanner', () => {
       error: null,
       recentZipCodes: [],
     });
-    vi.useFakeTimers();
+    // Don't use fake timers by default - only specific tests need them
   });
 
   afterEach(() => {
@@ -157,20 +157,21 @@ describe('ErrorBanner', () => {
 
   describe('Auto-Dismiss Timer', () => {
     it('should auto-dismiss after 10 seconds', async () => {
+      vi.useFakeTimers();
       useWeatherStore.setState({ error: 'Test error' });
       render(<ErrorBanner />);
 
       expect(screen.getByText('Weather Service Error')).toBeInTheDocument();
 
       // Fast-forward 10 seconds
-      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(10000);
 
-      await waitFor(() => {
-        expect(useWeatherStore.getState().error).toBeNull();
-      });
-    });
+      expect(useWeatherStore.getState().error).toBeNull();
+      vi.useRealTimers();
+    }, 10000);
 
     it('should not auto-dismiss before 10 seconds', () => {
+      vi.useFakeTimers();
       useWeatherStore.setState({ error: 'Test error' });
       render(<ErrorBanner />);
 
@@ -181,9 +182,11 @@ describe('ErrorBanner', () => {
 
       expect(screen.getByText('Weather Service Error')).toBeInTheDocument();
       expect(useWeatherStore.getState().error).toBe('Test error');
+      vi.useRealTimers();
     });
 
     it('should reset timer when new error appears', () => {
+      vi.useFakeTimers();
       useWeatherStore.setState({ error: 'First error' });
       const { rerender } = render(<ErrorBanner />);
 
@@ -206,9 +209,11 @@ describe('ErrorBanner', () => {
       waitFor(() => {
         expect(useWeatherStore.getState().error).toBeNull();
       });
+      vi.useRealTimers();
     });
 
     it('should clean up timer on unmount', () => {
+      vi.useFakeTimers();
       useWeatherStore.setState({ error: 'Test error' });
       const { unmount } = render(<ErrorBanner />);
 
@@ -219,6 +224,7 @@ describe('ErrorBanner', () => {
 
       // Error should still exist since component was unmounted
       expect(useWeatherStore.getState().error).toBe('Test error');
+      vi.useRealTimers();
     });
   });
 
@@ -564,7 +570,6 @@ describe('ErrorBanner', () => {
     });
 
     it('should handle error with array details', async () => {
-      vi.useRealTimers(); // Temporarily use real timers for this test
       const user = userEvent.setup({ delay: null });
       const errorWithArrayDetails = {
         message: 'Error message',
@@ -577,7 +582,6 @@ describe('ErrorBanner', () => {
       await user.click(showButton);
 
       expect(await screen.findByText(/\[/)).toBeInTheDocument();
-      vi.useFakeTimers(); // Restore fake timers
     });
   });
 

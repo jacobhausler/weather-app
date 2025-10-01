@@ -1,5 +1,16 @@
 # Alert Card Component Specification
 
+## Component Information
+
+- **File**: `/workspaces/weather-app/src/components/AlertCard.tsx`
+- **Type Definition**: `/workspaces/weather-app/src/types/weather.ts` (Alert interface)
+- **Component Size**: ~100 lines
+- **Dependencies**:
+  - `@/components/ui/card` (shadcn/ui)
+  - `@/components/ui/badge` (shadcn/ui)
+  - `lucide-react` (AlertTriangle icon)
+  - `date-fns` (format function)
+
 ## Purpose and Overview
 
 Displays active weather alerts for the user's location based on county-level data from the NWS API. The card is conditionally rendered only when active alerts exist. Multiple alerts are displayed in a vertically stacked layout with severity-based visual styling to communicate urgency.
@@ -8,91 +19,88 @@ Displays active weather alerts for the user's location based on county-level dat
 
 ```typescript
 interface AlertCardProps {
-  alerts: WeatherAlert[];
-  isLoading?: boolean;
-  className?: string;
+  alerts: Alert[];
 }
 
-interface WeatherAlert {
+interface Alert {
   id: string;
-  type: string;              // e.g., "Tornado Warning", "Flash Flood Watch"
+  areaDesc: string;          // Geographic area description
+  event: string;             // e.g., "Tornado Warning", "Flash Flood Watch"
   headline: string;          // Brief alert headline
+  description: string;       // Full alert description text
   severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
   urgency: 'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown';
-  certainty: 'Observed' | 'Likely' | 'Possible' | 'Unlikely' | 'Unknown';
-  description: string;       // Full alert description text
-  instruction?: string;      // Safety instructions (if provided)
-  effective: string;         // ISO 8601 timestamp
+  onset: string;             // ISO 8601 timestamp
   expires: string;           // ISO 8601 timestamp
-  onset?: string;            // ISO 8601 timestamp
-  areaDesc: string;          // Geographic area description
+  status: string;
+  messageType: string;
+  category: string;
 }
 ```
+
+**Note**: The component receives alerts via props. It does not use Zustand stores or manage loading states internally - the parent component is responsible for data fetching and state management.
 
 ## Layout and Visual Design
 
 ### Card Structure
-- Outer container with appropriate padding and rounded corners
-- Each alert rendered as a separate sub-card within the main card
-- Alerts stacked vertically with consistent spacing
-- No card displayed when `alerts` array is empty
+- Outer container (`div` with `space-y-4` for vertical spacing)
+- Each alert rendered as a separate shadcn/ui `Card` component
+- Alerts stacked vertically with consistent 1rem spacing
+- Returns `null` when `alerts` array is empty or undefined
 
 ### Individual Alert Layout
 ```
 ┌─────────────────────────────────────────┐
-│ [ICON] Alert Type                       │
-│        Headline Text                    │
+│ [⚠️ ICON] Headline Text                 │
+│          Severity Badge | Urgency Badge │
+│          Event Badge (outline)          │
 │                                         │
-│ Severity Badge | Urgency Badge          │
+│ Effective: [date/time]                  │
+│ Expires: [date/time]                    │
 │                                         │
 │ Description text wraps naturally and    │
 │ provides full context of the alert...   │
 │                                         │
-│ [Safety Instructions if present]        │
-│                                         │
-│ Effective: [formatted date/time]        │
-│ Expires: [formatted date/time]          │
+│ Areas: [area description]               │
 └─────────────────────────────────────────┘
 ```
 
+**Actual Layout Components**:
+- `Card` with left border accent (`border-l-4 border-l-red-600 dark:border-l-red-400`)
+- `CardHeader` contains icon, headline, and badges
+- `CardContent` contains timestamps, description, and area information
+
 ### Severity-Based Styling
 
-**Extreme**
-- Background: Red-tinted (e.g., `bg-red-50 dark:bg-red-950`)
-- Border: Red accent (e.g., `border-red-500`)
-- Icon: Warning triangle, red color
-- Badge: Red background
+**Implementation Note**: All alerts use a red left border (`border-l-red-600 dark:border-l-red-400`) and red `AlertTriangle` icon. Severity is differentiated through badge colors only.
 
-**Severe**
-- Background: Orange-tinted (e.g., `bg-orange-50 dark:bg-orange-950`)
-- Border: Orange accent (e.g., `border-orange-500`)
-- Icon: Warning triangle, orange color
-- Badge: Orange background
+**Card Appearance**:
+- Left Border: `border-l-4 border-l-red-600 dark:border-l-red-400` (all severities)
+- Icon: `AlertTriangle` from lucide-react with red color (`text-red-600 dark:text-red-400`)
+- Badge colors differentiate severity levels
 
-**Moderate**
-- Background: Yellow-tinted (e.g., `bg-yellow-50 dark:bg-yellow-950`)
-- Border: Yellow accent (e.g., `border-yellow-500`)
-- Icon: Alert circle, yellow color
-- Badge: Yellow background
+**Severity Badge Colors** (via `getSeverityColor` function):
+- **Extreme**: `bg-red-600 text-white hover:bg-red-700`
+- **Severe**: `bg-orange-600 text-white hover:bg-orange-700`
+- **Moderate**: `bg-yellow-600 text-white hover:bg-yellow-700`
+- **Minor**: `bg-blue-600 text-white hover:bg-blue-700`
+- **Unknown**: `bg-gray-600 text-white hover:bg-gray-700`
 
-**Minor**
-- Background: Blue-tinted (e.g., `bg-blue-50 dark:bg-blue-950`)
-- Border: Blue accent (e.g., `border-blue-500`)
-- Icon: Info circle, blue color
-- Badge: Blue background
+**Urgency Badge Colors** (via `getUrgencyColor` function):
+- **Immediate**: `bg-red-500 text-white hover:bg-red-600`
+- **Expected**: `bg-orange-500 text-white hover:bg-orange-600`
+- **Future**: `bg-blue-500 text-white hover:bg-blue-600`
+- **Past**: `bg-gray-500 text-white hover:bg-gray-600`
+- **Unknown**: `bg-gray-400 text-white hover:bg-gray-500`
 
-**Unknown**
-- Background: Gray-tinted (e.g., `bg-gray-50 dark:bg-gray-950`)
-- Border: Gray accent (e.g., `border-gray-500`)
-- Icon: Alert circle, gray color
-- Badge: Gray background
+**Event Badge**: `variant="outline"` (gray outline style from shadcn/ui)
 
 ### Typography
-- Alert Type: Bold, medium size (e.g., `font-semibold text-base`)
-- Headline: Bold, slightly larger (e.g., `font-bold text-lg`)
-- Description: Regular weight, readable line height
-- Timestamps: Smaller, muted color (e.g., `text-sm text-muted-foreground`)
-- Instructions: Italicized or distinct styling to emphasize importance
+- Headline: `CardTitle` with `text-xl` class
+- Badges: Default Badge component typography
+- Timestamps: `text-sm text-muted-foreground` with `<strong>` labels
+- Description: `text-sm leading-relaxed whitespace-pre-line` (preserves line breaks)
+- Area Description: `text-xs text-muted-foreground` with `<strong>` label
 
 ## Data Requirements
 
@@ -103,10 +111,10 @@ GET /alerts/active?point={lat},{lon}
 
 ### Data Transformation
 - Parse alert features from GeoJSON response
-- Extract properties: `event`, `headline`, `severity`, `urgency`, `certainty`, `description`, `instruction`, `effective`, `expires`, `onset`, `areaDesc`
-- Sort alerts by severity (Extreme → Severe → Moderate → Minor)
-- Filter out expired alerts on the client side
-- Format timestamps to user-friendly local time
+- Extract properties: `id`, `event`, `headline`, `severity`, `urgency`, `description`, `onset`, `expires`, `areaDesc`, `status`, `messageType`, `category`
+- Format timestamps using `date-fns` `format()` function: `'MMM d, h:mm a'` (e.g., "Jan 15, 3:45 PM")
+- Server-side sorting by severity (Extreme → Severe → Moderate → Minor)
+- No client-side filtering of expired alerts in this component
 
 ### Caching Strategy
 - **No caching** - Alerts are time-sensitive and should always be fresh
@@ -115,135 +123,119 @@ GET /alerts/active?point={lat},{lon}
 
 ## User Interactions
 
-### Alert Expansion (Optional Enhancement)
-- Initial state: Show headline and severity badges
-- Collapsed: Description and instructions hidden
-- Click to expand: Full description and instructions visible
-- Icon changes to indicate expand/collapse state
+**Current Implementation**: No interactive features. All alerts are displayed in expanded state.
 
-### Dismissal (Future Feature)
-- User can dismiss specific alerts
-- Dismissed alerts stored in localStorage
-- Dismissed alerts hidden until new alert with different ID appears
-
-### Links
-- If alert description contains URLs, render as clickable links
-- Open external links in new tab with `rel="noopener noreferrer"`
+### Not Implemented
+- Alert expansion/collapse
+- Alert dismissal
+- Automatic URL linkification in descriptions
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Full width within main layout
-- Description text allows for wider reading
-- Badges displayed horizontally
+**Implementation**: Uses Tailwind CSS flexbox with `flex-wrap` for responsive badge layout.
 
-### Tablet (768px - 1023px)
-- Adjust padding for medium screens
-- Maintain full alert information visibility
-- Badges may wrap if needed
-
-### Mobile (<768px)
-- Reduce padding for compact display
-- Stack badges vertically if horizontal space insufficient
-- Ensure description text remains readable
-- Timestamps may abbreviate format (e.g., "Today 3:45 PM")
+- Badges use `flex flex-wrap gap-2` to wrap on smaller screens
+- Timestamps use `flex flex-wrap gap-x-4 gap-y-1` to wrap when needed
+- Icon has `flex-shrink-0` to maintain size
+- All layouts adapt naturally via Tailwind's responsive utilities
+- No custom breakpoint-specific styling implemented
 
 ## Accessibility Considerations
 
-### Semantic HTML
-- Use `<article>` or `<section>` for each alert
-- Use appropriate heading levels (`<h3>` for alert type)
-- Use `role="alert"` for extreme/severe alerts to trigger screen readers
-- Use `aria-live="polite"` for moderate/minor alerts
+**Current Implementation**: Basic accessibility through semantic HTML and color contrast.
 
-### ARIA Labels
-```html
-<div role="alert" aria-labelledby="alert-headline-{id}" aria-describedby="alert-desc-{id}">
-  <h3 id="alert-headline-{id}">{headline}</h3>
-  <p id="alert-desc-{id}">{description}</p>
-</div>
-```
+### Implemented
+- Semantic HTML via shadcn/ui Card components
+- Visual indicators beyond color: AlertTriangle icon for all alerts
+- Text labels for severity/urgency (not color-only)
+- `<strong>` tags for timestamp labels
+- Dark mode support with appropriate contrast
 
-### Color Contrast
-- Ensure text meets WCAG AA standards (4.5:1 for normal text)
-- Don't rely solely on color to convey severity (use icons + text)
-- Test color combinations in both light and dark modes
-
-### Keyboard Navigation
-- Focusable elements should have visible focus indicators
-- If expandable, toggle with Enter/Space keys
-- Tab order should follow logical reading order
-
-### Screen Reader Support
-- Announce severity level: "Extreme severity tornado warning"
-- Provide context: "Weather alert effective until..."
-- Read instructions clearly
+### Not Implemented
+- ARIA roles (`role="alert"`, `aria-live`)
+- ARIA labels for screen reader context
+- Keyboard navigation features (no interactive elements)
+- Explicit heading hierarchy (`<h3>` for headlines)
 
 ## Loading States
 
-### Initial Load
-- Show skeleton placeholder with similar dimensions to actual alert card
-- Pulsing animation on skeleton elements
-- Avoid layout shift when data loads
+**Current Implementation**: Component does not handle loading or error states.
 
-### Refresh
-- Non-interrupting refresh (no skeleton replacement)
-- Subtle indicator that data is being updated (optional)
-- Smooth transition when new alerts appear or existing ones disappear
+- Returns `null` when alerts array is empty or undefined
+- No skeleton screens
+- No loading indicators
+- No error handling
 
-### Error State
-- Display error message if alerts endpoint fails
-- Provide retry mechanism
-- Don't prevent rest of app from functioning
+**Note**: Loading and error states are managed by parent component.
 
 ## Example Usage
 
 ```tsx
-import { AlertCard } from '@/components/weather/AlertCard';
-import { useWeatherData } from '@/hooks/useWeatherData';
+import { AlertCard } from '@/components/AlertCard';
+import { Alert } from '@/types/weather';
 
-function WeatherDashboard({ zipCode }: { zipCode: string }) {
-  const { alerts, isLoading } = useWeatherData(zipCode);
+function WeatherDashboard() {
+  const alerts: Alert[] = [
+    {
+      id: 'alert-123',
+      areaDesc: 'Collin County',
+      event: 'Severe Thunderstorm Warning',
+      headline: 'Severe Thunderstorm Warning issued for Collin County',
+      description: 'A severe thunderstorm capable of producing...',
+      severity: 'Severe',
+      urgency: 'Immediate',
+      onset: '2025-01-15T15:30:00-06:00',
+      expires: '2025-01-15T18:00:00-06:00',
+      status: 'Actual',
+      messageType: 'Alert',
+      category: 'Met'
+    }
+  ];
 
-  // Only render if alerts exist
-  if (!alerts || alerts.length === 0) {
-    return null;
-  }
-
-  return (
-    <AlertCard
-      alerts={alerts}
-      isLoading={isLoading}
-      className="mb-4"
-    />
-  );
+  return <AlertCard alerts={alerts} />;
 }
 ```
 
+**Note**: Component automatically handles empty/null arrays by returning `null`.
+
 ## Edge Cases
 
-1. **Multiple Severe Alerts**: Ensure all alerts are visible, not truncated
-2. **Long Descriptions**: Implement text truncation with "Read more" if needed
-3. **Expired Alerts**: Filter out on client side before rendering
-4. **Missing Fields**: Gracefully handle missing optional fields (instruction, onset)
-5. **Timezone Handling**: Convert UTC timestamps to user's local time
-6. **Alert Updates**: Smoothly transition when alerts change during refresh
+**Current Handling**:
+
+1. **Multiple Severe Alerts**: All rendered with vertical stacking (`space-y-4`)
+2. **Long Descriptions**: Displayed in full with `whitespace-pre-line` for line breaks
+3. **Expired Alerts**: No client-side filtering (assumes server filters)
+4. **Missing Fields**: Uses optional chaining and conditional rendering for `areaDesc`
+5. **Timezone Handling**: Timestamps displayed as received; formatted via `date-fns`
+6. **Invalid Dates**: Try/catch in `formatAlertTime()` returns original string on error
 
 ## Performance Considerations
 
-- Memoize severity styling logic
-- Use React.memo for individual alert components if rendering many alerts
-- Avoid re-rendering when unrelated state changes
-- Lazy load icon components if using icon library
+**Current Implementation**:
+- No memoization
+- No `React.memo` wrapper
+- Helper functions (`getSeverityColor`, `getUrgencyColor`, `formatAlertTime`) are pure functions defined outside component
+- Uses static imports for `AlertTriangle` icon from lucide-react
+
+**Optimization Opportunities**:
+- Could wrap in `React.memo` if re-rendering becomes an issue
+- Could memoize color calculation functions (currently recalculated on each render)
 
 ## Testing Requirements
 
-- Render with different severity levels
+### Recommended Test Coverage
+- Render with different severity levels (Extreme, Severe, Moderate, Minor, Unknown)
+- Render with different urgency levels (Immediate, Expected, Future, Past, Unknown)
 - Render with multiple simultaneous alerts
-- Render with missing optional fields
-- Verify proper sorting by severity
-- Test timestamp formatting
-- Test responsive breakpoints
-- Verify accessibility with screen reader
-- Test keyboard navigation
-- Verify color contrast in both themes
+- Render with missing `areaDesc` field
+- Test timestamp formatting (valid and invalid dates)
+- Verify null/empty array returns null
+- Verify color classes applied correctly for each severity/urgency
+- Test responsive badge wrapping behavior
+- Verify dark mode color variants
+
+### Not Required (No Implementation)
+- Sorting verification (handled server-side)
+- Keyboard navigation (no interactive elements)
+- Screen reader testing (no ARIA implementation)
+- Expansion/collapse behavior (not implemented)

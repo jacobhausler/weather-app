@@ -2,41 +2,32 @@
 
 ## Purpose and Overview
 
-Global error notification banner that displays API failures, network errors, and other critical issues. Appears at the top of the page (below header or as overlay) with details about the error and options for retry or dismissal. Provides user-friendly error messages and preserves technical details for debugging.
+Global error notification banner that displays API failures, network errors, and other critical issues. Appears fixed at the top of the page with details about the error and an option for dismissal. Provides user-friendly error messages and preserves technical details for debugging.
 
 ## Props/API Interface
 
+**No Props** - Component uses Zustand store directly.
+
 ```typescript
-interface ErrorBannerProps {
-  error: AppError | null;
-  onRetry?: () => void;
-  onDismiss: () => void;
-  position?: 'top' | 'fixed-top' | 'inline';
-  dismissible?: boolean;
-  autoHideDuration?: number; // milliseconds, 0 = no auto-hide
-  className?: string;
+// Component has no props - accesses store directly
+export function ErrorBanner() {
+  const { error, clearError } = useWeatherStore()
+  // ...
 }
 
-interface AppError {
-  id: string;                  // Unique error ID
-  type: ErrorType;
-  message: string;             // User-friendly message
-  details?: string;            // Technical details
-  timestamp: Date;
-  retryable: boolean;
-  statusCode?: number;         // HTTP status code if applicable
-  endpoint?: string;           // Failed API endpoint
-  context?: Record<string, unknown>; // Additional context
+// Store interface (weatherStore.ts)
+interface WeatherState {
+  error: string | null           // Error message (string only)
+  clearError: () => void         // Clear error from store
+  setError: (error: string | null) => void  // Set error in store
+  // ... other weather state fields
 }
 
-type ErrorType =
-  | 'network'                  // Network connectivity issue
-  | 'api_error'                // API returned error
-  | 'validation'               // Input validation error
-  | 'not_found'                // Resource not found (404)
-  | 'rate_limit'               // Rate limiting (429)
-  | 'timeout'                  // Request timeout
-  | 'unknown';                 // Unknown/unexpected error
+// Internal component interface for parsed errors
+interface ErrorInfo {
+  message: string                // Error message text
+  details?: unknown              // Optional technical details (any type)
+}
 ```
 
 ## Layout and Visual Design
@@ -44,452 +35,384 @@ type ErrorType =
 ### Banner Structure
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ ⚠️  Error: Unable to fetch weather data                     │
+│ ⚠  Weather Service Error                        [✕ Dismiss]│
 │                                                              │
-│     The weather service is currently unavailable. Please    │
-│     try again in a few moments.                             │
+│    Unable to connect to the weather service. Please check   │
+│    your internet connection.                                │
 │                                                              │
-│     [Retry]  [Details ▼]                       [Dismiss ✕] │
+│    [Show details ▼]                                         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### With Expanded Details
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ ⚠️  Error: Unable to fetch weather data                     │
+│ ⚠  Weather Service Error                        [✕ Dismiss]│
 │                                                              │
-│     The weather service is currently unavailable. Please    │
-│     try again in a few moments.                             │
+│    Unable to connect to the weather service. Please check   │
+│    your internet connection.                                │
 │                                                              │
-│     [Retry]  [Details ▲]                       [Dismiss ✕] │
+│    [Hide details ▲]                                         │
 │                                                              │
-│     ┌────────────────────────────────────────────────────┐ │
-│     │ Technical Details:                                 │ │
-│     │ • Endpoint: /gridpoints/OKX/35,37/forecast        │ │
-│     │ • Status Code: 503 Service Unavailable            │ │
-│     │ • Timestamp: 2024-09-30 12:45:32                  │ │
-│     │ • Error ID: err_abc123xyz                         │ │
-│     └────────────────────────────────────────────────────┘ │
+│    ┌────────────────────────────────────────────────────┐  │
+│    │ {                                                  │  │
+│    │   "message": "Network error",                      │  │
+│    │   "statusCode": 503,                               │  │
+│    │   "endpoint": "/api/weather/12345"                 │  │
+│    │ }                                                   │  │
+│    └────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Error Type Styling
 
-**Network Error**:
-- Icon: ⚠️ or 📡
-- Color: Orange/amber
-- Background: Light orange tint
-- Emphasis: Connection-related messaging
+**Default Error** (generic):
+- Icon: AlertCircle (lucide-react)
+- Variant: destructive (shadcn/ui Alert)
+- Background: Red tint (destructive variant)
+- Title: "Weather Service Error"
 
-**API Error**:
-- Icon: ⚠️
-- Color: Red
-- Background: Light red tint
-- Emphasis: Service issue
+**Rate Limit Warning** (429):
+- Icon: AlertCircle (lucide-react)
+- Border: Yellow (border-yellow-500)
+- Background: Yellow tint (bg-yellow-50 light, bg-yellow-950 dark)
+- Text: Yellow (text-yellow-900 light, text-yellow-200 dark)
+- Detected by: Message contains "429"
 
-**Rate Limit**:
-- Icon: ⏱️
-- Color: Yellow
-- Background: Light yellow tint
-- Message: "Too many requests. Please wait."
+### Positioning
 
-**Timeout**:
-- Icon: ⏱️
-- Color: Orange
-- Background: Light orange tint
-- Message: Request took too long
-
-**Not Found** (404):
-- Icon: 🔍 or ❓
-- Color: Blue/gray
-- Background: Light blue/gray tint
-- Message: Resource/location not found
-
-**Validation**:
-- Icon: ℹ️
-- Color: Blue
-- Background: Light blue tint
-- Message: Input issue
-
-### Positioning Options
-
-**Top** (default):
-- Below header
-- Pushes content down
-- Part of page flow
-
-**Fixed Top**:
-- Fixed position at top of viewport
+**Fixed Top** (only option):
+- Fixed position at top of viewport (top-16)
+- Below header (z-50)
 - Overlays content
-- Z-index above content
-
-**Inline**:
-- Within specific component
-- For localized errors
-- Doesn't affect global layout
+- Horizontal padding (px-4) with top padding (pt-4)
 
 ## Data Requirements
 
 ### Error Messages by Type
 
+Error messages are transformed from technical messages to user-friendly messages by the `getUserFriendlyMessage()` function:
+
 **Network Error**:
-- User message: "Unable to connect to weather service. Please check your internet connection."
-- Retryable: Yes
-
-**API Error (Generic)**:
-- User message: "Unable to fetch weather data. Please try again."
-- Retryable: Yes
-
-**API Error (503)**:
-- User message: "The weather service is currently unavailable. Please try again in a few moments."
-- Retryable: Yes, with backoff
-
-**Rate Limit (429)**:
-- User message: "Too many requests. Please wait 30 seconds before trying again."
-- Retryable: Yes, after delay
-
-**Timeout**:
-- User message: "Request timed out. Please try again."
-- Retryable: Yes
+- Detection: Message contains "Network error"
+- User message: "Unable to connect to the weather service. Please check your internet connection."
 
 **Not Found (404)**:
-- User message: "Unable to find weather data for this location. Please check the ZIP code."
-- Retryable: No (user needs to change input)
+- Detection: Message contains "404"
+- User message: "Weather data not found for this location. Please verify the ZIP code."
 
-**Invalid ZIP**:
-- User message: "Invalid ZIP code. Please enter a valid 5-digit US ZIP code."
-- Retryable: No
+**Rate Limit (429)**:
+- Detection: Message contains "429"
+- User message: "Too many requests. Please wait a moment and try again."
+- Special styling: Warning (yellow) instead of error (red)
+
+**Server Errors (500/502/503)**:
+- Detection: Message contains "500", "502", or "503"
+- User message: "Weather service is temporarily unavailable. Please try again later."
+
+**Generic Errors**:
+- Default: Display original error message if no pattern matches
 
 ### Error Context
-Store additional context for debugging:
-- Request parameters
-- User actions leading to error
-- Timestamp
-- Browser/device info (optional)
+The component can parse error objects with:
+- `message` (string, required): Error message text
+- `details` (unknown, optional): Technical details displayed in expandable section
 
 ## User Interactions
 
-### Retry Button
-- **Click**: Attempt same operation again
-- **State**: Show loading during retry
-- **Success**: Dismiss banner on successful retry
-- **Failure**: Update banner with new error (if different) or increment retry count
-
 ### Dismiss Button
-- **Click**: Close and hide banner
-- **Keyboard**: Escape key (if banner focused)
-- **Auto-dismiss**: Optional timeout for non-critical errors
+- **Click**: Calls `clearError()` to remove error from store
+- **Icon**: X (lucide-react)
+- **Position**: Top-right corner of banner
+- **Keyboard**: Accessible via Tab navigation
+- **Auto-dismiss**: Automatic after 10 seconds
 
-### Details Toggle
-- **Click**: Expand/collapse technical details
-- **Icon**: Arrow indicator (▼/▲)
-- **State**: Expanded details show technical information
-- **Audience**: For developers or advanced users
+### Details Toggle (conditional)
+- **Visibility**: Only shown if error has `details` property
+- **Click**: Toggle `isExpanded` state to show/hide details
+- **Icons**: ChevronDown (▼) when collapsed, ChevronUp (▲) when expanded
+- **Labels**: "Show details" / "Hide details"
+- **State**: Local component state (not persisted)
 
-### Copy Error Details
-- **Button**: "Copy to Clipboard" in details section
-- **Action**: Copy formatted error details for support tickets
-- **Feedback**: Brief "Copied!" message
+### No Retry Button
+- Component does not include retry functionality
+- Users must manually retry operations (e.g., re-submit ZIP code)
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Full-width banner
-- Horizontal layout for buttons
-- Expanded details show in collapsed section
-- Comfortable padding
-
-### Tablet (768px - 1023px)
-- Full-width banner
-- Buttons may wrap if many options
-- Maintain readability
-
-### Mobile (<768px)
-- Full-width banner
-- Stack buttons vertically if needed
-- Reduce padding for compact display
-- Ensure touch-friendly button sizes
-- Details section scrollable if long
+### All Screen Sizes
+- Fixed positioning at top (below header)
+- Full-width with horizontal padding (px-4)
+- Dismiss button positioned absolutely in top-right
+- Details toggle button inline below message
+- Details section scrollable with overflow-auto
+- Responsive padding and spacing via Tailwind classes
+- Banner adapts to content width automatically
 
 ## Accessibility Considerations
 
 ### Semantic HTML
-```html
-<div
-  role="alert"
-  aria-live="assertive"
-  aria-atomic="true"
-  className="error-banner"
->
-  <div className="error-content">
-    <span className="error-icon" aria-hidden="true">⚠️</span>
-    <div>
-      <h3 id="error-title">Error: Unable to fetch weather data</h3>
-      <p id="error-message">
-        The weather service is currently unavailable. Please try again.
-      </p>
-    </div>
-  </div>
-
-  <div className="error-actions">
-    <button onClick={onRetry} aria-label="Retry fetching weather data">
-      Retry
-    </button>
-    <button
-      onClick={toggleDetails}
-      aria-expanded={showDetails}
-      aria-controls="error-details"
+Uses shadcn/ui Alert component which provides:
+```tsx
+<Alert variant="destructive" className="...">
+  <AlertCircle className="h-4 w-4" />
+  <AlertTitle className="flex items-center justify-between pr-8">
+    <span>Weather Service Error</span>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={clearError}
+      aria-label="Dismiss error"
     >
-      Details
-    </button>
-    <button onClick={onDismiss} aria-label="Dismiss error message">
-      <X /> Dismiss
-    </button>
-  </div>
-
-  {showDetails && (
-    <div id="error-details" className="error-details">
-      <!-- Technical details -->
-    </div>
-  )}
-</div>
+      <X className="h-4 w-4" />
+    </Button>
+  </AlertTitle>
+  <AlertDescription className="mt-2">
+    <p>{getUserFriendlyMessage(errorInfo.message)}</p>
+    {hasDetails && (
+      <Button onClick={toggleDetails} className="...">
+        {/* Show/Hide details */}
+      </Button>
+    )}
+    {isExpanded && hasDetails && (
+      <pre className="...">{JSON.stringify(errorInfo.details, null, 2)}</pre>
+    )}
+  </AlertDescription>
+</Alert>
 ```
 
 ### ARIA Attributes
-- `role="alert"` for critical errors
-- `aria-live="polite"` for non-critical errors
-- `aria-live="assertive"` for critical errors
-- `aria-atomic="true"` to read entire message
-- `aria-label` on action buttons
-- `aria-expanded` on details toggle
+- shadcn/ui Alert component provides appropriate `role` attributes
+- `aria-label="Dismiss error"` on dismiss button
+- Buttons use semantic `<button>` elements
+- Icon components from lucide-react are decorative
 
 ### Keyboard Navigation
-- **Tab**: Navigate through buttons
+- **Tab**: Navigate to dismiss button and details toggle
 - **Enter/Space**: Activate buttons
-- **Escape**: Dismiss banner (if dismissible)
-- Focus trap within banner (optional for critical errors)
+- Full keyboard accessibility via native button elements
 
 ### Screen Reader Support
-- Announce error immediately when appears
-- Read full error message
-- Announce retry button availability
-- Announce when error is dismissed or resolved
+- Alert component announces when error appears
+- Clear button labels for screen readers
+- Error message read by AlertTitle and AlertDescription
+- Technical details in `<pre>` tag for proper formatting
 
 ### Visual Considerations
-- High contrast for error text
-- Icons supplement text (not sole indicator)
-- Color-blind friendly color scheme
-- Focus indicators on all interactive elements
+- High contrast destructive variant for errors
+- Custom yellow styling for warnings (429 rate limit)
+- AlertCircle icon supplements text
+- Focus indicators on interactive elements via shadcn/ui Button component
 
 ## Loading States
 
-### Normal Display
-- Error content visible
-- Buttons enabled
-- No loading indicators
+**No loading states** - Component has simple show/hide behavior:
 
-### During Retry
-```
-┌─────────────────────────────────────────────────────────────┐
-│ ⚠️  Error: Unable to fetch weather data                     │
-│                                                              │
-│     Retrying...  [⏳]                                       │
-└─────────────────────────────────────────────────────────────┘
-```
-- Retry button shows spinner
-- Other buttons disabled
-- Message may update: "Retrying..."
+### When Error Exists
+- Banner visible with error message
+- Dismiss button enabled
+- Details toggle enabled (if details present)
 
-### After Successful Retry
-- Banner fades out and disappears
-- Smooth exit animation
-- Success message (optional, brief)
+### When Error Cleared
+- Banner disappears (returns `null`)
+- Component unmounts completely
+- No animations or transitions
 
-### After Failed Retry
-- Update error message (if different)
-- Or show "Retry failed" with attempt count
-- Re-enable retry button
+### Auto-Dismiss Behavior
+- Timer starts when error appears
+- After 10 seconds, `clearError()` called automatically
+- Timer cleared if component unmounts or error changes
 
 ## Example Usage
 
+### In App Component
 ```tsx
-import { ErrorBanner } from '@/components/ErrorBanner';
-import { useErrorStore } from '@/store/errors';
+import { ErrorBanner } from '@/components/ErrorBanner'
 
 function App() {
-  const { error, clearError, retryLastAction } = useErrorStore();
-
   return (
     <div className="app">
       <Header />
 
-      {error && (
-        <ErrorBanner
-          error={error}
-          onRetry={error.retryable ? retryLastAction : undefined}
-          onDismiss={clearError}
-          dismissible={true}
-        />
-      )}
+      {/* ErrorBanner accesses store directly - no props needed */}
+      <ErrorBanner />
 
       <main>{/* Content */}</main>
     </div>
-  );
+  )
 }
 ```
 
-### With Error Store
+### Setting Errors from API Calls
 ```tsx
-import { create } from 'zustand';
+import { useWeatherStore } from '@/stores/weatherStore'
 
-interface ErrorStore {
-  error: AppError | null;
-  lastAction: (() => Promise<void>) | null;
-  setError: (error: AppError) => void;
-  clearError: () => void;
-  retryLastAction: () => Promise<void>;
-}
+function WeatherComponent() {
+  const { setError, setLoading } = useWeatherStore()
 
-export const useErrorStore = create<ErrorStore>((set, get) => ({
-  error: null,
-  lastAction: null,
-
-  setError: (error) => set({ error }),
-
-  clearError: () => set({ error: null }),
-
-  retryLastAction: async () => {
-    const { lastAction, clearError, setError } = get();
-    if (!lastAction) return;
-
+  async function fetchWeather(zipCode: string) {
     try {
-      await lastAction();
-      clearError();
+      setLoading(true)
+      const response = await fetch(`/api/weather/${zipCode}`)
+
+      if (!response.ok) {
+        // Set simple string error
+        setError(`HTTP ${response.status}: ${response.statusText}`)
+        return
+      }
+
+      const data = await response.json()
+      // Process data...
+
     } catch (error) {
-      setError(parseError(error));
+      // Set error with details
+      setError(error instanceof Error ? error.message : 'Unknown error')
+    } finally {
+      setLoading(false)
     }
-  },
-}));
+  }
+}
 ```
 
-### Error Creation Helper
-```typescript
-function createError(
-  type: ErrorType,
-  message: string,
-  options?: Partial<AppError>
-): AppError {
-  return {
-    id: generateErrorId(),
-    type,
-    message,
-    timestamp: new Date(),
-    retryable: type !== 'validation' && type !== 'not_found',
-    ...options,
-  };
+### Setting Errors with Details Object
+```tsx
+// Component can parse objects if stored as JSON string or object
+const errorWithDetails = {
+  message: 'Failed to fetch weather data',
+  details: {
+    statusCode: 503,
+    endpoint: '/api/weather/12345',
+    timestamp: new Date().toISOString()
+  }
 }
 
-// Usage
-try {
-  await fetchWeatherData(zipCode);
-} catch (error) {
-  const appError = createError(
-    'api_error',
-    'Unable to fetch weather data',
-    {
-      statusCode: error.response?.status,
-      endpoint: error.config?.url,
-      details: error.message,
-    }
-  );
-  setError(appError);
-}
+// Store expects string, but component can parse objects
+setError(JSON.stringify(errorWithDetails))
+// OR if store type updated to accept objects:
+setError(errorWithDetails)
 ```
 
 ## Edge Cases
 
 1. **Multiple Simultaneous Errors**:
-   - Show only most recent/critical error
-   - Or queue errors and show one at a time
-   - Log all errors for debugging
+   - Only most recent error shown (store holds single error)
+   - New error replaces previous error
+   - Auto-dismiss timer resets for new errors
 
 2. **Rapid Error-Success-Error**:
-   - Debounce error display
-   - Avoid rapid appearance/disappearance
-   - Smooth transitions
+   - Component remounts/unmounts with each error change
+   - Auto-dismiss timer resets on each error
+   - Details collapse when new error appears
 
-3. **Error During Retry**:
-   - Update banner with new error
-   - Increment retry attempt counter
-   - Implement exponential backoff
+3. **Long Error Messages**:
+   - Message text flows naturally (no truncation)
+   - Details section has `overflow-auto` for scrolling
+   - No max-height constraint on banner
 
-4. **Long Error Messages**:
-   - Truncate with "Read more" (optional)
-   - Ensure details section scrollable
-   - Maintain banner height limits
+4. **Error While Banner Displayed**:
+   - New error replaces existing error immediately
+   - Details collapse state resets
+   - Auto-dismiss timer restarts
 
-5. **Banner Overflow**:
-   - Set max-height with scroll
-   - Ensure dismiss button always visible
-   - Don't cover critical UI elements
-
-6. **Error While Banner Displayed**:
-   - Replace existing error
-   - Or stack errors (queue)
-   - Transition smoothly
-
-7. **Permanent Errors**:
-   - Some errors require action (not just retry)
-   - Make non-dismissible for critical issues
-   - Provide clear guidance
+5. **String vs Object Errors**:
+   - Component tries to parse error as object
+   - Falls back to string message if parsing fails
+   - Details only shown if object has `details` property
 
 ## Auto-Hide Behavior
 
-### Non-Critical Errors
-- Auto-hide after 10 seconds (configurable)
-- User can dismiss earlier
-- Countdown indicator (optional)
+**All Errors** (no distinction between critical/non-critical):
+- Auto-hide after 10 seconds (hardcoded)
+- User can dismiss earlier via button
+- No countdown indicator shown
+- No configuration options
 
-### Critical Errors
-- No auto-hide
-- Require explicit dismissal
-- Or require successful retry
-
-### Rate Limiting
-- Show countdown: "Try again in 30 seconds"
-- Auto-enable retry after countdown
-- Update message in real-time
+**Note**: Rate limiting errors (429) get warning styling but same auto-hide behavior.
 
 ## Performance Considerations
 
-- Render only when error present (conditional)
-- Use React Portal for fixed positioning
-- Memoize error banner component
-- Optimize animations (CSS transforms)
-- Lazy load details section
-- Debounce rapid error changes
+- Conditional render: Returns `null` when no error
+- Component unmounts completely when error cleared
+- No memoization (simple component)
+- No animations or transitions
+- useEffect cleanup prevents memory leaks from timers
+- Details JSON formatting done inline (no lazy loading)
 
 ## Testing Requirements
 
-- Render with different error types
-- Test retry functionality
-- Test dismiss functionality
-- Test details toggle
-- Test auto-hide behavior
-- Test keyboard navigation (Tab, Escape)
-- Test with screen reader
-- Verify ARIA attributes
-- Test focus management
-- Test during retry (loading state)
-- Test after successful retry (disappears)
-- Test after failed retry (updates)
-- Test responsive layouts
-- Verify color contrast
-- Test with very long error messages
-- Test multiple rapid errors
-- Test error during retry
-- Test non-dismissible errors
-- Test rate limit countdown
-- Test copy error details functionality
-- Verify z-index and positioning
-- Test animation smoothness
+### Core Functionality
+- Render with no error (should return `null`)
+- Render with string error message
+- Render with object error (with details)
+- Test dismiss functionality (calls `clearError()`)
+- Test auto-hide after 10 seconds
+- Test auto-hide timer cleanup on unmount
+
+### Error Message Transformation
+- Test network error detection and message
+- Test 404 error detection and message
+- Test 429 error detection and warning styling
+- Test 500/502/503 error detection and message
+- Test generic error (no pattern match)
+
+### Details Toggle
+- Details toggle only shown when error has details
+- Toggle expands/collapses details section
+- Details show JSON.stringify output
+- Expanded state resets when new error appears
+
+### Accessibility
+- Dismiss button has `aria-label="Dismiss error"`
+- Tab navigation to buttons works
+- Alert component announces errors
+
+### Styling
+- Default errors use destructive variant (red)
+- 429 errors use yellow warning styling
+- Fixed positioning at top-16
+- Responsive padding (px-4, pt-4)
+
+### Edge Cases
+- Test error change while banner displayed
+- Test error with undefined/null details
+- Test very long error messages
+- Test rapid error changes
+- Test string error parsing (try/catch fallback)
+
+## Implementation Details
+
+### Component Structure
+- **File**: `/workspaces/weather-app/src/components/ErrorBanner.tsx`
+- **Lines**: 120 lines (within 300 line guideline)
+- **Dependencies**:
+  - `lucide-react`: AlertCircle, X, ChevronDown, ChevronUp icons
+  - `@/components/ui/alert`: Alert, AlertDescription, AlertTitle (shadcn/ui)
+  - `@/components/ui/button`: Button (shadcn/ui)
+  - `@/stores/weatherStore`: useWeatherStore hook
+
+### State Management
+- **Store**: Uses `useWeatherStore` from Zustand
+- **Store Fields**:
+  - `error: string | null` - Current error message
+  - `clearError: () => void` - Function to clear error
+- **Local State**:
+  - `isExpanded: boolean` - Controls details visibility
+  - `errorInfo: ErrorInfo | null` - Parsed error object
+
+### Key Functions
+- `getUserFriendlyMessage(message: string): string` - Transforms technical errors to user-friendly messages
+- Error parsing logic in useEffect that handles both string and object errors
+
+### Styling Approach
+- Fixed positioning: `fixed left-0 right-0 top-16 z-50`
+- Conditional warning styling for 429 errors
+- shadcn/ui components provide base styling
+- Tailwind CSS for custom styling and spacing
+
+### Component Lifecycle
+1. Mount: Check for error in store
+2. Error appears: Parse error, start 10-second timer
+3. Error changes: Clear previous timer, start new timer
+4. User dismisses: Call `clearError()`, timer cleanup
+5. Auto-dismiss: Timer fires, calls `clearError()`
+6. Unmount: Cleanup timer if still running

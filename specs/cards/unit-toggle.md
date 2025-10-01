@@ -2,453 +2,410 @@
 
 ## Purpose and Overview
 
-Allows users to switch between Imperial (Fahrenheit, mph, inches) and Metric (Celsius, km/h, mm) unit systems for weather data display. Located at the bottom of the application layout alongside the theme toggle. Persists user preference to localStorage and updates all weather data displays throughout the app.
+Allows users to switch between Imperial (Fahrenheit, mph, miles) and Metric (Celsius, km/h, km) unit systems for weather data display. Located at the bottom of the application layout alongside the theme toggle. Persists user preference to localStorage and updates all weather data displays throughout the app.
 
-## Props/API Interface
+## Implementation
+
+The component uses a simple switch toggle design with "Imperial" and "Metric" labels on either side. No props are accepted - the component is self-contained and manages its state through the Zustand store.
+
+### Component Structure
 
 ```typescript
-interface UnitToggleProps {
-  className?: string;
-  variant?: 'switch' | 'button' | 'segmented';
-  showLabel?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+// Component has no props - fully self-contained
+export function UnitToggle()
+```
+
+### Store Integration
+
+Uses Zustand store with persistence:
+
+```typescript
+// From src/stores/unitStore.ts
+export type UnitSystem = 'imperial' | 'metric'
+
+interface UnitState {
+  unitSystem: UnitSystem
+  setUnitSystem: (system: UnitSystem) => void
 }
 
-type UnitSystem = 'imperial' | 'metric';
-
-interface UnitConfig {
-  system: UnitSystem;
-  temperature: '°F' | '°C';
-  speed: 'mph' | 'km/h';
-  distance: 'mi' | 'km';
-  precipitation: 'in' | 'mm';
-  pressure: 'inHg' | 'mb' | 'hPa';
-}
+export const useUnitStore = create<UnitState>()(
+  persist(
+    (set) => ({
+      unitSystem: 'imperial',
+      setUnitSystem: (system) => set({ unitSystem: system })
+    }),
+    {
+      name: 'unit-storage'  // localStorage key
+    }
+  )
+)
 ```
 
 ## Layout and Visual Design
 
-### Toggle Variants
+### Actual Implementation
 
-**Segmented Button** (Recommended):
+The component uses a **Switch Toggle** design with text labels:
+
 ```
-┌──────────────┐
-│ [°F]│ °C   │
-│  ██ │      │
-└──────────────┘
+┌──────────────────────────────────────┐
+│  Imperial  ○─────  Metric            │
+│  (active)           (inactive)       │
+└──────────────────────────────────────┘
 
-or
+or when toggled:
 
-┌──────────────┐
-│ °F │[°C]  │
-│    │ ██   │
-└──────────────┘
-```
-
-**Switch Toggle**:
-```
-┌─────────────────┐
-│ °F  ●─────  °C  │
-│     (slide)     │
-└─────────────────┘
+┌──────────────────────────────────────┐
+│  Imperial  ─────●  Metric            │
+│  (inactive)        (active)          │
+└──────────────────────────────────────┘
 ```
 
-**Button Toggle**:
-```
-┌─────────────────┐
-│ [°F]   [°C]     │
-│ Imperial Metric │
-└─────────────────┘
-```
+### Visual Structure
 
-### Icon/Label Options
-- **Short**: °F | °C
-- **Medium**: °F/mph | °C/km/h
-- **Long**: Imperial | Metric
-- **Icons**: Flag icons (US flag for Imperial, metric countries for Metric)
+- **Left Label**: "Imperial" - highlighted when active, muted when inactive
+- **Center**: shadcn/ui Switch component (toggle)
+- **Right Label**: "Metric" - highlighted when active, muted when inactive
+- **Layout**: Horizontal flex container with 3-unit gap
+- **Font**: Small (text-sm) medium weight
+- **Color States**:
+  - Active: `text-foreground`
+  - Inactive: `text-muted-foreground`
 
 ### Positioning
 - **Location**: Bottom of page
-- **Alignment**: Bottom-left or bottom-center
+- **Alignment**: Typically bottom-left or bottom-center
 - **Near**: Theme toggle (coordinated bottom controls)
-- **Spacing**: Adequate from edges and theme toggle
-
-### Styling Guidelines
-
-**Segmented Button** (Recommended):
-- Two connected segments
-- Active segment highlighted (filled background)
-- Inactive segment outlined or muted
-- Clear visual distinction
-- Smooth transition animation
-- Equal width segments
-
-**Switch**:
-- Similar to theme toggle
-- Labeled with °F and °C
-- Slide animation on toggle
-
-**Button**:
-- Two separate buttons
-- Active button highlighted
-- Inactive button muted
-
-### Layout Examples
-
-**Bottom Center** (with Theme Toggle):
-```
-┌─────────────────────────────────────┐
-│                                     │
-│      [Weather content]              │
-│                                     │
-│   [°F|°C]      ☀️ ●───── 🌙        │
-│   Units          Theme              │
-└─────────────────────────────────────┘
-```
-
-**Bottom Left and Right**:
-```
-┌─────────────────────────────────────┐
-│                                     │
-│      [Weather content]              │
-│                                     │
-│  [°F|°C]              ☀️ ●───── 🌙 │
-└─────────────────────────────────────┘
-```
+- **Spacing**: Controlled by parent layout
 
 ## Data Requirements
 
-### Unit Conversions
+### Conversion Helper Functions
 
-**Temperature**:
-- F to C: `(F - 32) × 5/9`
-- C to F: `(C × 9/5) + 32`
+The store exports standalone conversion utilities (located in `src/stores/unitStore.ts`):
 
-**Speed**:
-- mph to km/h: `mph × 1.60934`
-- km/h to mph: `km/h × 0.621371`
+**Temperature Conversion**:
+```typescript
+// Converts Celsius to target system
+export const convertTemp = (celsius: number, toSystem: UnitSystem): number => {
+  if (toSystem === 'imperial') {
+    return (celsius * 9) / 5 + 32  // To Fahrenheit
+  }
+  return celsius  // Already in Celsius
+}
+```
 
-**Distance**:
-- miles to km: `mi × 1.60934`
-- km to miles: `km × 0.621371`
+**Speed Conversion**:
+```typescript
+// Converts meters per second to target system
+export const convertSpeed = (
+  metersPerSecond: number,
+  toSystem: UnitSystem
+): number => {
+  if (toSystem === 'imperial') {
+    return metersPerSecond * 2.237  // To mph
+  }
+  return metersPerSecond * 3.6  // To km/h
+}
+```
 
-**Precipitation**:
-- inches to mm: `in × 25.4`
-- mm to inches: `mm × 0.0393701`
+**Distance Conversion**:
+```typescript
+// Converts meters to target system
+export const convertDistance = (meters: number, toSystem: UnitSystem): number => {
+  if (toSystem === 'imperial') {
+    return meters * 0.000621371  // To miles
+  }
+  return meters / 1000  // To kilometers
+}
+```
 
-**Pressure**:
-- inHg to mb/hPa: `inHg × 33.8639`
-- mb/hPa to inHg: `mb × 0.02953`
+**Unit Label Helpers**:
+```typescript
+export const getTempUnit = (system: UnitSystem): string => {
+  return system === 'imperial' ? '°F' : '°C'
+}
+
+export const getSpeedUnit = (system: UnitSystem): string => {
+  return system === 'imperial' ? 'mph' : 'km/h'
+}
+
+export const getDistanceUnit = (system: UnitSystem): string => {
+  return system === 'imperial' ? 'mi' : 'km'
+}
+```
 
 ### localStorage Schema
 ```json
 {
-  "unitSystem": "imperial",  // "imperial" | "metric"
-  "lastUpdated": "2024-09-30T12:00:00Z"
+  "state": {
+    "unitSystem": "imperial"  // "imperial" | "metric"
+  },
+  "version": 0
 }
 ```
-- Key: `weather-unit-preference`
-- Value: Unit system string
-- Default: "imperial" (US-based app)
+- **Key**: `unit-storage`
+- **Format**: Zustand persist middleware format
+- **Default**: "imperial" (US-based app)
 
 ### NWS API Considerations
-- NWS API returns data in **metric units** (SI)
-- Convert on client-side or server-side
-- Cache both unit systems or convert on demand
-- Display format based on user preference
+- NWS API returns data in **SI/metric units** (Celsius, meters/second, meters)
+- All conversions happen **client-side** using the helper functions above
+- Components consume raw API data and convert on-demand based on current unit preference
+- No server-side conversion or caching of both unit systems
 
 ## User Interactions
 
 ### Toggle Action
-- **Click/Tap**: Switch between Imperial and Metric
-- **Immediate**: All units update throughout app
-- **Animation**: Smooth transition of active segment
-- **Feedback**: Visual change in numbers across all cards
-
-### Segmented Button
-- **Click segment**: Select unit system
-- **Active state**: Filled background
-- **Inactive state**: Outlined or muted
-- **Transition**: Smooth slide or fade
+- **Click/Tap Switch**: Switch between Imperial and Metric
+- **Click Labels**: Labels are also clickable (associated with switch via htmlFor)
+- **Immediate**: All units update throughout app via Zustand store subscription
+- **Animation**: Smooth slide animation provided by shadcn/ui Switch component
+- **Feedback**:
+  - Label color changes (active vs. muted)
+  - Visual change in numbers across all cards
+  - Switch knob slides to new position
 
 ### Affected Components
-All weather displays update:
+All weather displays update automatically via Zustand store subscription:
 - Current Conditions card
 - 7-Day Forecast card
 - Hourly Forecast card
-- Alert card (if showing temps)
-- Forecast Day modal
+- Any other component that uses `useUnitStore()` or conversion helpers
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Full-size toggle with labels
-- °F/mph or Imperial label visible
-- Comfortable spacing
-- Hover effects
-
-### Tablet (768px - 1023px)
-- Similar to desktop
-- May use shorter labels (°F/°C)
-- Maintain touch-friendly size
-
-### Mobile (<768px)
-- Compact toggle (°F/°C only)
-- Minimum 44x44px touch target
-- May reduce padding
-- Ensure easy thumb reach
+The component uses the same layout across all screen sizes:
+- "Imperial" and "Metric" text labels always visible
+- Switch component maintains consistent size
+- Touch targets meet accessibility requirements (44x44px minimum)
+- Text remains readable at all sizes with `text-sm` class
+- Gap between elements (3 units) provides adequate spacing
+- No breakpoint-specific behavior needed due to simple, compact design
 
 ## Accessibility Considerations
 
 ### Semantic HTML
 
-**Segmented Button**:
-```html
-<div role="group" aria-labelledby="unit-toggle-label">
-  <span id="unit-toggle-label" class="sr-only">Unit system selection</span>
-  <div role="radiogroup" aria-label="Select unit system">
-    <button
-      role="radio"
-      aria-checked="true"
-      aria-label="Imperial units: Fahrenheit and miles per hour"
-    >
-      °F
-    </button>
-    <button
-      role="radio"
-      aria-checked="false"
-      aria-label="Metric units: Celsius and kilometers per hour"
-    >
-      °C
-    </button>
-  </div>
+The implementation uses shadcn/ui components which provide proper accessibility:
+
+```tsx
+<div className="flex items-center gap-3">
+  <Label
+    htmlFor="unit-toggle"
+    className={`text-sm font-medium ${!isMetric ? 'text-foreground' : 'text-muted-foreground'}`}
+  >
+    Imperial
+  </Label>
+  <Switch
+    id="unit-toggle"
+    checked={isMetric}
+    onCheckedChange={handleToggle}
+    aria-label="Toggle between Imperial and Metric units"
+  />
+  <Label
+    htmlFor="unit-toggle"
+    className={`text-sm font-medium ${isMetric ? 'text-foreground' : 'text-muted-foreground'}`}
+  >
+    Metric
+  </Label>
 </div>
 ```
 
-**Switch**:
-```html
-<button
-  role="switch"
-  aria-checked="false"
-  aria-label="Switch to metric units"
-  onClick={toggleUnits}
->
-  <span>°F</span>
-  <span className="toggle-track">
-    <span className="toggle-knob"></span>
-  </span>
-  <span>°C</span>
-</button>
-```
-
 ### ARIA Attributes
-- **Radio group**: `role="radiogroup"`, individual `role="radio"`
-- **Switch**: `role="switch"`, `aria-checked`
-- **Labels**: Clear description of each option
-- **State**: Announce current selection
+- **Switch role**: Provided by shadcn/ui Switch component
+- **aria-checked**: Automatically managed by Switch component based on `checked` prop
+- **aria-label**: "Toggle between Imperial and Metric units" provides clear description
+- **Labels**: Both labels associated with switch via `htmlFor="unit-toggle"`
 
 ### Keyboard Navigation
-- **Tab**: Focus on toggle control
-- **Arrow keys**: Switch between options (radio group)
-- **Space/Enter**: Activate selection
-- **Focus indicator**: Clearly visible
+- **Tab**: Focus on switch control
+- **Space/Enter**: Toggle between Imperial and Metric
+- **Focus indicator**: Provided by shadcn/ui Switch component with visible focus ring
 
 ### Screen Reader Support
-- Announce current unit: "Imperial units selected"
-- Announce on change: "Switched to metric units"
-- Provide context: "Unit system toggle, showing Fahrenheit and miles per hour"
-- Explain conversion: "All temperatures will display in Celsius"
+- Switch announces: "Toggle between Imperial and Metric units"
+- State announced automatically: "checked" or "not checked"
+- Label association allows clicking either label to toggle
+- Visual label changes (foreground vs. muted) reinforce current state
 
 ### Visual Considerations
-- Clear visual distinction between active/inactive
-- High contrast in both themes
-- Focus indicators meet WCAG standards
-- Text labels supplement visual design
+- Clear visual distinction via color contrast (foreground vs. muted-foreground)
+- High contrast maintained in both light and dark themes via theme variables
+- Focus indicators meet WCAG standards (provided by shadcn/ui)
+- Text labels clearly identify both options ("Imperial" and "Metric")
 
 ## Loading States
 
 ### Initial Load
-- Apply saved preference immediately
-- Default to Imperial if no preference stored
-- Update all displays with correct units
+- Zustand persist middleware loads saved preference from localStorage immediately
+- Default to "imperial" if no preference stored
+- Components subscribe to store and render with correct units on mount
 
 ### Unit Switching
-- **Instant conversion**: No loading state needed
-- **Smooth transition**: Optional fade or slide animation
-- **All components**: Update simultaneously
-
-### Data Re-fetch (if needed)
-If server-side conversion used:
-```
-┌──────────────┐
-│ [°F]│ °C   │
-│  ██ │ ⏳   │
-└──────────────┘
-```
-- Brief loading indicator
-- Toggle disabled during fetch
-- Re-enable after data loaded
+- **Instant conversion**: No loading state needed (all conversions are client-side)
+- **Smooth transition**: Switch animation provided by shadcn/ui component
+- **All components**: Update simultaneously via Zustand store subscription
+- No need to disable toggle or show loading indicators
 
 ## Example Usage
 
+### Rendering the Toggle Component
+
 ```tsx
-import { UnitToggle } from '@/components/UnitToggle';
-import { useUnits } from '@/hooks/useUnits';
+import { UnitToggle } from '@/components/UnitToggle'
 
 function Footer() {
   return (
     <footer>
-      <UnitToggle variant="segmented" showLabel />
-      <ThemeToggle variant="switch" showLabel />
+      <UnitToggle />  {/* No props needed */}
+      <ThemeToggle />
     </footer>
-  );
-}
-```
-
-### With Unit Hook
-```tsx
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-interface UnitStore {
-  system: UnitSystem;
-  setSystem: (system: UnitSystem) => void;
-  convert: {
-    temperature: (value: number, to: 'F' | 'C') => number;
-    speed: (value: number, to: 'mph' | 'kmh') => number;
-    // ... other conversions
-  };
-}
-
-export const useUnitStore = create<UnitStore>()(
-  persist(
-    (set) => ({
-      system: 'imperial',
-      setSystem: (system) => set({ system }),
-      convert: {
-        temperature: (value, to) => {
-          // Conversion logic
-        },
-        // ...
-      },
-    }),
-    { name: 'weather-unit-preference' }
   )
-);
+}
 ```
 
-### Using in Components
+### Using Unit System in Components
+
 ```tsx
-import { useUnitStore } from '@/store/units';
+import { useUnitStore, convertTemp, getTempUnit } from '@/stores/unitStore'
 
-function CurrentConditions({ temp }: { temp: number }) {
-  const { system, convert } = useUnitStore();
+function CurrentConditions({ tempCelsius }: { tempCelsius: number }) {
+  const { unitSystem } = useUnitStore()
 
-  const displayTemp = system === 'imperial'
-    ? temp
-    : convert.temperature(temp, 'C');
+  // Convert temperature from Celsius to current unit system
+  const displayTemp = convertTemp(tempCelsius, unitSystem)
+  const unit = getTempUnit(unitSystem)
 
-  const unit = system === 'imperial' ? '°F' : '°C';
+  return <div>{Math.round(displayTemp)}{unit}</div>
+}
+```
 
-  return <div>{displayTemp.toFixed(0)}{unit}</div>;
+### Full Example with Multiple Conversions
+
+```tsx
+import {
+  useUnitStore,
+  convertTemp,
+  convertSpeed,
+  convertDistance,
+  getTempUnit,
+  getSpeedUnit,
+  getDistanceUnit
+} from '@/stores/unitStore'
+
+interface WeatherData {
+  temperature: number  // Celsius
+  windSpeed: number    // meters per second
+  visibility: number   // meters
+}
+
+function WeatherDisplay({ data }: { data: WeatherData }) {
+  const { unitSystem } = useUnitStore()
+
+  const temp = Math.round(convertTemp(data.temperature, unitSystem))
+  const wind = Math.round(convertSpeed(data.windSpeed, unitSystem))
+  const vis = convertDistance(data.visibility, unitSystem).toFixed(1)
+
+  return (
+    <div>
+      <div>Temperature: {temp}{getTempUnit(unitSystem)}</div>
+      <div>Wind: {wind} {getSpeedUnit(unitSystem)}</div>
+      <div>Visibility: {vis} {getDistanceUnit(unitSystem)}</div>
+    </div>
+  )
 }
 ```
 
 ## Edge Cases
 
 1. **localStorage Unavailable**:
-   - Gracefully degrade
-   - Use session state
-   - Default to Imperial
+   - Zustand persist middleware handles gracefully
+   - Falls back to in-memory state
+   - Defaults to "imperial"
 
 2. **Invalid Stored Value**:
-   - Validate on load
-   - Fallback to Imperial if invalid
-   - Reset to default
+   - TypeScript enforces `UnitSystem` type ('imperial' | 'metric')
+   - Zustand validates on load
+   - Falls back to "imperial" if corrupted
 
-3. **Mid-Conversion Edge Cases**:
-   - Very large/small numbers
-   - Rounding inconsistencies
-   - Precision handling
+3. **Multiple Tabs**:
+   - Zustand persist middleware syncs across tabs automatically
+   - Uses storage events internally
+   - All tabs update when preference changes in any tab
 
-4. **Multiple Tabs**:
-   - Sync preference across tabs
-   - Listen for storage events
-   - Update other tabs when changed
+4. **Data Precision**:
+   - Components control rounding based on their needs
+   - Helper functions return raw numbers
+   - Consumers apply `Math.round()`, `.toFixed()`, etc. as needed
 
-5. **Print Styles**:
-   - Ensure printed content shows correct units
-   - Include unit labels clearly
+5. **API Response Units**:
+   - NWS returns SI/metric units (Celsius, m/s, meters)
+   - Conversion helpers expect metric input
+   - All conversions happen at display time (on-demand)
 
-6. **Data Precision**:
-   - Round appropriately (0-1 decimal places)
-   - Avoid showing excessive decimals
-   - Consistent rounding throughout app
+## Best Practices for Using Conversions
 
-7. **API Response Units**:
-   - NWS returns metric (Celsius)
-   - Handle conversion consistently
-   - Cache converted values or convert on-demand
+### Temperature
+```tsx
+const displayTemp = Math.round(convertTemp(celsiusValue, unitSystem))
+const unit = getTempUnit(unitSystem)
+// Result: "82°F" or "28°C"
+```
 
-## Conversion Best Practices
+### Wind Speed
+```tsx
+const displaySpeed = Math.round(convertSpeed(metersPerSecond, unitSystem))
+const unit = getSpeedUnit(unitSystem)
+// Result: "15 mph" or "24 km/h"
+```
 
-### Rounding Rules
-- **Temperature**: Round to nearest integer (82°F, 28°C)
-- **Wind Speed**: Round to nearest integer (15 mph, 24 km/h)
-- **Distance**: 1 decimal place for < 10, integer for ≥ 10
-- **Precipitation**: 2 decimal places (0.25 in, 6.35 mm)
-- **Pressure**: 2 decimal places
-
-### Display Formatting
-```typescript
-function formatTemperature(value: number, system: UnitSystem): string {
-  const unit = system === 'imperial' ? '°F' : '°C';
-  return `${Math.round(value)}${unit}`;
-}
-
-function formatSpeed(value: number, system: UnitSystem): string {
-  const unit = system === 'imperial' ? 'mph' : 'km/h';
-  return `${Math.round(value)} ${unit}`;
-}
-
-function formatPrecipitation(value: number, system: UnitSystem): string {
-  const unit = system === 'imperial' ? 'in' : 'mm';
-  return `${value.toFixed(2)} ${unit}`;
-}
+### Distance/Visibility
+```tsx
+const distance = convertDistance(meters, unitSystem)
+const displayDist = distance < 10 ? distance.toFixed(1) : Math.round(distance)
+const unit = getDistanceUnit(unitSystem)
+// Result: "2.5 mi" or "10 km"
 ```
 
 ## Performance Considerations
 
-- Memoize conversion functions
-- Cache converted values when possible
-- Use React.memo for toggle component
-- Optimize re-renders when units change
-- Consider converting data layer vs. presentation layer
-- Batch updates when toggling units
+- Conversion functions are simple, pure calculations (no memoization needed)
+- Toggle component is already lightweight (no need for React.memo)
+- Zustand provides optimal re-rendering (only subscribed components update)
+- All conversions happen on-demand at render time
+- No caching of converted values (calculations are fast enough)
 
 ## Testing Requirements
 
-- Render in Imperial mode
-- Render in Metric mode
-- Test toggle interaction
-- Verify localStorage persistence
-- Test with localStorage disabled
-- Test keyboard navigation
-- Test with screen reader
-- Verify ARIA attributes
-- Test focus indicators
-- Test in all variants (segmented, switch, button)
-- Test conversion accuracy:
-  - Temperature (F ↔ C)
-  - Speed (mph ↔ km/h)
-  - Distance (mi ↔ km)
-  - Precipitation (in ↔ mm)
-  - Pressure (inHg ↔ mb)
-- Test rounding and formatting
-- Verify all components update on toggle
-- Test with edge case values (very high/low)
-- Test multi-tab synchronization
-- Verify no layout shift during conversion
+### Component Tests
+- Render with Imperial selected (default)
+- Render with Metric selected
+- Test switch toggle interaction changes state
+- Test clicking "Imperial" label toggles to Imperial
+- Test clicking "Metric" label toggles to Metric
+- Verify localStorage persistence via Zustand
+- Test keyboard navigation (Tab, Space, Enter)
+- Verify ARIA attributes (`aria-label`, `aria-checked`)
+- Test focus indicators are visible
 - Test in both light and dark themes
-- Test responsive behavior
-- Test touch targets on mobile
+- Verify label color changes (foreground vs. muted)
+
+### Conversion Function Tests
+- Test `convertTemp()` accuracy:
+  - 0°C = 32°F
+  - 100°C = 212°F
+  - -40°C = -40°F
+- Test `convertSpeed()` accuracy:
+  - 10 m/s = 22.37 mph
+  - 10 m/s = 36 km/h
+- Test `convertDistance()` accuracy:
+  - 1609 meters = 1 mile
+  - 1000 meters = 1 km
+- Test edge case values (very high/low, zero, negative)
+
+### Integration Tests
+- Verify components update when toggle changes
+- Test multi-tab synchronization (Zustand persist)
+- Verify no layout shift during unit changes
+- Test that all weather displays reflect current unit preference

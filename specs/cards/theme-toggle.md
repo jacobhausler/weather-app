@@ -2,403 +2,312 @@
 
 ## Purpose and Overview
 
-Allows users to switch between light and dark color themes. Detects and respects system theme preference on initial load. Located at the bottom of the application layout. Persists user preference to localStorage for consistent experience across sessions.
+Allows users to switch between light and dark color themes. Detects and respects system theme preference on initial load. Located at the bottom of the application layout. Persists user preference to localStorage via Zustand persist middleware for consistent experience across sessions.
 
 ## Props/API Interface
 
+**Component Props:**
 ```typescript
-interface ThemeToggleProps {
-  className?: string;
-  variant?: 'switch' | 'button' | 'select';
-  showLabel?: boolean;
-  size?: 'sm' | 'md' | 'lg';
-}
+// ThemeToggle accepts no props - fully self-contained
+export function ThemeToggle(): JSX.Element
+```
 
+**Theme Store State:**
+```typescript
 type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeState {
   theme: Theme;
-  systemTheme: 'light' | 'dark';
-  effectiveTheme: 'light' | 'dark';  // Resolved theme
+  setTheme: (theme: Theme) => void;
 }
 ```
 
+**Store Integration:**
+- Uses Zustand store (`useThemeStore`) for state management
+- Persists to localStorage with key `theme-storage`
+- Default theme: `'system'`
+- No component props required
+
 ## Layout and Visual Design
 
-### Toggle Variants
+### Actual Implementation
 
-**Switch Toggle** (Recommended):
+**Button Icon Toggle** (shadcn/ui Button component):
 ```
-┌────────────────────┐
-│  ☀️  ●─────  🌙   │
-│      (slide)       │
-└────────────────────┘
+┌─────────┐
+│   🌙    │  Light mode (shows Moon icon)
+└─────────┘
 
-Light mode:  ●───── 🌙
-Dark mode:   ☀️ ─────●
-```
-
-**Button Toggle**:
-```
-┌──────────────┐
-│  [☀️] [🌙]  │
-│  Light Dark  │
-└──────────────┘
+┌─────────┐
+│   ☀️    │  Dark mode (shows Sun icon)
+└─────────┘
 ```
 
-**Select Dropdown**:
-```
-┌────────────────┐
-│ Theme: [Dark ▼]│
-│  ├─ Light      │
-│  ├─ Dark       │
-│  └─ System     │
-└────────────────┘
-```
+### Visual Design Details
+- **Component**: `Button` from shadcn/ui
+- **Variant**: `ghost`
+- **Size**: `icon` (icon-only button)
+- **Shape**: Rounded full circle (`rounded-full` class)
+- **Icons**:
+  - Light mode: Moon icon from lucide-react (5x5 size)
+  - Dark mode: Sun icon from lucide-react (5x5 size)
+- **No text labels**: Icon-only implementation
 
 ### Icon Indicators
-- **Light mode**: Sun icon (☀️)
-- **Dark mode**: Moon/crescent icon (🌙)
-- **System**: Monitor/computer icon (🖥️) or auto icon
+- **Light mode**: Shows Moon icon (🌙) - clicking switches to dark
+- **Dark mode**: Shows Sun icon (☀️) - clicking switches to light
+- Icons from `lucide-react` package
+- Icon size: `h-5 w-5` (20px)
 
 ### Positioning
-- **Location**: Bottom of page
-- **Fixed position**: Stays visible when scrolling (optional)
-- **Alignment**: Centered or bottom-right
-- **Spacing**: Adequate padding from edges and other controls
+- **Location**: Bottom of page (in footer layout)
+- **Alignment**: As determined by parent container
+- **Spacing**: Controlled by parent layout
 
-### Styling Guidelines
-
-**Switch Variant**:
-- Track: Rounded rectangle (~40px wide, ~20px tall)
-- Knob: Circle that slides left/right
-- Colors:
-  - Light mode track: Light gray/blue
-  - Dark mode track: Dark gray/blue
-  - Knob: White with shadow
-- Transition: Smooth 200-300ms animation
-- Icons: Positioned at track ends
-
-**Button Variant**:
-- Two adjacent buttons
-- Active button highlighted
-- Inactive button muted
-- Clear visual distinction
-- Icon + text or icon only
-
-**Select Variant**:
-- Standard dropdown/select element
-- Options: Light, Dark, System
-- Shows current selection
-- Themed to match current mode
-
-### Layout Examples
-
-**Bottom Center**:
-```
-┌────────────────────────────────┐
-│                                │
-│     [Weather content]          │
-│                                │
-│      ☀️ ●───── 🌙            │
-│        Theme                   │
-└────────────────────────────────┘
-```
-
-**Bottom Right** (with Unit Toggle):
-```
-┌────────────────────────────────┐
-│                                │
-│     [Weather content]          │
-│                                │
-│  [°F/°C]        ☀️ ●───── 🌙 │
-└────────────────────────────────┘
-```
+### Styling
+- Ghost button variant (minimal background)
+- Circular shape with `rounded-full`
+- Standard hover/focus states from Button component
+- Inherits theme-aware styling from shadcn/ui
 
 ## Data Requirements
 
 ### Initial Theme Detection
-1. **Check localStorage**: User's saved preference
-2. **Check system preference**: `window.matchMedia('(prefers-color-scheme: dark)')`
-3. **Default**: Light mode if no preference found
+1. **Default theme**: `'system'` (stored in Zustand store)
+2. **Check localStorage**: Zustand persist middleware auto-loads from `theme-storage` key
+3. **System preference detection**: Component evaluates `window.matchMedia('(prefers-color-scheme: dark)')` when theme is `'system'`
 
 ### Theme Application
-- Apply theme to document root: `<html class="light">` or `<html class="dark">`
-- Or use CSS variables on `:root`
-- Update immediately when toggled
-- Persist to localStorage
+- Applied to document root via `document.documentElement.classList`
+- Classes: `'light'` or `'dark'` added to `<html>` element
+- Tailwind configured with `darkMode: 'class'` strategy
+- Theme updates immediately via `useEffect` when store state changes
 
 ### localStorage Schema
 ```json
 {
-  "theme": "dark",  // "light" | "dark" | "system"
-  "lastUpdated": "2024-09-30T12:00:00Z"
+  "state": {
+    "theme": "dark"  // "light" | "dark" | "system"
+  },
+  "version": 0
 }
 ```
-- Key: `weather-theme-preference`
-- Value: Theme string
-- Timestamp for debugging (optional)
+- **Key**: `theme-storage` (Zustand persist middleware)
+- **Value**: Zustand state object with theme property
+- **Auto-managed**: Zustand handles serialization/deserialization
 
 ### System Preference Listener
-```javascript
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-mediaQuery.addEventListener('change', (e) => {
-  if (theme === 'system') {
-    applyTheme(e.matches ? 'dark' : 'light');
-  }
-});
+```typescript
+// Implemented in useEffect
+if (theme === 'system') {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const handleChange = (e: MediaQueryListEvent) => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(e.matches ? 'dark' : 'light');
+  };
+
+  mediaQuery.addEventListener('change', handleChange);
+  return () => mediaQuery.removeEventListener('change', handleChange);
+}
 ```
+- Only active when theme is set to `'system'`
+- Updates DOM directly without triggering store update
+- Properly cleaned up on component unmount
 
 ## User Interactions
 
-### Toggle Action (Switch)
-- **Click/Tap**: Toggle between light and dark
-- **Animation**: Smooth slide of knob
-- **Immediate**: Theme changes instantly
-- **Feedback**: Visual change across entire app
+### Toggle Action (Button Icon)
+- **Click/Tap**: Toggles between light and dark modes
+- **Toggle behavior**:
+  - If current theme is dark → switches to light
+  - If current theme is light → switches to dark
+  - If current theme is system → determines effective theme, then toggles to opposite explicit theme
+- **Immediate**: Theme changes instantly via DOM class update
+- **Feedback**:
+  - Icon changes (Moon ↔ Sun)
+  - Visual change across entire app
+  - Hover state from Button component
 
-### Button Selection
-- **Click**: Select light or dark mode
-- **Active state**: Clearly indicated
-- **Hover**: Visual feedback on hover
-
-### Dropdown Selection
-- **Open**: Click to show options
-- **Select**: Choose light, dark, or system
-- **Close**: Auto-close on selection
-
-### System Theme Option
-If "System" mode supported:
-- Auto-detect system preference
-- Update when system preference changes
-- Visual indicator that "System" is selected
+### System Theme Support
+- **Default mode**: Component starts with `'system'` theme
+- **Auto-detection**: Uses `window.matchMedia('(prefers-color-scheme: dark)')` to determine effective theme
+- **Dynamic updates**: Listens for OS theme changes when in system mode
+- **Toggle override**: Clicking button exits system mode and sets explicit theme
+- **Visual indicator**: Shows Moon or Sun based on effective (resolved) theme
 
 ## Responsive Behavior
 
-### Desktop (≥1024px)
-- Full-size toggle with labels
-- Switch variant with icons and text
-- Hover effects active
-- Comfortable spacing
-
-### Tablet (768px - 1023px)
-- Similar to desktop
-- May reduce label text size
-- Maintain touch-friendly size
-
-### Mobile (<768px)
-- Compact toggle (icon only optional)
-- Minimum 44x44px touch target
-- May reduce text labels or hide
-- Ensure easy thumb reach at bottom
+### All Viewports
+- **Consistent design**: Icon-only button at all screen sizes
+- **Touch-friendly**: Button component provides adequate touch target
+- **Size**: Fixed icon size (`h-5 w-5`) with Button padding
+- **No responsive variations**: Same appearance on desktop, tablet, and mobile
+- **Parent-controlled**: Positioning and spacing handled by parent layout
 
 ## Accessibility Considerations
 
 ### Semantic HTML
-
-**Switch Variant**:
 ```html
-<div role="group" aria-labelledby="theme-toggle-label">
-  <span id="theme-toggle-label" class="sr-only">Theme selection</span>
-  <button
-    role="switch"
-    aria-checked="false"
-    aria-label="Switch to dark mode"
-    onClick={toggleTheme}
-  >
-    <span aria-hidden="true">☀️</span>
-    <span className="sr-only">Light mode</span>
-    <span className="toggle-track">
-      <span className="toggle-knob"></span>
-    </span>
-    <span aria-hidden="true">🌙</span>
-    <span className="sr-only">Dark mode</span>
-  </button>
-</div>
-```
-
-**Button Variant**:
-```html
-<fieldset>
-  <legend>Theme</legend>
-  <div role="radiogroup" aria-label="Select theme">
-    <button
-      role="radio"
-      aria-checked="true"
-      aria-label="Light theme"
-    >
-      ☀️ Light
-    </button>
-    <button
-      role="radio"
-      aria-checked="false"
-      aria-label="Dark theme"
-    >
-      🌙 Dark
-    </button>
-  </div>
-</fieldset>
+<button
+  aria-label="Switch to dark mode"
+  class="rounded-full"
+  onClick={toggleTheme}
+>
+  <svg class="h-5 w-5"><!-- Moon or Sun icon --></svg>
+</button>
 ```
 
 ### ARIA Attributes
-- **Switch**: `role="switch"`, `aria-checked`
-- **Radio**: `role="radio"`, `aria-checked` for button group
-- **Select**: Native `<select>` element has built-in accessibility
-- **Label**: Clear label for screen readers
-- Icons: `aria-hidden="true"` with text alternatives
+- **aria-label**: Dynamic label indicating next state
+  - Light mode: `"Switch to dark mode"`
+  - Dark mode: `"Switch to light mode"`
+- **Button semantics**: Native `<button>` element from shadcn/ui
+- **No explicit role needed**: Button element has implicit button role
 
 ### Keyboard Navigation
-- **Tab**: Focus on toggle control
+- **Tab**: Focus on button
 - **Space/Enter**: Activate toggle
-- **Arrow keys**: Navigate between options (button variant)
-- Focus indicator clearly visible
+- **Focus indicator**: Provided by Button component (meets WCAG standards)
 
 ### Screen Reader Support
-- Announce current theme: "Light mode selected"
-- Announce on change: "Switched to dark mode"
-- Provide context: "Theme toggle, light mode, switch"
-- Button/switch clearly labeled
+- Button announces as: "Switch to [next mode] mode, button"
+- Clear action indication via aria-label
+- State conveyed through label (which icon is shown)
 
 ### Visual Considerations
-- High contrast in both themes
-- Focus indicators meet WCAG standards
-- Don't rely solely on color
-- Icons supplement text labels
+- **Icons only**: Moon and Sun provide clear visual distinction
+- **High contrast**: Icons visible in both themes
+- **Focus indicators**: Inherit from Button component (WCAG compliant)
+- **Hover states**: Clear visual feedback from ghost variant
 
 ## Loading States
 
 ### Initial Load
-- Apply saved theme immediately (before render)
-- Avoid flash of wrong theme (FOUC)
-- Use inline script or SSR to set initial theme
+- **Zustand persist**: Automatically loads theme from localStorage
+- **useEffect application**: Theme applied to DOM after component mount
+- **Potential FOUC**: Brief flash possible until useEffect runs
+- **Default**: System theme (respects OS preference immediately)
 
 ### Theme Switching
-- Instantaneous change
-- No loading state needed
-- Smooth transition animation (optional)
+- **Instantaneous change**: DOM updated immediately in onClick handler
+- **No loading state**: Direct class manipulation
+- **No transition animations**: Immediate theme switch
 
 ### System Preference Change
-- Detect and apply automatically if "System" selected
-- Silent update (no explicit loading state)
+- **Auto-update**: When theme is `'system'`, listener updates DOM directly
+- **Silent update**: No loading indicators needed
 
 ## Flash of Unstyled Content (FOUC) Prevention
 
-**Critical inline script** (in `<head>`):
-```html
-<script>
-  (function() {
-    const theme = localStorage.getItem('weather-theme-preference') || 'light';
-    document.documentElement.classList.add(theme);
-  })();
-</script>
-```
+**Current Implementation:**
+- Theme applied via `useEffect` after component mount
+- Zustand persist hydrates store state asynchronously
+- May show brief flash until theme applied
 
-This ensures theme applied before page renders.
+**Note:** No inline script currently implemented. Theme application happens client-side after React hydration.
 
 ## Example Usage
 
+### In Layout Component
 ```tsx
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useTheme } from '@/hooks/useTheme';
 
 function Footer() {
   return (
     <footer>
-      <ThemeToggle variant="switch" showLabel />
+      <ThemeToggle />
     </footer>
   );
 }
 ```
 
-### With Theme Hook
+### Using Theme Store Directly
 ```tsx
-import { useTheme } from '@/hooks/useTheme';
+import { useThemeStore } from '@/stores/themeStore';
 
-function useTheme() {
-  const [theme, setTheme] = useState<Theme>('light');
+function CustomComponent() {
+  const { theme, setTheme } = useThemeStore();
 
-  useEffect(() => {
-    // Load from localStorage
-    const saved = localStorage.getItem('weather-theme-preference');
-    if (saved) {
-      setTheme(saved as Theme);
-      applyTheme(saved as Theme);
-    } else {
-      // Detect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = prefersDark ? 'dark' : 'light';
-      setTheme(initial);
-      applyTheme(initial);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    applyTheme(newTheme);
-    localStorage.setItem('weather-theme-preference', newTheme);
-  };
-
-  return { theme, toggleTheme };
+  return (
+    <div>
+      <p>Current theme: {theme}</p>
+      <button onClick={() => setTheme('dark')}>Dark</button>
+      <button onClick={() => setTheme('light')}>Light</button>
+      <button onClick={() => setTheme('system')}>System</button>
+    </div>
+  );
 }
+```
+
+### Store Implementation
+```tsx
+// src/stores/themeStore.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+type Theme = 'light' | 'dark' | 'system';
+
+interface ThemeState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      theme: 'system',
+      setTheme: (theme) => set({ theme })
+    }),
+    {
+      name: 'theme-storage'
+    }
+  )
+);
 ```
 
 ## Edge Cases
 
 1. **localStorage Unavailable**:
-   - Gracefully degrade
-   - Use session state
-   - Default to light mode
+   - Zustand persist middleware handles gracefully
+   - Falls back to in-memory state
+   - Defaults to `'system'` theme
 
 2. **Invalid Stored Value**:
-   - Validate on load
-   - Fallback to default if invalid
-   - Reset to light mode
+   - TypeScript typing prevents invalid values in store
+   - Zustand persist validates against schema
+   - Defaults to `'system'` if corruption detected
 
 3. **System Preference Changes**:
-   - Listen for changes if "System" selected
-   - Update automatically
-   - Don't override explicit user selection
+   - **When theme is 'system'**: MediaQuery listener auto-updates DOM
+   - **When theme is 'light' or 'dark'**: System changes ignored (user preference respected)
+   - Listener cleanup prevents memory leaks
 
 4. **Mid-Use Theme Change**:
-   - User changes OS theme while app open
-   - Update if "System" mode selected
-   - Ignore if explicit theme selected
+   - OS theme changes detected via `mediaQuery.addEventListener('change')`
+   - Only applies when current theme is `'system'`
+   - Explicit user selections (light/dark) take precedence
 
 5. **Multiple Tabs**:
-   - Sync theme across tabs
-   - Listen for storage events
-   - Update other tabs when theme changes
+   - Zustand persist automatically syncs across tabs
+   - Uses localStorage events
+   - All tabs update when theme changes in any tab
 
-6. **Print Styles**:
-   - Consider light mode for printing
-   - Override dark mode for print media query
+6. **Toggle from System Mode**:
+   - **Behavior**: Determines current effective theme, then toggles to opposite
+   - **Example**: System is dark → user clicks → switches to explicit light mode
+   - **Persistence**: New explicit theme saved to localStorage
 
-7. **Accessibility Settings**:
-   - Respect `prefers-color-scheme`
-   - Respect `prefers-reduced-transparency`
-   - Respect `prefers-contrast`
+7. **Component Lifecycle**:
+   - Two separate `useEffect` hooks:
+     - First: Applies theme on mount and when theme changes
+     - Second: Sets up/tears down system preference listener
+   - Proper cleanup prevents memory leaks
 
 ## Theme Implementation
 
-### CSS Variables Approach
-```css
-:root {
-  --bg-primary: #ffffff;
-  --text-primary: #000000;
-  --border-color: #e5e5e5;
-  /* ... more variables */
-}
-
-:root.dark {
-  --bg-primary: #0a0a0a;
-  --text-primary: #ffffff;
-  --border-color: #333333;
-  /* ... more variables */
-}
-```
-
-### Tailwind Dark Mode
+### Tailwind Dark Mode (Class Strategy)
 ```javascript
 // tailwind.config.js
 module.exports = {
@@ -407,40 +316,78 @@ module.exports = {
 }
 ```
 
+### DOM Application
+```typescript
+// Applied to document root
+document.documentElement.classList.remove('light', 'dark');
+document.documentElement.classList.add(effectiveTheme);
+```
+
+Result:
 ```html
+<!-- Light mode -->
+<html class="light">
+  <!-- ... -->
+</html>
+
+<!-- Dark mode -->
 <html class="dark">
-  <!-- Dark mode styles applied -->
+  <!-- ... -->
 </html>
 ```
 
+### Component Styling
+- Uses Tailwind's `dark:` variant for theme-specific styles
+- Example: `className="bg-white dark:bg-gray-900"`
+- shadcn/ui components automatically support dark mode via this strategy
+
 ## Performance Considerations
 
-- Apply theme before render to prevent FOUC
-- Use CSS classes/variables (not inline styles)
-- Memoize toggle component
-- Debounce system preference listener
-- Optimize theme transition animations
+- **Class-based theming**: Efficient DOM class manipulation
+- **No memoization needed**: Component is lightweight (simple button)
+- **Direct DOM updates**: Bypasses React reconciliation for theme changes
+- **Cleanup handlers**: Proper event listener cleanup prevents memory leaks
+- **No debouncing**: System preference changes are infrequent, no debounce needed
+- **No transitions**: Instant theme switching (no animation overhead)
+- **Zustand persist**: Minimal overhead for localStorage sync
 
 ## Testing Requirements
 
-- Render in light mode
-- Render in dark mode
-- Test toggle interaction
-- Verify localStorage persistence
-- Test with localStorage disabled
+### Functional Tests
+- Render with default `'system'` theme
+- Render in light mode (explicit)
+- Render in dark mode (explicit)
+- Test toggle interaction (light → dark → light)
+- Test toggle from system mode (resolves effective theme first)
+- Verify Zustand store updates on toggle
 - Test system preference detection
-- Test system preference change listener
-- Test keyboard navigation
-- Test with screen reader
-- Verify ARIA attributes
+- Test system preference change listener (when theme is 'system')
+- Verify listener cleanup on unmount
+
+### Accessibility Tests
+- Test keyboard navigation (Tab to focus, Space/Enter to activate)
+- Verify ARIA label changes based on current theme
 - Test focus indicators
-- Test in all variants (switch, button, select)
-- Test with and without labels
-- Test different sizes
-- Verify no FOUC on initial load
-- Test theme application across all components
-- Test with invalid stored values
-- Test multi-tab synchronization
-- Verify print styles
+- Verify button semantics (native button role)
+- Test with screen reader (announces "Switch to [mode] mode, button")
+
+### Integration Tests
+- Verify theme application to `document.documentElement`
+- Test theme persistence via Zustand (localStorage key: `theme-storage`)
+- Test multi-tab synchronization (Zustand persist handles this)
+- Test with localStorage disabled (Zustand degrades gracefully)
+- Verify theme changes propagate across app (Tailwind dark: classes work)
+
+### Visual Tests
+- Verify Moon icon shows in light mode
+- Verify Sun icon shows in dark mode
+- Test icon size consistency (`h-5 w-5`)
+- Verify button styling (ghost variant, rounded-full)
+- Test hover states
 - Test color contrast in both themes
-- Test reduced motion preferences
+
+### Edge Case Tests
+- Test rapid toggling
+- Test component unmount during system mode (listener cleanup)
+- Test theme change during re-render
+- Verify no memory leaks from event listeners

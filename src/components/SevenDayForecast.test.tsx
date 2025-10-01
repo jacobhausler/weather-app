@@ -433,7 +433,7 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const dayButtons = screen.getAllByRole('button')
-      await user.click(dayButtons[1]) // Click Tuesday
+      await user.click(dayButtons[1]!) // Click Tuesday
 
       expect(screen.getByTestId('modal-period-name')).toHaveTextContent('Tuesday')
     })
@@ -448,7 +448,7 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const dayButtons = screen.getAllByRole('button')
-      await user.click(dayButtons[1]) // Click Wednesday
+      await user.click(dayButtons[1]!) // Click Wednesday
 
       expect(screen.getByTestId('forecast-modal')).toBeInTheDocument()
 
@@ -472,14 +472,14 @@ describe('SevenDayForecast', () => {
       const dayButtons = screen.getAllByRole('button')
 
       // Click first day (Today)
-      await user.click(dayButtons[0])
+      await user.click(dayButtons[0]!)
       expect(screen.getByTestId('modal-period-name')).toHaveTextContent('Today')
 
       // Close modal
       await user.click(screen.getByTestId('modal-close'))
 
       // Click second day (Thursday)
-      await user.click(dayButtons[1])
+      await user.click(dayButtons[1]!)
       expect(screen.getByTestId('modal-period-name')).toHaveTextContent('Thursday')
     })
 
@@ -493,7 +493,7 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const dayButtons = screen.getAllByRole('button')
-      await user.click(dayButtons[1]) // Click Saturday
+      await user.click(dayButtons[1]!) // Click Saturday
 
       // Modal should open with the day period, not night
       expect(screen.getByTestId('modal-period-name')).toHaveTextContent('Saturday')
@@ -669,13 +669,13 @@ describe('SevenDayForecast', () => {
 
       const buttons = screen.getAllByRole('button')
 
-      await user.click(buttons[0])
+      await user.click(buttons[0]!)
       expect(screen.getByTestId('forecast-modal')).toBeInTheDocument()
 
       await user.click(screen.getByTestId('modal-close'))
       expect(screen.queryByTestId('forecast-modal')).not.toBeInTheDocument()
 
-      await user.click(buttons[1])
+      await user.click(buttons[1]!)
       expect(screen.getByTestId('forecast-modal')).toBeInTheDocument()
     })
   })

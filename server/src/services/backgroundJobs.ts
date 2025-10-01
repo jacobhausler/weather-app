@@ -6,6 +6,7 @@
 import cron, { ScheduledTask } from 'node-cron';
 import { nwsService } from './nwsService.js';
 import { geocodeZip } from './geocodingService.js';
+import { logger } from '../utils/logger.js';
 
 // Configured ZIP codes to refresh (as specified in CLAUDE.md)
 const CACHED_ZIP_CODES = ['75454', '75070', '75035'];
@@ -18,7 +19,7 @@ const REFRESH_CRON_SCHEDULE = '*/5 * * * *';
  */
 async function refreshZipCode(zipCode: string): Promise<void> {
   try {
-    console.log(`[Background] Starting refresh for ZIP ${zipCode}`);
+    logger.info(`[Background] Starting refresh for ZIP ${zipCode}`);
 
     // Geocode ZIP to coordinates
     const { lat, lon } = await geocodeZip(zipCode);
@@ -26,10 +27,10 @@ async function refreshZipCode(zipCode: string): Promise<void> {
     // Prefetch weather data (warms cache)
     await nwsService.prefetchWeatherData(lat, lon);
 
-    console.log(`[Background] Successfully refreshed ZIP ${zipCode}`);
+    logger.info(`[Background] Successfully refreshed ZIP ${zipCode}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Background] Failed to refresh ZIP ${zipCode}: ${errorMessage}`);
+    logger.error(`[Background] Failed to refresh ZIP ${zipCode}: ${errorMessage}`);
   }
 }
 
@@ -37,7 +38,7 @@ async function refreshZipCode(zipCode: string): Promise<void> {
  * Refresh all configured ZIP codes
  */
 async function refreshAllZipCodes(): Promise<void> {
-  console.log('[Background] Starting scheduled refresh for cached ZIP codes');
+  logger.info('[Background] Starting scheduled refresh for cached ZIP codes');
   const startTime = Date.now();
 
   try {
@@ -47,10 +48,10 @@ async function refreshAllZipCodes(): Promise<void> {
     );
 
     const duration = Date.now() - startTime;
-    console.log(`[Background] Completed refresh cycle in ${duration}ms`);
+    logger.info(`[Background] Completed refresh cycle in ${duration}ms`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Background] Error during refresh cycle: ${errorMessage}`);
+    logger.error(`[Background] Error during refresh cycle: ${errorMessage}`);
   }
 }
 
@@ -60,13 +61,13 @@ async function refreshAllZipCodes(): Promise<void> {
  * - Performs initial refresh on startup
  */
 export function initBackgroundJobs(): ScheduledTask {
-  console.log('[Background] Initializing background jobs...');
-  console.log(`[Background] Configured ZIP codes: ${CACHED_ZIP_CODES.join(', ')}`);
-  console.log(`[Background] Refresh schedule: every 5 minutes`);
+  logger.info('[Background] Initializing background jobs...');
+  logger.info(`[Background] Configured ZIP codes: ${CACHED_ZIP_CODES.join(', ')}`);
+  logger.info(`[Background] Refresh schedule: every 5 minutes`);
 
   // Perform initial refresh on startup (non-blocking)
   refreshAllZipCodes().catch((error) => {
-    console.error('[Background] Initial refresh failed:', error);
+    logger.error('[Background] Initial refresh failed:', error);
   });
 
   // Schedule periodic refresh every 5 minutes
@@ -76,7 +77,7 @@ export function initBackgroundJobs(): ScheduledTask {
     timezone: 'America/Chicago', // Can be configured via env variable
   });
 
-  console.log('[Background] Background jobs initialized successfully');
+  logger.info('[Background] Background jobs initialized successfully');
 
   return task;
 }
@@ -85,9 +86,9 @@ export function initBackgroundJobs(): ScheduledTask {
  * Stop background jobs
  */
 export function stopBackgroundJobs(task: ScheduledTask): void {
-  console.log('[Background] Stopping background jobs...');
+  logger.info('[Background] Stopping background jobs...');
   task.stop();
-  console.log('[Background] Background jobs stopped');
+  logger.info('[Background] Background jobs stopped');
 }
 
 /**

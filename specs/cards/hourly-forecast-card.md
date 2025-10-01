@@ -7,33 +7,36 @@ Displays hourly weather forecast data using bar charts for visualization. Users 
 ## Props/API Interface
 
 ```typescript
-interface HourlyForecastCardProps {
-  hourlyData: HourlyForecastData[];
-  isLoading?: boolean;
-  className?: string;
+interface HourlyForecastProps {
+  hourlyForecast: HourlyForecast[];
 }
 
-interface HourlyForecastData {
-  timestamp: string;           // ISO 8601 timestamp
+// From @/types/weather.ts
+interface HourlyForecast {
+  number: number;
+  startTime: string;           // ISO 8601 timestamp
+  endTime: string;
+  isDaytime: boolean;
   temperature: number;         // Fahrenheit
-  dewpoint: number;           // Fahrenheit
-  precipProbability: number;  // 0-100 percentage
-  precipAmount?: number;      // Inches (if available)
-  windSpeed: number;          // mph
-  windDirection: string;      // e.g., "NW", "South"
-  windGust?: number;          // mph (optional)
-  relativeHumidity: number;   // 0-100 percentage
-  icon: string;               // NWS icon URL
-  shortForecast: string;      // e.g., "Partly Cloudy"
+  temperatureUnit: string;
+  probabilityOfPrecipitation?: {
+    value: number | null;      // 0-100 percentage
+  }
+  dewpoint: {
+    value: number;             // Fahrenheit
+    unitCode: string;
+  }
+  relativeHumidity: {
+    value: number;             // 0-100 percentage
+  }
+  windSpeed: string;           // e.g., "10 mph"
+  windDirection: string;       // e.g., "NW", "South"
+  icon: string;                // NWS icon URL
+  shortForecast: string;       // e.g., "Partly Cloudy"
 }
 
-type TimePeriod = '12' | '24' | '48';
+type Period = '12' | '24' | '48';
 type DataType = 'temperature' | 'precipitation' | 'wind' | 'humidity';
-
-interface ChartConfig {
-  period: TimePeriod;
-  dataType: DataType;
-}
 ```
 
 ## Layout and Visual Design
@@ -61,71 +64,89 @@ interface ChartConfig {
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Control Panel (Split Button Box)
+### Control Panel
 
-**Time Period Selector** (Left group):
-- Three buttons: `12h` | `24h` | `48h`
-- Active button highlighted
-- Mutually exclusive selection
-- Default: 24h
+**Time Period Selector** (Select dropdown):
+- shadcn/ui Select component with three options:
+  - "12 Hours"
+  - "24 Hours"
+  - "48 Hours"
+- Default: 24 Hours
+- Width: 120px
 
-**Data Type Selector** (Right group):
-- Four buttons: `Temp` | `Precip` | `Wind` | `Humid`
-- Active button highlighted
+**Data Type Selector** (Button group):
+- Four buttons: `Temp` | `Precip` | `Wind` | `Humidity`
+- Active button uses `default` variant, inactive use `outline` variant
+- Size: `sm`
 - Mutually exclusive selection
 - Default: Temperature
 
 **Layout**:
 ```
-┌────────────────────────────────────────────────┐
-│  12h    24h    48h  │  Temp  Precip  Wind  Humid │
-│ [  ]   [██]   [  ]  │  [██]  [  ]   [  ]   [  ]  │
-└────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│ Hourly Forecast            [24 Hours ▼]  [Temp] [Precip]  │
+│                                           [Wind] [Humidity]│
+└───────────────────────────────────────────────────────────┘
 ```
+- Responsive: Controls wrap on small screens
+- Mobile: Vertical stack with period selector on top, data type buttons below
 
 ### Chart Visualizations
 
 #### Temperature Chart
-- **Y-axis**: Temperature in °F
-- **X-axis**: Time labels (e.g., "12p", "1p", "2p")
-- **Bars**: Vertical bars for each hour
-- **Color gradient**: Cool-to-warm (blue → yellow → red)
-- **Data labels**: Show temperature value on or above each bar
-- **Hover**: Display time, temperature, and conditions
+- **Y-axis**: Temperature with unit label (°F or °C based on unit system)
+- **X-axis**: Time labels formatted as "ha" (e.g., "12PM", "1AM")
+- **Bars**: Vertical bars with rounded top corners
+- **Color**: Single color from `--chart-1` CSS variable
+- **Unit conversion**: Supports both Imperial (°F) and Metric (°C)
+- **Hover**: Tooltip displays time and temperature with unit
+- **Legend**: Shows "Temperature"
 
 #### Precipitation Chart
 - **Y-axis**: Precipitation probability (0-100%)
-- **X-axis**: Time labels
-- **Bars**: Vertical bars for each hour
-- **Color**: Blue gradient based on probability
-- **Secondary data**: Show precipitation amount if available (as annotation)
-- **Hover**: Display time, probability, and amount
+- **X-axis**: Time labels formatted as "ha"
+- **Bars**: Vertical bars with rounded top corners
+- **Color**: Single color from `--chart-2` CSS variable
+- **Data source**: `probabilityOfPrecipitation.value` (defaults to 0 if null)
+- **Hover**: Tooltip displays time and probability percentage
+- **Legend**: Shows "Precipitation"
+- **Note**: Precipitation amount not currently displayed
 
 #### Wind Chart
-- **Y-axis**: Wind speed in mph
-- **X-axis**: Time labels
-- **Bars**: Vertical bars for wind speed
-- **Color**: Gradient based on wind speed (light → dark)
-- **Direction indicators**: Arrow or text showing wind direction above/on bar
-- **Gusts**: Show as dot or line above bar if present
-- **Hover**: Display time, speed, direction, and gusts
+- **Y-axis**: Wind speed with unit label (mph or km/h based on unit system)
+- **X-axis**: Time labels formatted as "ha"
+- **Bars**: Vertical bars with rounded top corners
+- **Color**: Single color from `--chart-3` CSS variable
+- **Unit conversion**: Supports both Imperial (mph) and Metric (km/h)
+- **Data parsing**: Extracts numeric value from windSpeed string (e.g., "10 mph" → 10)
+- **Hover**: Tooltip displays time and wind speed with unit
+- **Legend**: Shows "Wind Speed"
+- **Note**: Wind direction and gusts not currently displayed on chart
 
 #### Humidity Chart
 - **Y-axis**: Relative humidity (0-100%)
-- **X-axis**: Time labels
-- **Bars**: Vertical bars for each hour
-- **Color**: Teal/cyan gradient
-- **Data labels**: Show percentage on or above each bar
-- **Hover**: Display time, humidity, and dewpoint
+- **X-axis**: Time labels formatted as "ha"
+- **Bars**: Vertical bars with rounded top corners
+- **Color**: Single color from `--chart-4` CSS variable
+- **Data source**: `relativeHumidity.value`
+- **Hover**: Tooltip displays time and humidity percentage
+- **Legend**: Shows "Humidity"
 
 ### Styling Guidelines
-- Use shadcn/ui chart components for consistent styling
-- Responsive chart sizing
-- Clear axis labels with appropriate units
-- Grid lines for easier reading (subtle, not distracting)
-- Smooth transitions when switching data types
-- Color schemes that work in both light and dark modes
-- Adequate bar width with small gaps for readability
+- Uses Recharts library (not shadcn/ui chart components)
+- Chart height: 300px
+- ResponsiveContainer for width adaptation
+- Clear axis labels with appropriate units (rotated label on Y-axis)
+- CartesianGrid with "3 3" dash pattern and muted stroke
+- Bar colors from CSS variables:
+  - Temperature: `hsl(var(--chart-1))`
+  - Precipitation: `hsl(var(--chart-2))`
+  - Wind: `hsl(var(--chart-3))`
+  - Humidity: `hsl(var(--chart-4))`
+- Bars with rounded top corners: `radius={[4, 4, 0, 0]}`
+- Tooltip with popover background and border styling
+- Legend showing data type label
+- Summary stats section below chart with min/max/avg values
 
 ## Data Requirements
 
@@ -158,7 +179,10 @@ GET /gridpoints/{office}/{gridX},{gridY}/forecast/hourly
 ### Caching Strategy
 - Hourly forecast data: 1 hour (server-side)
 - Client refreshes every 1 minute (fetches from server cache)
-- User preferences (period/dataType): localStorage (client-side)
+- User preferences stored in localStorage (client-side):
+  - Key `hourly-chart-dataType`: stores selected data type ('temperature' | 'precipitation' | 'wind' | 'humidity')
+  - Key `hourly-chart-period`: stores selected period ('12' | '24' | '48')
+  - Defaults: dataType='temperature', period='24'
 
 ## User Interactions
 
@@ -175,18 +199,24 @@ GET /gridpoints/{office}/{gridX},{gridY}/forecast/hourly
 - Preference saved to localStorage
 
 ### Chart Interactions
-- **Hover**: Show tooltip with detailed information
-- **Touch**: Tap bar to show information (mobile)
+- **Hover**: Recharts tooltip shows on hover
+- **Touch**: Tap bar to show tooltip (mobile)
 - **Tooltip content**:
-  - Time
-  - Primary value (temp, precip, wind, humidity)
-  - Secondary info (conditions, dewpoint, wind direction)
-  - Weather icon (optional)
+  - Time label
+  - Primary value with unit (formatted as "{value}{unit}")
+  - Data type label (Temperature/Precipitation/Wind Speed/Humidity)
+- **Tooltip styling**:
+  - Background: `hsl(var(--popover))`
+  - Border: `1px solid hsl(var(--border))`
+  - Border radius: 6px
+  - Text color: `hsl(var(--popover-foreground))`
 
 ### Responsive Controls
-- On narrow screens, buttons may wrap or reduce size
-- Maintain usability of all controls
-- Consider vertical stacking of control groups if needed
+- Desktop: Controls display in single row (title | select + buttons)
+- Mobile: Controls wrap with `flex-wrap` and stack vertically with `flex-col`
+- Gap spacing: 3 (between control groups) and 2 (between buttons)
+- Period selector maintains fixed width (120px)
+- Data type buttons use `sm` size for compact display
 
 ## Responsive Behavior
 
@@ -215,36 +245,46 @@ GET /gridpoints/{office}/{gridX},{gridY}/forecast/hourly
 
 ### Semantic HTML
 ```html
-<section aria-label="Hourly weather forecast">
-  <h2>Hourly Forecast</h2>
-  <div role="group" aria-label="Time period selection">
-    <button aria-label="12 hour forecast" aria-pressed="false">12h</button>
-    <button aria-label="24 hour forecast" aria-pressed="true">24h</button>
-    <button aria-label="48 hour forecast" aria-pressed="false">48h</button>
+<div class="card">
+  <div class="card-header">
+    <h3>Hourly Forecast</h3>
+    <div>
+      <select aria-label="Time period selection">
+        <option value="12">12 Hours</option>
+        <option value="24">24 Hours</option>
+        <option value="48">48 Hours</option>
+      </select>
+      <div role="group" aria-label="Data type selection">
+        <button aria-label="Temperature chart">Temp</button>
+        <button aria-label="Precipitation chart">Precip</button>
+        <button aria-label="Wind chart">Wind</button>
+        <button aria-label="Humidity chart">Humidity</button>
+      </div>
+    </div>
   </div>
-  <div role="group" aria-label="Data type selection">
-    <button aria-label="Temperature chart" aria-pressed="true">Temp</button>
-    <button aria-label="Precipitation chart" aria-pressed="false">Precip</button>
-    <button aria-label="Wind chart" aria-pressed="false">Wind</button>
-    <button aria-label="Humidity chart" aria-pressed="false">Humidity</button>
+  <div class="card-content">
+    <div class="responsive-container">
+      <!-- Recharts BarChart -->
+    </div>
+    <div class="stats-section">
+      <!-- Min/Max/Avg stats -->
+    </div>
   </div>
-  <div role="img" aria-label="Temperature chart showing hourly forecast">
-    <!-- Chart content -->
-  </div>
-</section>
+</div>
 ```
 
 ### ARIA Labels
-- Control buttons: Use `aria-pressed` to indicate active state
-- Chart container: Describe chart type and content
-- Data points: Provide text alternative for screen readers
+- Period selector: Use shadcn/ui Select component with built-in accessibility
+- Data type buttons: Should include `aria-label` for full descriptions (currently not implemented)
+- Active state: Indicated by `variant` prop (default vs outline)
+- Chart container: Recharts provides some built-in accessibility features
 
 ### Keyboard Navigation
-- Tab through control buttons
-- Arrow keys to navigate between buttons in each group
+- Tab to select dropdown (shadcn/ui Select handles keyboard navigation)
+- Tab through data type buttons
 - Enter/Space to activate button
-- Focus indicators clearly visible
-- Keyboard access to chart data points (if interactive)
+- Focus indicators from shadcn/ui components
+- Chart data points: Recharts provides limited keyboard support
 
 ### Screen Reader Support
 - Announce current selection when changing period/type
@@ -266,65 +306,35 @@ GET /gridpoints/{office}/{gridX},{gridY}/forecast/hourly
 
 ## Loading States
 
-### Initial Load
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Hourly Forecast                                            │
-├─────────────────────────────────────────────────────────────┤
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ [12h] [24h] [48h]  |  [Temp] [Precip] [Wind] [Humid] │  │
-│  └──────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │  │
-│  │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │  │
-│  │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-- Skeleton screen for chart area
-- Controls enabled but chart loading
-- Pulsing animation on skeleton
+**Current Implementation**: The component does not implement loading states. It expects `hourlyForecast` data to be available when rendered.
 
-### Switching Views
-- Smooth transition animation (fade or slide)
-- Brief loading state if data needs processing
-- Maintain control panel state
+**Potential Improvements**:
+- Add `isLoading` prop to show skeleton state
+- Display error state if data is unavailable
+- Show loading indicator during data type/period switches
+- Maintain controls functionality during loading
 
-### Refresh
-- Non-interrupting refresh
-- Data updates smoothly without layout shift
-- Optional: Subtle loading indicator
-
-### Error State
-- Display error message in chart area
-- Retry button
-- Keep controls functional
+### Error Handling
+- If `hourlyForecast` is empty, component may render empty chart
+- No explicit error state UI currently implemented
+- Stats calculations will fail on empty data (NaN values)
 
 ## Example Usage
 
 ```tsx
-import { HourlyForecastCard } from '@/components/weather/HourlyForecastCard';
+import { HourlyForecast } from '@/components/HourlyForecast';
 import { useWeatherData } from '@/hooks/useWeatherData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 function WeatherDashboard({ zipCode }: { zipCode: string }) {
-  const { hourlyData, isLoading } = useWeatherData(zipCode);
-  const [chartConfig, setChartConfig] = useLocalStorage<ChartConfig>(
-    'hourly-chart-config',
-    { period: '24', dataType: 'temperature' }
-  );
+  const { hourlyForecast } = useWeatherData(zipCode);
 
   return (
-    <HourlyForecastCard
-      hourlyData={hourlyData}
-      isLoading={isLoading}
-      config={chartConfig}
-      onConfigChange={setChartConfig}
-      className="mb-4"
-    />
+    <HourlyForecast hourlyForecast={hourlyForecast} />
   );
 }
 ```
+
+**Note**: The component manages its own state internally using `useLocalStorage` hook for period and dataType preferences. Unit system is accessed from the global `unitStore`.
 
 ## Edge Cases
 
@@ -360,31 +370,90 @@ function WeatherDashboard({ zipCode }: { zipCode: string }) {
    - For 48h view, consider showing fewer bars or summarizing
    - Horizontal scroll if all bars don't fit
 
+## Summary Statistics Section
+
+A statistics panel is displayed below the chart showing:
+- **Min**: Minimum value in the displayed period
+- **Max**: Maximum value in the displayed period
+- **Avg**: Average value (rounded to nearest integer)
+
+**Layout**:
+```
+┌────────────────────────────────────────────┐
+│         Min    │    Max    │    Avg        │
+│         65°F   │    85°F   │    75°F       │
+└────────────────────────────────────────────┘
+```
+
+**Styling**:
+- Background: `bg-muted`
+- Padding: `p-3`
+- Border radius: `rounded-lg`
+- Layout: `flex justify-around`
+- Text size: `text-sm`
+- Labels: `text-muted-foreground`
+- Values: `font-semibold`
+
+## Unit System Support
+
+The component integrates with the global unit store (`@/stores/unitStore`) to support both Imperial and Metric systems:
+
+**Temperature**:
+- Imperial: Fahrenheit (°F)
+- Metric: Celsius (°C)
+- Conversion: `(°F - 32) × 5/9 = °C`
+
+**Wind Speed**:
+- Imperial: Miles per hour (mph)
+- Metric: Kilometers per hour (km/h)
+- Conversion: `mph × 1.60934 = km/h`
+
+**Precipitation and Humidity**:
+- Always displayed as percentages (%)
+- No unit conversion needed
+
 ## Performance Considerations
 
-- Memoize chart component
-- Use React.memo for control buttons
-- Debounce chart rendering when switching views
-- Lazy load chart library
-- Optimize re-renders when unrelated state changes
-- Cache processed chart data
-- Virtualize bars for very long forecasts (48h+)
+- Uses `useLocalStorage` hook to persist user preferences
+- Recharts library handles chart rendering and animations
+- Data transformation occurs on each render (could be optimized with useMemo)
+- ResponsiveContainer handles chart resizing automatically
+- No virtualization implemented for 48-hour view
+
+## Implementation Details
+
+**Dependencies**:
+- `recharts`: Chart library for bar charts
+- `date-fns`: Time formatting (`format` function)
+- `@/hooks/useLocalStorage`: Persisting user preferences
+- `@/stores/unitStore`: Global unit system state
+- `@/components/ui/card`: shadcn/ui Card components
+- `@/components/ui/button`: shadcn/ui Button component
+- `@/components/ui/select`: shadcn/ui Select component
+
+**Key Functions**:
+- `getPeriodData()`: Slices hourlyForecast array based on selected period
+- `convertTemperature()`: Converts Fahrenheit to Celsius for metric system
+- `parseWindSpeed()`: Extracts numeric value from wind speed string and converts units
+- `formatChartData()`: Transforms hourly forecast data into Recharts-compatible format
+- `getBarColor()`: Returns CSS variable for bar color based on data type
+- `getDataTypeLabel()`: Returns full label for data type
+
+**Component File**: `/workspaces/weather-app/src/components/HourlyForecast.tsx`
 
 ## Testing Requirements
 
 - Render with different time periods (12h, 24h, 48h)
-- Render with different data types
+- Render with different data types (temperature, precipitation, wind, humidity)
 - Test switching between periods and types
-- Test with missing data
-- Test with extreme values
-- Test responsive layouts at all breakpoints
-- Verify control button interactions
-- Test keyboard navigation
-- Test with screen reader
-- Verify chart tooltips/interactions
 - Test localStorage persistence of preferences
-- Verify color contrast in both themes
-- Test chart accessibility features
-- Test with insufficient data (< full period)
-- Test date boundary crossing
-- Verify time formatting and timezone handling
+- Test unit conversion (Imperial/Metric)
+- Test with missing probabilityOfPrecipitation values
+- Test with various wind speed string formats
+- Test responsive layouts at all breakpoints
+- Verify control interactions (select and buttons)
+- Verify chart tooltips display correctly
+- Test stats calculations (min, max, avg)
+- Verify color scheme in both light and dark modes
+- Test with insufficient data (< full period requested)
+- Test time formatting with date-fns

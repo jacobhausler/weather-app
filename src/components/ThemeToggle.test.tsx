@@ -448,11 +448,9 @@ describe('ThemeToggle', () => {
       })
 
       // Simulate system theme change to dark
-      if (changeHandler) {
-        act(() => {
-          changeHandler({ matches: true } as MediaQueryListEvent)
-        })
-      }
+      act(() => {
+        changeHandler!({ matches: true } as MediaQueryListEvent)
+      })
 
       await waitFor(() => {
         expect(document.documentElement.classList.contains('dark')).toBe(true)
@@ -612,8 +610,6 @@ describe('ThemeToggle', () => {
       })
 
       render(<ThemeToggle />)
-
-      const button = screen.getByRole('button')
 
       await user.tab()
       await user.keyboard(' ')

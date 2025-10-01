@@ -369,6 +369,8 @@ describe('UnitToggle', () => {
       const toggle = screen.getByRole('switch')
 
       await user.tab()
+      expect(toggle).toHaveFocus()
+
       await user.keyboard('{Enter}')
 
       await waitFor(() => {
@@ -572,9 +574,9 @@ describe('UnitToggle', () => {
       const wrapper = container.firstChild as HTMLElement
       const children = Array.from(wrapper.children)
 
-      expect(children[0].textContent).toBe('Imperial')
+      expect(children[0]!.textContent).toBe('Imperial')
       expect(children[1]).toHaveAttribute('role', 'switch')
-      expect(children[2].textContent).toBe('Metric')
+      expect(children[2]!.textContent).toBe('Metric')
     })
   })
 
@@ -718,7 +720,6 @@ describe('UnitToggle', () => {
       const user = userEvent.setup()
 
       const { result } = renderHook(() => useUnitStore())
-      const setUnitSystemSpy = vi.fn(result.current.setUnitSystem)
 
       act(() => {
         result.current.setUnitSystem('imperial')

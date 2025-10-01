@@ -909,7 +909,7 @@ describe('useWeatherData', () => {
 
       expect(apiService.getWeatherByZip).toHaveBeenCalledTimes(4)
 
-      const lastWarning = consoleWarnSpy.mock.calls[consoleWarnSpy.mock.calls.length - 1][0]
+      const lastWarning = consoleWarnSpy.mock.calls[consoleWarnSpy.mock.calls.length - 1]![0]
       expect(lastWarning).toContain('Background refresh failed (1/3)')
 
       consoleWarnSpy.mockRestore()

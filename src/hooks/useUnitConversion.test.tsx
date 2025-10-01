@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useUnitConversion, type UnitSystem } from './useUnitConversion'
+import { useUnitConversion } from './useUnitConversion'
 
 describe('useUnitConversion', () => {
   // Clear localStorage before each test
