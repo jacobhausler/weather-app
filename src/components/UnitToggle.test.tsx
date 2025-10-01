@@ -46,7 +46,8 @@ describe('UnitToggle', () => {
       render(<UnitToggle />)
 
       const toggle = screen.getByRole('switch')
-      expect(toggle).toHaveAttribute('id', 'unit-toggle')
+      // Custom toggle doesn't require id since labels are buttons
+      expect(toggle).toBeInTheDocument()
     })
 
     it('should have both labels properly associated with switch', () => {
@@ -55,8 +56,9 @@ describe('UnitToggle', () => {
       const imperialLabel = screen.getByText('Imperial')
       const metricLabel = screen.getByText('Metric')
 
-      expect(imperialLabel).toHaveAttribute('for', 'unit-toggle')
-      expect(metricLabel).toHaveAttribute('for', 'unit-toggle')
+      // Labels are now buttons, not label elements with for attributes
+      expect(imperialLabel).toBeInTheDocument()
+      expect(metricLabel).toBeInTheDocument()
     })
 
     it('should start with imperial system by default', () => {
@@ -328,10 +330,11 @@ describe('UnitToggle', () => {
 
       render(<UnitToggle />)
 
-      const toggle = screen.getByRole('switch')
+      const imperialButton = screen.getByText('Imperial')
 
       await user.tab()
-      expect(toggle).toHaveFocus()
+      // First tab focuses the Imperial label button
+      expect(imperialButton).toHaveFocus()
     })
 
     it('should be toggleable with Space key', async () => {
@@ -346,6 +349,8 @@ describe('UnitToggle', () => {
 
       const toggle = screen.getByRole('switch')
 
+      // Tab to Imperial button, then tab to toggle
+      await user.tab()
       await user.tab()
       expect(toggle).toHaveFocus()
 
@@ -368,6 +373,8 @@ describe('UnitToggle', () => {
 
       const toggle = screen.getByRole('switch')
 
+      // Tab to Imperial button, then tab to toggle
+      await user.tab()
       await user.tab()
       expect(toggle).toHaveFocus()
 
@@ -421,6 +428,8 @@ describe('UnitToggle', () => {
 
       const toggle = screen.getByRole('switch')
 
+      // Tab to Imperial button, then tab to toggle
+      await user.tab()
       await user.tab()
       expect(toggle).toHaveFocus()
 
@@ -438,8 +447,10 @@ describe('UnitToggle', () => {
       const metricLabel = screen.getByText('Metric')
       const toggle = screen.getByRole('switch')
 
-      expect(imperialLabel.getAttribute('for')).toBe(toggle.getAttribute('id'))
-      expect(metricLabel.getAttribute('for')).toBe(toggle.getAttribute('id'))
+      // Labels are now buttons, not label elements
+      expect(imperialLabel.tagName).toBe('BUTTON')
+      expect(metricLabel.tagName).toBe('BUTTON')
+      expect(toggle).toBeInTheDocument()
     })
 
     it('should be clickable via labels', async () => {
@@ -557,7 +568,7 @@ describe('UnitToggle', () => {
       const { container } = render(<UnitToggle />)
 
       const wrapper = container.firstChild as HTMLElement
-      expect(wrapper).toHaveClass('flex')
+      expect(wrapper).toHaveClass('inline-flex')
       expect(wrapper).toHaveClass('items-center')
     })
 

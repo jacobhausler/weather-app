@@ -434,7 +434,7 @@ describe('ZipInput', () => {
     it('should disable submit button when loading', () => {
       useWeatherStore.setState({ isLoading: true });
       render(<ZipInput />);
-      const button = screen.getByRole('button', { name: /submit/i });
+      const button = screen.getByRole('button', { name: /loading/i });
       expect(button).toBeDisabled();
     });
 
@@ -443,7 +443,7 @@ describe('ZipInput', () => {
       render(<ZipInput />);
 
       const input = screen.getByPlaceholderText('Enter ZIP code');
-      const submitButton = screen.getByRole('button', { name: /submit/i });
+      const submitButton = screen.getByRole('button', { name: /loading/i });
       const dropdown = screen.getByRole('button', { name: /recent zip codes/i });
 
       expect(input).toBeDisabled();

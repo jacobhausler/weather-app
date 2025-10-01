@@ -78,9 +78,9 @@ describe('HourlyForecast', () => {
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      expect(screen.getByText('Min')).toBeInTheDocument()
-      expect(screen.getByText('Max')).toBeInTheDocument()
-      expect(screen.getByText('Avg')).toBeInTheDocument()
+      expect(screen.getByText('Minimum')).toBeInTheDocument()
+      expect(screen.getByText('Maximum')).toBeInTheDocument()
+      expect(screen.getByText('Average')).toBeInTheDocument()
     })
 
     it('should render with minimal hourly forecast data (1 hour)', () => {
@@ -300,7 +300,7 @@ describe('HourlyForecast', () => {
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Should display in °F (no conversion)
-      const statsSection = screen.getByText('Min').closest('div')
+      const statsSection = screen.getByText('Minimum').closest('div')
       expect(statsSection).toBeInTheDocument()
     })
 
@@ -314,7 +314,7 @@ describe('HourlyForecast', () => {
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Temperature should be converted
-      const statsSection = screen.getByText('Min').closest('div')
+      const statsSection = screen.getByText('Minimum').closest('div')
       expect(statsSection).toBeInTheDocument()
     })
 
@@ -332,7 +332,7 @@ describe('HourlyForecast', () => {
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Should show 0°C in the chart
-      const statsSection = screen.getByText('Min').parentElement
+      const statsSection = screen.getByText('Minimum').parentElement
       expect(statsSection?.textContent).toContain('0')
     })
 
@@ -349,7 +349,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const statsSection = screen.getByText('Max').parentElement
+      const statsSection = screen.getByText('Maximum').parentElement
       expect(statsSection?.textContent).toContain('100')
     })
 
@@ -366,7 +366,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const avgSection = screen.getByText('Avg').parentElement
+      const avgSection = screen.getByText('Average').parentElement
       expect(avgSection?.textContent).toContain('20')
     })
 
@@ -383,7 +383,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const avgSection = screen.getByText('Avg').parentElement
+      const avgSection = screen.getByText('Average').parentElement
       expect(avgSection?.textContent).toContain('24')
     })
   })
@@ -398,7 +398,7 @@ describe('HourlyForecast', () => {
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Should show mph in imperial
-      const statsSection = screen.getByText('Min').closest('div')
+      const statsSection = screen.getByText('Minimum').closest('div')
       expect(statsSection).toBeInTheDocument()
     })
 
@@ -415,7 +415,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
       // Should convert to km/h
-      const statsSection = screen.getByText('Min').closest('div')
+      const statsSection = screen.getByText('Minimum').closest('div')
       expect(statsSection).toBeInTheDocument()
     })
 
@@ -433,7 +433,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
       // Should parse first number from string
-      const minSection = screen.getByText('Min').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
       expect(minSection?.textContent).toContain('5')
     })
 
@@ -449,7 +449,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
       // Should default to 0 for missing data
-      const minSection = screen.getByText('Min').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
       expect(minSection?.textContent).toContain('0')
     })
 
@@ -469,7 +469,7 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const avgSection = screen.getByText('Avg').parentElement
+      const avgSection = screen.getByText('Average').parentElement
       expect(avgSection?.textContent).toContain('16')
     })
   })
@@ -494,7 +494,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
       // Check that percentage unit is used
-      const statsSection = screen.getByText('Max').parentElement
+      const statsSection = screen.getByText('Maximum').parentElement
       expect(statsSection?.textContent).toMatch(/%/)
     })
 
@@ -508,7 +508,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
       // Check that percentage unit is used
-      const statsSection = screen.getByText('Avg').parentElement
+      const statsSection = screen.getByText('Average').parentElement
       expect(statsSection?.textContent).toMatch(/%/)
     })
 
@@ -524,7 +524,7 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
       // Should default to 0 for null/undefined values
-      const minSection = screen.getByText('Min').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
       expect(minSection).toBeInTheDocument()
     })
 
@@ -555,7 +555,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const minSection = screen.getByText('Min').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
       expect(minSection?.textContent).toContain('40')
     })
 
@@ -569,7 +569,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const maxSection = screen.getByText('Max').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
       expect(maxSection?.textContent).toContain('85')
     })
 
@@ -584,7 +584,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const avgSection = screen.getByText('Avg').parentElement
+      const avgSection = screen.getByText('Average').parentElement
       expect(avgSection?.textContent).toContain('70')
     })
 
@@ -597,7 +597,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const avgSection = screen.getByText('Avg').parentElement
+      const avgSection = screen.getByText('Average').parentElement
       expect(avgSection?.textContent).toContain('51')
     })
 
@@ -614,9 +614,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
-      const avgSection = screen.getByText('Avg').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
+      const avgSection = screen.getByText('Average').parentElement
 
       expect(minSection?.textContent).toContain('10')
       expect(maxSection?.textContent).toContain('50')
@@ -638,8 +638,8 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
 
       expect(minSection?.textContent).toContain('5')
       expect(maxSection?.textContent).toContain('25')
@@ -658,9 +658,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
-      const avgSection = screen.getByText('Avg').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
+      const avgSection = screen.getByText('Average').parentElement
 
       expect(minSection?.textContent).toContain('50')
       expect(maxSection?.textContent).toContain('90')
@@ -674,9 +674,9 @@ describe('HourlyForecast', () => {
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Min, Max, and Avg should all be the same
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
-      const avgSection = screen.getByText('Avg').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
+      const avgSection = screen.getByText('Average').parentElement
 
       expect(minSection?.textContent).toContain('72')
       expect(maxSection?.textContent).toContain('72')
@@ -825,13 +825,13 @@ describe('HourlyForecast', () => {
       expect(screen.getByText('Hourly Forecast')).toBeInTheDocument()
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      expect(screen.getByText('Minimum').parentElement?.textContent).toContain('0')
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      expect(screen.getByText('Minimum').parentElement?.textContent).toContain('0')
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      expect(screen.getByText('Minimum').parentElement?.textContent).toContain('0')
     })
 
     it('should handle negative temperature values', () => {
@@ -844,7 +844,7 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const minSection = screen.getByText('Min').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
       expect(minSection).toBeInTheDocument()
       // Should handle negative values without error
     })
@@ -858,7 +858,7 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
-      const maxSection = screen.getByText('Max').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
       expect(maxSection?.textContent).toContain('100')
     })
 
@@ -871,7 +871,7 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
-      const maxSection = screen.getByText('Max').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
       expect(maxSection?.textContent).toContain('100')
     })
 
@@ -886,7 +886,7 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const maxSection = screen.getByText('Max').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
       expect(maxSection?.textContent).toContain('150')
     })
 
@@ -899,8 +899,8 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
+      const minSection = screen.getByText('Minimum').parentElement
+      const maxSection = screen.getByText('Maximum').parentElement
 
       expect(minSection).toBeInTheDocument()
       expect(maxSection).toBeInTheDocument()
