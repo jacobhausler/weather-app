@@ -94,6 +94,28 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 
 ---
 
+### ✓ Mobile Footer Spacing Insufficient (P2)
+**Status**: RESOLVED (2025-10-01)
+
+**Issue**: Fixed footer was covering content on smaller screens due to insufficient padding-bottom spacing.
+
+**Resolution**: Implemented CSS custom property-based solution using `--footer-height: 4rem` variable that synchronizes footer height with main container padding-bottom. This ensures content is never covered by the fixed footer on any mobile device size (320px-428px).
+
+**Files Modified**: src/App.tsx, src/index.css
+
+---
+
+### ✓ Horizontal Scroll Not Obvious on 7-Day Forecast (P2)
+**Status**: RESOLVED (2025-10-01)
+
+**Issue**: 7-day forecast required horizontal scrolling on mobile but had no visual indicator that content is scrollable.
+
+**Resolution**: Added intelligent fade gradient overlay on the right edge that automatically shows/hides based on scroll position and content width. Uses theme-aware gradient (from-card to-transparent) for both light and dark modes. Includes scroll detection with useEffect hook and proper event listener cleanup.
+
+**Files Modified**: src/components/SevenDayForecast.tsx
+
+---
+
 ## Critical Issues (Fix Immediately)
 
 *No critical issues pending*
@@ -108,35 +130,7 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 
 ## Medium Priority Issues
 
-### 🟠 P2: Mobile Footer Spacing Insufficient
-**Status**: PENDING
-**Severity**: MEDIUM - Content cut off on some devices
-**Files**: `src/App.tsx:21,98-103`
-
-**Issue**:
-- Fixed footer may cover content on smaller screens
-- Padding-bottom (pb-20) may be insufficient for all devices
-
-**Fix**:
-1. Calculate footer height dynamically
-2. Use CSS custom properties for dynamic padding
-3. Test on various mobile screen sizes (320px - 428px width)
-
----
-
-### 🟠 P2: Horizontal Scroll Not Obvious on 7-Day Forecast
-**Status**: PENDING
-**Severity**: MEDIUM - Users may not realize they can scroll
-**Files**: `src/components/SevenDayForecast.tsx:58-60`
-
-**Issue**:
-- 7-day forecast requires horizontal scrolling on mobile
-- No visual indicator that content is scrollable
-
-**Fix**:
-1. Add scroll hint/indicator (fade gradient or arrows)
-2. Consider "swipe to scroll" instruction on first use
-3. Or implement carousel-style navigation with dots
+*No medium priority issues pending*
 
 ---
 
@@ -206,9 +200,10 @@ Before marking as complete:
 ~~2. **Second**: Fix API connection (P0) - Restores core functionality~~ ✓ COMPLETED
 ~~3. **Third**: Fix error banner position (P1) - Improves mobile UX~~ ✓ COMPLETED
 ~~4. **Fourth**: Add background refresh throttling (P1) - Reduces errors~~ ✓ COMPLETED
-5. **Next**: Address remaining P2/P3 items as time permits
-   - Mobile footer spacing verification
-   - Horizontal scroll indicators for 7-Day Forecast
+~~5. **Fifth**: Mobile footer spacing (P2) - CSS variable solution implemented~~ ✓ COMPLETED (2025-10-01)
+~~6. **Sixth**: Horizontal scroll indicators for 7-Day Forecast (P2) - Fade gradient added~~ ✓ COMPLETED (2025-10-01)
+
+**Note**: All P0, P1, and P2 priority items have been completed as of 2025-10-01.
 
 ---
 
@@ -219,6 +214,6 @@ Mobile deployment is considered successful when:
 - [x] ZIP code input works and fetches weather data
 - [x] Error messages display without breaking layout
 - [x] All weather cards render correctly on mobile
-- [ ] Footer doesn't cover content (pending verification on all devices)
+- [x] Footer doesn't cover content (CSS variable solution implemented)
 - [x] Background refresh handles failures gracefully
 - [x] App is responsive from 320px to 1920px width

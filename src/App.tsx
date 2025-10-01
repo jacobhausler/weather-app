@@ -18,7 +18,7 @@ function App() {
   const tonightForecast = weatherData?.forecast.find((p) => !p.isDaytime && p.number === 2)
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className="min-h-screen bg-background text-foreground" style={{ paddingBottom: 'var(--footer-height)' }}>
       <ErrorBanner />
       <Header />
 
@@ -97,8 +97,8 @@ function App() {
       </main>
 
       {/* Footer with theme and unit toggles */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+      <footer className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{ height: 'var(--footer-height)' }}>
+        <div className="container mx-auto flex items-center justify-between px-4 h-full">
           <UnitToggle />
           <ThemeToggle />
         </div>

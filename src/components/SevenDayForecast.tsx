@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ForecastPeriod } from '@/types/weather'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ForecastModal } from './ForecastModal'
@@ -20,6 +20,35 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
     null
   )
   const [modalOpen, setModalOpen] = useState(false)
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Check if content is scrollable and update indicator visibility
+  useEffect(() => {
+    const checkScrollable = () => {
+      const container = scrollContainerRef.current
+      if (container) {
+        const isScrollable = container.scrollWidth > container.clientWidth
+        const isScrolledToEnd =
+          container.scrollWidth - container.scrollLeft <= container.clientWidth + 10
+        setShowScrollIndicator(isScrollable && !isScrolledToEnd)
+      }
+    }
+
+    checkScrollable()
+    const container = scrollContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', checkScrollable)
+      window.addEventListener('resize', checkScrollable)
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', checkScrollable)
+      }
+      window.removeEventListener('resize', checkScrollable)
+    }
+  }, [forecast])
 
   // Convert temperature from Fahrenheit (NWS default) to current unit system
   const convertTemperature = (tempF: number) => {
@@ -81,9 +110,13 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
           <CardTitle>7-Day Forecast</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <div className="flex gap-4 pb-2">
-              {sevenDays.map((dayForecast, index) => {
+          <div className="relative">
+            <div
+              ref={scrollContainerRef}
+              className="overflow-x-auto"
+            >
+              <div className="flex gap-4 pb-2">
+                {sevenDays.map((dayForecast, index) => {
                 const highTemp = convertTemperature(dayForecast.day.temperature)
                 const lowTemp = dayForecast.night?.temperature
                   ? convertTemperature(dayForecast.night.temperature)
@@ -145,7 +178,11 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
                   </button>
                 )
               })}
+              </div>
             </div>
+            {showScrollIndicator && (
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-card to-transparent" />
+            )}
           </div>
         </CardContent>
       </Card>
