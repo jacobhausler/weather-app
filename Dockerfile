@@ -11,7 +11,7 @@ WORKDIR /app/frontend
 # Copy frontend package files
 COPY package*.json ./
 COPY tsconfig.json tsconfig.node.json ./
-COPY vite.config.ts tailwind.config.js components.json ./
+COPY vite.config.ts tailwind.config.js components.json postcss.config.js ./
 COPY index.html ./
 
 # Install frontend dependencies
