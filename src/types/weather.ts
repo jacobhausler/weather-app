@@ -120,13 +120,6 @@ export interface Alert {
   category: string
 }
 
-export interface UVIndex {
-  value: number
-  timestamp: string
-  latitude: number
-  longitude: number
-}
-
 export interface SunTimes {
   sunrise: string // ISO 8601 timestamp
   sunset: string // ISO 8601 timestamp
@@ -143,7 +136,6 @@ export interface WeatherData {
   hourlyForecast: HourlyForecast[]
   currentObservation?: Observation
   alerts: Alert[]
-  uvIndex?: UVIndex | null
   sunTimes: SunTimes
   lastUpdated: string
 }

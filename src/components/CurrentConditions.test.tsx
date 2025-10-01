@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { CurrentConditions } from './CurrentConditions'
 import { useUnitStore } from '@/stores/unitStore'
-import type { Observation, ForecastPeriod, UVIndex, SunTimes } from '@/types/weather'
+import type { Observation, ForecastPeriod, SunTimes } from '@/types/weather'
 
 describe('CurrentConditions', () => {
   // Reset unit store before each test
@@ -88,13 +88,6 @@ describe('CurrentConditions', () => {
     ...overrides,
   })
 
-  const createMockUVIndex = (value: number = 5): UVIndex => ({
-    value,
-    timestamp: '2025-09-30T12:00:00Z',
-    latitude: 33.0,
-    longitude: -96.0,
-  })
-
   const createMockSunTimes = (): SunTimes => ({
     sunrise: '2025-09-30T11:30:00Z',
     sunset: '2025-09-30T23:45:00Z',
@@ -134,7 +127,6 @@ describe('CurrentConditions', () => {
         temperature: 55,
         shortForecast: 'Clear',
       })
-      const uvIndex = createMockUVIndex()
       const sunTimes = createMockSunTimes()
 
       render(
@@ -142,7 +134,6 @@ describe('CurrentConditions', () => {
           observation={observation}
           todayForecast={todayForecast}
           tonightForecast={tonightForecast}
-          uvIndex={uvIndex}
           sunTimes={sunTimes}
         />
       )
@@ -507,134 +498,6 @@ describe('CurrentConditions', () => {
     })
   })
 
-  describe('UV Index Display and Categorization', () => {
-    it('should display UV index as Low (value <= 2)', () => {
-      const uvIndex = createMockUVIndex(2)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText('UV Index')).toBeInTheDocument()
-      expect(screen.getByText(/2.0 \(Low\)/)).toBeInTheDocument()
-    })
-
-    it('should display UV index as Moderate (3-5)', () => {
-      const uvIndex = createMockUVIndex(5)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/5.0 \(Moderate\)/)).toBeInTheDocument()
-    })
-
-    it('should display UV index as High (6-7)', () => {
-      const uvIndex = createMockUVIndex(7)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/7.0 \(High\)/)).toBeInTheDocument()
-    })
-
-    it('should display UV index as Very High (8-10)', () => {
-      const uvIndex = createMockUVIndex(10)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/10.0 \(Very High\)/)).toBeInTheDocument()
-    })
-
-    it('should display UV index as Extreme (> 10)', () => {
-      const uvIndex = createMockUVIndex(11)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/11.0 \(Extreme\)/)).toBeInTheDocument()
-    })
-
-    it('should format UV index with one decimal place', () => {
-      const uvIndex = createMockUVIndex(5.67)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/5.7/)).toBeInTheDocument()
-    })
-
-    it('should not display UV index when null', () => {
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={null} />)
-
-      expect(screen.queryByText('UV Index')).not.toBeInTheDocument()
-    })
-
-    it('should not display UV index when undefined', () => {
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} />)
-
-      expect(screen.queryByText('UV Index')).not.toBeInTheDocument()
-    })
-
-    it('should handle UV index of 0 (Low)', () => {
-      const uvIndex = createMockUVIndex(0)
-      const forecast = createMockForecastPeriod()
-      render(<CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />)
-
-      expect(screen.getByText(/0.0 \(Low\)/)).toBeInTheDocument()
-    })
-
-    it('should apply correct color class for Low UV index', () => {
-      const uvIndex = createMockUVIndex(1)
-      const forecast = createMockForecastPeriod()
-      const { container } = render(
-        <CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />
-      )
-
-      const uvElement = container.querySelector('.text-green-600')
-      expect(uvElement).toBeInTheDocument()
-    })
-
-    it('should apply correct color class for Moderate UV index', () => {
-      const uvIndex = createMockUVIndex(4)
-      const forecast = createMockForecastPeriod()
-      const { container } = render(
-        <CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />
-      )
-
-      const uvElement = container.querySelector('.text-yellow-600')
-      expect(uvElement).toBeInTheDocument()
-    })
-
-    it('should apply correct color class for High UV index', () => {
-      const uvIndex = createMockUVIndex(6)
-      const forecast = createMockForecastPeriod()
-      const { container } = render(
-        <CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />
-      )
-
-      const uvElement = container.querySelector('.text-orange-600')
-      expect(uvElement).toBeInTheDocument()
-    })
-
-    it('should apply correct color class for Very High UV index', () => {
-      const uvIndex = createMockUVIndex(9)
-      const forecast = createMockForecastPeriod()
-      const { container } = render(
-        <CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />
-      )
-
-      const uvElement = container.querySelector('.text-red-600')
-      expect(uvElement).toBeInTheDocument()
-    })
-
-    it('should apply correct color class for Extreme UV index', () => {
-      const uvIndex = createMockUVIndex(12)
-      const forecast = createMockForecastPeriod()
-      const { container } = render(
-        <CurrentConditions todayForecast={forecast} uvIndex={uvIndex} />
-      )
-
-      const uvElement = container.querySelector('.text-purple-600')
-      expect(uvElement).toBeInTheDocument()
-    })
-  })
-
   describe('Sunrise/Sunset Display', () => {
     it('should display sunrise time when sun times provided', () => {
       const sunTimes = createMockSunTimes()
@@ -987,20 +850,17 @@ describe('CurrentConditions', () => {
         windSpeed: { value: 2, unitCode: 'wmoUnit:m_s-1' },
       })
       const forecast = createMockForecastPeriod({ shortForecast: 'Hot and Humid' })
-      const uvIndex = createMockUVIndex(10)
 
       render(
         <CurrentConditions
           observation={observation}
           todayForecast={forecast}
-          uvIndex={uvIndex}
         />
       )
 
       expect(screen.getByText(/95°F/)).toBeInTheDocument()
       expect(screen.getByText(/Feels like 104°F/)).toBeInTheDocument()
       expect(screen.getByText('85%')).toBeInTheDocument()
-      expect(screen.getByText(/10.0 \(Very High\)/)).toBeInTheDocument()
     })
 
     it('should handle cold winter day with wind chill', () => {
@@ -1051,7 +911,6 @@ describe('CurrentConditions', () => {
         name: 'Tonight',
         temperature: 55,
       })
-      const uvIndex = createMockUVIndex(6)
       const sunTimes = createMockSunTimes()
 
       render(
@@ -1059,7 +918,6 @@ describe('CurrentConditions', () => {
           observation={observation}
           todayForecast={todayForecast}
           tonightForecast={tonightForecast}
-          uvIndex={uvIndex}
           sunTimes={sunTimes}
         />
       )
@@ -1068,7 +926,6 @@ describe('CurrentConditions', () => {
       expect(screen.getByText('Current Conditions')).toBeInTheDocument()
       expect(screen.getByText('Sunny')).toBeInTheDocument()
       expect(screen.getByText('Tonight')).toBeInTheDocument()
-      expect(screen.getByText('UV Index')).toBeInTheDocument()
       expect(screen.getByText('Sunrise')).toBeInTheDocument()
       expect(screen.getByText('Sunset')).toBeInTheDocument()
       expect(screen.getByText('Dewpoint')).toBeInTheDocument()

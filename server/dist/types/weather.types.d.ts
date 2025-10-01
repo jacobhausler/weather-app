@@ -363,12 +363,6 @@ export interface SunTimes {
     civilDawn: string;
     civilDusk: string;
 }
-export interface UVIndexData {
-    value: number;
-    timestamp: string;
-    latitude: number;
-    longitude: number;
-}
 export interface WeatherPackage {
     location: {
         zipCode: string;
@@ -390,7 +384,6 @@ export interface WeatherPackage {
     currentConditions: ObservationResponse | null;
     alerts: AlertResponse;
     sunTimes: SunTimes;
-    uvIndex: UVIndexData | null;
     metadata: {
         fetchedAt: string;
         cacheExpiry: string;

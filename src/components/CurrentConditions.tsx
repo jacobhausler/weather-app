@@ -1,4 +1,4 @@
-import { Observation, ForecastPeriod, UVIndex, SunTimes } from '@/types/weather'
+import { Observation, ForecastPeriod, SunTimes } from '@/types/weather'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Thermometer,
@@ -6,7 +6,6 @@ import {
   Wind,
   Eye,
   Cloud,
-  Sun,
   Sunrise,
   Sunset,
 } from 'lucide-react'
@@ -16,7 +15,6 @@ interface CurrentConditionsProps {
   observation?: Observation
   todayForecast?: ForecastPeriod
   tonightForecast?: ForecastPeriod
-  uvIndex?: UVIndex | null
   sunTimes?: SunTimes
 }
 
@@ -33,27 +31,10 @@ const getFeelsLike = (temp: number, heatIndex: number | null, windChill: number 
   return temp
 }
 
-const getUVIndexLabel = (value: number): string => {
-  if (value <= 2) return 'Low'
-  if (value <= 5) return 'Moderate'
-  if (value <= 7) return 'High'
-  if (value <= 10) return 'Very High'
-  return 'Extreme'
-}
-
-const getUVIndexColor = (value: number): string => {
-  if (value <= 2) return 'text-green-600 dark:text-green-400'
-  if (value <= 5) return 'text-yellow-600 dark:text-yellow-400'
-  if (value <= 7) return 'text-orange-600 dark:text-orange-400'
-  if (value <= 10) return 'text-red-600 dark:text-red-400'
-  return 'text-purple-600 dark:text-purple-400'
-}
-
 export function CurrentConditions({
   observation,
   todayForecast,
   tonightForecast,
-  uvIndex,
   sunTimes,
 }: CurrentConditionsProps) {
   const { unitSystem } = useUnitStore()
@@ -222,10 +203,6 @@ export function CurrentConditions({
               value={cloudCover}
             />
 
-            {uvIndex && uvIndex.value !== null && uvIndex.value !== undefined && (
-              <UVIndexItem value={uvIndex.value} />
-            )}
-
             {sunTimes && (
               <>
                 <WeatherDetailItem
@@ -291,29 +268,6 @@ function WeatherDetailItem({ icon, label, value }: WeatherDetailItemProps) {
       <div className="min-w-0 flex-1">
         <div className="text-xs text-muted-foreground">{label}</div>
         <div className="truncate text-sm font-medium">{value}</div>
-      </div>
-    </div>
-  )
-}
-
-interface UVIndexItemProps {
-  value: number
-}
-
-function UVIndexItem({ value }: UVIndexItemProps) {
-  const label = getUVIndexLabel(value)
-  const colorClass = getUVIndexColor(value)
-
-  return (
-    <div className="flex items-center gap-2 rounded-lg border p-3">
-      <div className="text-muted-foreground">
-        <Sun className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs text-muted-foreground">UV Index</div>
-        <div className={`truncate text-sm font-medium ${colorClass}`}>
-          {value.toFixed(1)} ({label})
-        </div>
       </div>
     </div>
   )

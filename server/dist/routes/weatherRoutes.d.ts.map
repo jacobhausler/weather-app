@@ -1,1 +1,1 @@
-{"version":3,"file":"weatherRoutes.d.ts","sourceRoot":"","sources":["../../src/routes/weatherRoutes.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAqJ7C,QAAA,MAAM,aAAa,EAAE,kBAkoBpB,CAAC;AAEF,eAAe,aAAa,CAAC"}
+{"version":3,"file":"weatherRoutes.d.ts","sourceRoot":"","sources":["../../src/routes/weatherRoutes.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AA8I7C,QAAA,MAAM,aAAa,EAAE,kBA4mBpB,CAAC;AAEF,eAAe,aAAa,CAAC"}

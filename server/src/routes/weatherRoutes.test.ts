@@ -139,13 +139,6 @@ describe('Weather Routes Integration Tests', () => {
       expect(data.sunTimes.sunset).toBeDefined();
       expect(data.sunTimes.solarNoon).toBeDefined();
 
-      // Verify UV index (may be null but field should exist)
-      expect(data).toHaveProperty('uvIndex');
-      if (data.uvIndex) {
-        expect(typeof data.uvIndex.value).toBe('number');
-        expect(data.uvIndex.timestamp).toBeDefined();
-      }
-
       // Verify metadata
       expect(data.lastUpdated).toBeDefined();
       const lastUpdated = new Date(data.lastUpdated);
@@ -807,13 +800,6 @@ describe('Weather Routes Integration Tests', () => {
       expect(response.statusCode).toBe(200);
 
       const data = JSON.parse(response.body);
-
-      // UV Index might be null
-      if (data.uvIndex === null) {
-        expect(data.uvIndex).toBeNull();
-      } else {
-        expect(data.uvIndex.value).toBeDefined();
-      }
 
       // Current observation might be undefined/null
       if (!data.currentObservation) {

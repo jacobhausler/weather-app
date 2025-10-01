@@ -5,7 +5,6 @@
 import { nwsService } from '../services/nwsService.js';
 import { geocodeZip } from '../services/geocodingService.js';
 import { getSunTimes } from '../services/sunService.js';
-import { uvService } from '../services/uvService.js';
 import { getBackgroundJobsStatus } from '../services/backgroundJobs.js';
 /**
  * Transform backend WeatherPackage to frontend WeatherData format
@@ -132,12 +131,6 @@ function transformWeatherPackage(pkg) {
             messageType: feature.properties.messageType,
             category: feature.properties.category,
         })),
-        uvIndex: pkg.uvIndex ? {
-            value: pkg.uvIndex.value,
-            timestamp: pkg.uvIndex.timestamp,
-            latitude: pkg.uvIndex.latitude,
-            longitude: pkg.uvIndex.longitude,
-        } : null,
         sunTimes: pkg.sunTimes,
         lastUpdated: pkg.metadata.fetchedAt,
     };
@@ -266,12 +259,11 @@ const weatherRoutes = async (fastify) => {
             const { gridId, gridX, gridY, forecastOffice, timeZone } = pointData.properties;
             // Step 4: Fetch all weather data in parallel
             // Use Promise.allSettled to handle partial failures gracefully
-            const [forecastResult, hourlyForecastResult, currentConditionsResult, alertsResult, uvIndexResult,] = await Promise.allSettled([
+            const [forecastResult, hourlyForecastResult, currentConditionsResult, alertsResult,] = await Promise.allSettled([
                 nwsService.getForecast(gridId, gridX, gridY),
                 nwsService.getHourlyForecast(gridId, gridX, gridY),
                 nwsService.getCurrentConditions(gridId, gridX, gridY),
                 nwsService.getActiveAlerts(lat, lon),
-                uvService.getUVIndex(lat, lon),
             ]);
             // Check if critical data (forecast) failed
             if (forecastResult.status === 'rejected') {
@@ -296,9 +288,6 @@ const weatherRoutes = async (fastify) => {
             }
             if (alertsResult.status === 'rejected') {
                 fastify.log.warn({ error: alertsResult.reason, zipcode }, 'Failed to fetch alerts');
-            }
-            if (uvIndexResult.status === 'rejected') {
-                fastify.log.warn({ error: uvIndexResult.reason, zipcode }, 'Failed to fetch UV Index');
             }
             // Step 5: Calculate sunrise/sunset times
             const sunTimes = getSunTimes(lat, lon, new Date(), timeZone);
@@ -333,7 +322,6 @@ const weatherRoutes = async (fastify) => {
                         updated: now.toISOString(),
                     },
                 sunTimes,
-                uvIndex: uvIndexResult.status === 'fulfilled' ? uvIndexResult.value : null,
                 metadata: {
                     fetchedAt: now.toISOString(),
                     cacheExpiry: cacheExpiry.toISOString(),
@@ -528,12 +516,11 @@ const weatherRoutes = async (fastify) => {
             }
             const { gridId, gridX, gridY, forecastOffice, timeZone } = pointData.properties;
             // Step 5: Fetch all weather data in parallel
-            const [forecastResult, hourlyForecastResult, currentConditionsResult, alertsResult, uvIndexResult,] = await Promise.allSettled([
+            const [forecastResult, hourlyForecastResult, currentConditionsResult, alertsResult,] = await Promise.allSettled([
                 nwsService.getForecast(gridId, gridX, gridY),
                 nwsService.getHourlyForecast(gridId, gridX, gridY),
                 nwsService.getCurrentConditions(gridId, gridX, gridY),
                 nwsService.getActiveAlerts(lat, lon),
-                uvService.getUVIndex(lat, lon),
             ]);
             // Check if critical data failed
             if (forecastResult.status === 'rejected') {
@@ -558,9 +545,6 @@ const weatherRoutes = async (fastify) => {
             }
             if (alertsResult.status === 'rejected') {
                 fastify.log.warn({ error: alertsResult.reason, zipcode }, 'Failed to fetch alerts during refresh');
-            }
-            if (uvIndexResult.status === 'rejected') {
-                fastify.log.warn({ error: uvIndexResult.reason, zipcode }, 'Failed to fetch UV Index during refresh');
             }
             // Step 6: Calculate sunrise/sunset times
             const sunTimes = getSunTimes(lat, lon, new Date(), timeZone);
@@ -595,7 +579,6 @@ const weatherRoutes = async (fastify) => {
                         updated: now.toISOString(),
                     },
                 sunTimes,
-                uvIndex: uvIndexResult.status === 'fulfilled' ? uvIndexResult.value : null,
                 metadata: {
                     fetchedAt: now.toISOString(),
                     cacheExpiry: cacheExpiry.toISOString(),

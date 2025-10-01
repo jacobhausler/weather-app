@@ -384,14 +384,6 @@ export interface SunTimes {
   civilDusk: string; // ISO 8601 timestamp
 }
 
-// UV Index data type
-export interface UVIndexData {
-  value: number;
-  timestamp: string;
-  latitude: number;
-  longitude: number;
-}
-
 // Complete weather package type
 export interface WeatherPackage {
   location: {
@@ -414,7 +406,6 @@ export interface WeatherPackage {
   currentConditions: ObservationResponse | null;
   alerts: AlertResponse;
   sunTimes: SunTimes;
-  uvIndex: UVIndexData | null;
   metadata: {
     fetchedAt: string;
     cacheExpiry: string;

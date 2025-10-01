@@ -373,12 +373,6 @@ describe('Bug #2: Data Structure Mismatch - REGRESSION TESTS', () => {
         civilDawn: '2025-09-30T12:05:00.000Z',
         civilDusk: '2025-09-30T00:10:00.000Z'
       },
-      uvIndex: {
-        value: 7,
-        timestamp: now.toISOString(),
-        latitude: 33.0198,
-        longitude: -96.6989
-      },
       metadata: {
         fetchedAt: now.toISOString(),
         cacheExpiry: expires.toISOString()
@@ -511,12 +505,6 @@ describe('Bug #2: Data Structure Mismatch - REGRESSION TESTS', () => {
         messageType: feature.properties.messageType,
         category: feature.properties.category,
       })),
-      uvIndex: pkg.uvIndex ? {
-        value: pkg.uvIndex.value,
-        timestamp: pkg.uvIndex.timestamp,
-        latitude: pkg.uvIndex.latitude,
-        longitude: pkg.uvIndex.longitude,
-      } : null,
       sunTimes: pkg.sunTimes,
       lastUpdated: pkg.metadata.fetchedAt,
     };
@@ -626,16 +614,6 @@ describe('Bug #2: Data Structure Mismatch - REGRESSION TESTS', () => {
 
     expect(Array.isArray(transformed.alerts)).toBe(true);
     expect(transformed.alerts.length).toBe(0);
-  });
-
-  it('should handle null uvIndex', () => {
-    // Test edge case: UV data unavailable
-    const backendData = createTestWeatherPackage();
-    backendData.uvIndex = null;
-
-    const transformed = transformWeatherPackage(backendData);
-
-    expect(transformed.uvIndex).toBeNull();
   });
 
   it('should preserve all required forecast period fields', () => {

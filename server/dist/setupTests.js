@@ -7,7 +7,6 @@ process.env['NODE_ENV'] = 'test';
 process.env['PORT'] = '3001';
 process.env['NWS_API_BASE_URL'] = 'https://api.weather.gov';
 process.env['NWS_USER_AGENT'] = 'WeatherApp/1.0 (test@example.com)';
-process.env['OPENWEATHER_API_KEY'] = 'test_api_key_12345';
 process.env['CACHED_ZIP_CODES'] = '75454,75070,75035';
 process.env['CACHE_POINTS_DURATION'] = '1440';
 process.env['CACHE_FORECAST_DURATION'] = '60';
