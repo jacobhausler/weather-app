@@ -26,6 +26,7 @@ export function useWeatherData() {
   const consecutiveFailuresRef = useRef(0)
   const backoffDelayRef = useRef(INITIAL_BACKOFF_DELAY)
   const [isAutoRefreshPaused, setIsAutoRefreshPaused] = useState(false)
+  const hasInitializedRef = useRef(false)
 
   // Fetch weather data for a ZIP code
   const fetchWeather = useCallback(async (zipCode: string) => {
@@ -122,6 +123,16 @@ export function useWeatherData() {
       setLoading(false)
     }
   }, [currentZipCode, setLoading, setError, setWeatherData, resetFailureTracking])
+
+  // Auto-fetch on initial load if cached ZIP exists
+  useEffect(() => {
+    // Only run on initial mount if there's a cached ZIP but no weather data
+    if (currentZipCode && !weatherData && !isLoading && !hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      fetchWeather(currentZipCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Set up background refresh with Page Visibility API and exponential backoff
   useEffect(() => {

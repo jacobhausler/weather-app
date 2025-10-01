@@ -93,6 +93,14 @@ describe('useWeatherData', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.useRealTimers()
+    // Clean up by ensuring the hook is fully unmounted
+    useWeatherStore.setState({
+      currentZipCode: null,
+      weatherData: null,
+      isLoading: false,
+      error: null,
+      recentZipCodes: []
+    })
   })
 
   describe('fetchWeather', () => {
@@ -913,6 +921,74 @@ describe('useWeatherData', () => {
       expect(lastWarning).toContain('Background refresh failed (1/3)')
 
       consoleWarnSpy.mockRestore()
+    })
+  })
+
+  describe('Auto-fetch on initial load', () => {
+    it('should automatically fetch weather data on mount if cached ZIP exists', async () => {
+      // Pre-populate the store with a cached ZIP code
+      useWeatherStore.setState({
+        currentZipCode: '75454',
+        weatherData: null,
+        isLoading: false,
+        error: null,
+        recentZipCodes: ['75454']
+      })
+
+      vi.mocked(apiService.getWeatherByZip).mockResolvedValue(mockWeatherData)
+
+      const { result } = renderHook(() => useWeatherData())
+
+      // Wait for the auto-fetch to complete
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(apiService.getWeatherByZip).toHaveBeenCalledWith('75454')
+      expect(apiService.getWeatherByZip).toHaveBeenCalledTimes(1)
+      expect(result.current.weatherData).toEqual(mockWeatherData)
+    })
+
+    it('should not auto-fetch if no cached ZIP exists', async () => {
+      // Store has no cached ZIP
+      useWeatherStore.setState({
+        currentZipCode: null,
+        weatherData: null,
+        isLoading: false,
+        error: null,
+        recentZipCodes: []
+      })
+
+      vi.mocked(apiService.getWeatherByZip).mockResolvedValue(mockWeatherData)
+
+      renderHook(() => useWeatherData())
+
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(apiService.getWeatherByZip).not.toHaveBeenCalled()
+    })
+
+    it('should not auto-fetch if weather data already exists', async () => {
+      // Store already has weather data
+      useWeatherStore.setState({
+        currentZipCode: '75454',
+        weatherData: mockWeatherData,
+        isLoading: false,
+        error: null,
+        recentZipCodes: ['75454']
+      })
+
+      vi.mocked(apiService.getWeatherByZip).mockResolvedValue(mockWeatherData)
+
+      renderHook(() => useWeatherData())
+
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(apiService.getWeatherByZip).not.toHaveBeenCalled()
     })
   })
 })

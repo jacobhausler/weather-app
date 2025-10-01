@@ -2,9 +2,36 @@
 
 ## Latest Updates (2025-10-01)
 
+### ✅ AUTO-FETCH ON INITIAL LOAD FEATURE (October 1)
+
+**Status**: Feature implemented and fully tested
+
+#### Feature Description:
+Implemented automatic weather data fetching on initial page load when a cached ZIP code exists in localStorage. This enhancement improves user experience by automatically loading their last viewed location's weather data when they return to the application.
+
+#### Implementation Details:
+- **File**: `/workspaces/weather-app/src/hooks/useWeatherData.ts` (lines 127-135)
+- **Behavior**: On component mount, checks if a cached ZIP code exists in localStorage and automatically fetches weather data for that location
+- **User Experience**: Users no longer need to manually re-enter their ZIP code on subsequent visits
+- **Non-intrusive**: Maintains existing manual fetch and background refresh functionality
+
+#### Test Coverage:
+- Added 3 comprehensive tests in `useWeatherData.test.tsx`
+- Total tests in file: 33 (was 30)
+- Test scenarios:
+  1. Auto-fetches weather data on mount when cached ZIP exists
+  2. Does not auto-fetch when no cached ZIP exists
+  3. Does not auto-fetch when weather data already exists
+
+**Impact**: Enhanced user experience with seamless return visits. Weather data loads immediately without user interaction.
+
+**Time Investment**: ~30 minutes (implementation + testing)
+
+---
+
 ### ✅ TEST INFRASTRUCTURE FIXES (October 1)
 
-**All Critical Test Issues Resolved - 990 Tests Passing**
+**All Critical Test Issues Resolved - 993 Tests Passing**
 
 #### Fixed Issues:
 1. **TypeScript Compilation Errors in Test Files** [FIXED]
@@ -29,7 +56,7 @@
 #### Test Results Summary:
 **Frontend Tests** (/workspaces/weather-app):
 - ✅ 15 test files passed
-- ✅ 772 tests passed
+- ✅ 775 tests passed
 - Duration: ~38 seconds
 
 **Backend Tests** (/workspaces/weather-app/server):
@@ -37,14 +64,14 @@
 - ✅ 218 tests passed
 - Duration: ~68 seconds
 
-**Total**: 990 tests passing across 21 test files
+**Total**: 993 tests passing across 21 test files
 
 #### Build Status:
 - ✅ Frontend TypeScript: PASSING
 - ✅ Backend TypeScript: PASSING
 - ✅ Frontend Build: PASSING
 - ✅ Backend Build: PASSING
-- ✅ All Tests: PASSING (990/990)
+- ✅ All Tests: PASSING (993/993)
 
 **Impact**: Complete test infrastructure stability achieved. All builds and tests pass cleanly.
 
@@ -583,10 +610,10 @@
 ### 7.5 Frontend Hook & Store Tests ✅ COMPLETE
 - [x] useLocalStorage.test.tsx (57 tests) - Storage operations, cross-tab sync, SSR safety
 - [x] useUnitConversion.test.tsx (90 tests) - All conversions, edge cases, mathematical accuracy
-- [x] useWeatherData.test.tsx (30 tests) - Fetch, background refresh, exponential backoff, failure handling
+- [x] useWeatherData.test.tsx (33 tests) - Fetch, background refresh, exponential backoff, failure handling, auto-fetch on initial load
 - [x] unitStore.test.ts (75 tests) - State management, conversions, persistence
 - [x] weatherStore.test.ts (46 tests) - Weather data state, recent ZIPs, localStorage persistence
-- **Total Hook & Store Tests**: 298 tests
+- **Total Hook & Store Tests**: 301 tests
 
 ### 7.6 Frontend Component Tests ✅ COMPLETE
 - [x] AlertCard.test.tsx (33 tests) - Severity/urgency mapping, date formatting, multiple alerts
