@@ -1,5 +1,5 @@
 import { useState, FormEvent, KeyboardEvent } from 'react'
-import { MapPin, ChevronDown, Sparkles } from 'lucide-react'
+import { MapPin, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -14,7 +14,6 @@ import { apiService } from '@/services/api'
 export function ZipInput() {
   const [inputValue, setInputValue] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [isFocused, setIsFocused] = useState(false)
   const {
     setZipCode,
     setWeatherData,
@@ -92,99 +91,28 @@ export function ZipInput() {
   return (
     <div className="flex flex-col gap-2">
       <form onSubmit={handleSubmit} className="flex gap-2">
-        {/* Glass morphism input wrapper */}
-        <div className="relative flex-1 group">
-          <div
-            className={`
-              absolute inset-0 rounded-lg transition-all duration-300
-              ${
-                isFocused
-                  ? 'bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-sm'
-                  : 'bg-transparent'
-              }
-            `}
+        <div className="relative flex-1">
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="\d{5}"
+            placeholder="Enter ZIP code"
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
+            className="pr-10"
+            aria-label="ZIP code input"
+            aria-invalid={!!validationError}
+            aria-describedby={validationError ? 'zip-error' : undefined}
           />
-          <div className="relative">
-            <Input
-              type="text"
-              inputMode="numeric"
-              pattern="\d{5}"
-              placeholder="Enter ZIP code"
-              value={inputValue}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              disabled={isLoading}
-              className={`
-                pr-10 h-11
-                bg-background/50 backdrop-blur-sm
-                border-border/50
-                transition-all duration-300 ease-out
-                hover:bg-background/60 hover:border-border/70
-                focus:bg-background/70 focus:border-primary/50
-                focus:shadow-lg focus:shadow-primary/10
-                placeholder:transition-all placeholder:duration-300
-                ${isFocused ? 'placeholder:translate-x-1' : ''}
-              `}
-              aria-label="ZIP code input"
-              aria-invalid={!!validationError}
-              aria-describedby={validationError ? 'zip-error' : undefined}
-            />
-            <MapPin
-              className={`
-                absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2
-                transition-all duration-300
-                ${
-                  isFocused
-                    ? 'text-primary scale-110'
-                    : 'text-muted-foreground scale-100'
-                }
-              `}
-            />
-          </div>
+          <MapPin className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
 
-        {/* Modern gradient submit button */}
-        <Button
-          type="submit"
-          disabled={isLoading || !inputValue.trim()}
-          className={`
-            h-11 px-6
-            relative overflow-hidden
-            bg-gradient-to-r from-primary via-primary/90 to-primary
-            hover:from-primary/90 hover:via-primary hover:to-primary/90
-            transition-all duration-300 ease-out
-            shadow-lg shadow-primary/20
-            hover:shadow-xl hover:shadow-primary/30
-            hover:scale-[1.02]
-            active:scale-[0.98]
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-            group
-          `}
-        >
-          <span className="relative z-10 flex items-center gap-2 font-medium">
-            {isLoading ? (
-              <>
-                <Sparkles className="h-4 w-4 animate-spin" />
-                Loading
-              </>
-            ) : (
-              'Submit'
-            )}
-          </span>
-          {/* Shimmer effect */}
-          <div
-            className={`
-              absolute inset-0 -translate-x-full
-              bg-gradient-to-r from-transparent via-white/20 to-transparent
-              group-hover:translate-x-full
-              transition-transform duration-700 ease-in-out
-            `}
-          />
+        <Button type="submit" disabled={isLoading || !inputValue.trim()}>
+          Submit
         </Button>
 
-        {/* Recent ZIP codes dropdown with glass style */}
         {recentZipCodes.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -193,31 +121,16 @@ export function ZipInput() {
                 size="icon"
                 disabled={isLoading}
                 aria-label="Recent ZIP codes"
-                className={`
-                  h-11 w-11
-                  bg-background/50 backdrop-blur-sm
-                  border-border/50
-                  hover:bg-background/70 hover:border-border/70
-                  hover:scale-105
-                  active:scale-95
-                  transition-all duration-300 ease-out
-                  shadow-md hover:shadow-lg
-                `}
               >
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-background/95 backdrop-blur-xl border-border/50"
-            >
+            <DropdownMenuContent align="end">
               {recentZipCodes.map((zip) => (
                 <DropdownMenuItem
                   key={zip}
                   onClick={() => handleRecentZipClick(zip)}
-                  className="cursor-pointer hover:bg-primary/10 transition-colors duration-200"
                 >
-                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
                   {zip}
                 </DropdownMenuItem>
               ))}
@@ -226,21 +139,15 @@ export function ZipInput() {
         )}
       </form>
 
-      {/* Elegant error message */}
       {validationError && (
-        <div
+        <p
           id="zip-error"
+          className="text-sm text-destructive"
           role="alert"
           aria-live="polite"
-          className={`
-            text-sm text-destructive
-            bg-destructive/10 border border-destructive/20
-            rounded-md px-3 py-2
-            animate-in slide-in-from-top-1 duration-300
-          `}
         >
           {validationError}
-        </div>
+        </p>
       )}
     </div>
   )

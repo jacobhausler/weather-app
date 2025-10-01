@@ -767,7 +767,7 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('hover:scale-[1.02]')
+      expect(button).toHaveClass('hover:bg-muted')
     })
 
     it('should support multiple day selections', async () => {

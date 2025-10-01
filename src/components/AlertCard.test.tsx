@@ -75,7 +75,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[extremeAlert]} />)
       const severityBadge = screen.getByText('Extreme')
-      expect(severityBadge).toHaveClass('from-red-600')
+      expect(severityBadge).toHaveClass('bg-red-600')
     })
 
     it('should apply orange color class for Severe severity', () => {
@@ -86,7 +86,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[severeAlert]} />)
       const severityBadge = screen.getByText('Severe')
-      expect(severityBadge).toHaveClass('from-orange-600')
+      expect(severityBadge).toHaveClass('bg-orange-600')
     })
 
     it('should apply yellow color class for Moderate severity', () => {
@@ -97,7 +97,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[moderateAlert]} />)
       const severityBadge = screen.getByText('Moderate')
-      expect(severityBadge).toHaveClass('from-yellow-600')
+      expect(severityBadge).toHaveClass('bg-yellow-600')
     })
 
     it('should apply blue color class for Minor severity', () => {
@@ -108,7 +108,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[minorAlert]} />)
       const severityBadge = screen.getByText('Minor')
-      expect(severityBadge).toHaveClass('from-blue-600')
+      expect(severityBadge).toHaveClass('bg-blue-600')
     })
 
     it('should apply gray color class for Unknown severity', () => {
@@ -119,7 +119,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[unknownAlert]} />)
       const severityBadge = screen.getByText('Unknown')
-      expect(severityBadge).toHaveClass('from-gray-600')
+      expect(severityBadge).toHaveClass('bg-gray-600')
     })
   })
 
@@ -132,7 +132,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[immediateAlert]} />)
       const urgencyBadge = screen.getByText('Immediate')
-      expect(urgencyBadge).toHaveClass('from-red-500')
+      expect(urgencyBadge).toHaveClass('bg-red-500')
     })
 
     it('should apply orange color class for Expected urgency', () => {
@@ -143,7 +143,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[expectedAlert]} />)
       const urgencyBadge = screen.getByText('Expected')
-      expect(urgencyBadge).toHaveClass('from-orange-500')
+      expect(urgencyBadge).toHaveClass('bg-orange-500')
     })
 
     it('should apply blue color class for Future urgency', () => {
@@ -154,7 +154,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[futureAlert]} />)
       const urgencyBadge = screen.getByText('Future')
-      expect(urgencyBadge).toHaveClass('from-blue-500')
+      expect(urgencyBadge).toHaveClass('bg-blue-500')
     })
 
     it('should apply gray color class for Past urgency', () => {
@@ -165,7 +165,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[pastAlert]} />)
       const urgencyBadge = screen.getByText('Past')
-      expect(urgencyBadge).toHaveClass('from-gray-500')
+      expect(urgencyBadge).toHaveClass('bg-gray-500')
     })
 
     it('should apply light gray color class for Unknown urgency', () => {
@@ -176,7 +176,7 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[unknownAlert]} />)
       const urgencyBadge = screen.getByText('Unknown')
-      expect(urgencyBadge).toHaveClass('from-gray-400')
+      expect(urgencyBadge).toHaveClass('bg-gray-400')
     })
   })
 
@@ -231,11 +231,10 @@ describe('AlertCard', () => {
       expect(icon).toBeInTheDocument()
     })
 
-    it('should render with border styling matching severity', () => {
+    it('should render with red border styling', () => {
       const { container } = render(<AlertCard alerts={[mockAlert]} />)
 
-      // mockAlert has 'Severe' severity, which uses orange border
-      const card = container.querySelector('.border-orange-500\\/50')
+      const card = container.querySelector('.border-l-red-600')
       expect(card).toBeInTheDocument()
     })
 

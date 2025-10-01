@@ -143,128 +143,87 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
     return parts.join('. ')
   }
 
-  // Get temperature gradient color based on temp value
-  const getTempGradient = (temp: number) => {
-    if (temp >= 90) return 'from-red-500 to-orange-500'
-    if (temp >= 80) return 'from-orange-500 to-amber-500'
-    if (temp >= 70) return 'from-amber-500 to-yellow-500'
-    if (temp >= 60) return 'from-yellow-500 to-lime-500'
-    if (temp >= 50) return 'from-lime-500 to-green-500'
-    if (temp >= 40) return 'from-green-500 to-cyan-500'
-    if (temp >= 32) return 'from-cyan-500 to-blue-500'
-    return 'from-blue-500 to-indigo-500'
-  }
-
   return (
     <>
-      <Card className="group overflow-hidden border-[0.5px] border-border/50 bg-gradient-to-br from-card/95 via-card/90 to-card/95 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-        <CardHeader className="relative space-y-0 pb-3">
-          <CardTitle className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground bg-clip-text text-transparent">
-            7-Day Forecast
-          </CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>7-Day Forecast</CardTitle>
         </CardHeader>
-
-        <CardContent className="relative">
+        <CardContent>
           <div className="relative">
             <div
               ref={scrollContainerRef}
-              className="overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40"
-              style={{
-                scrollbarWidth: 'thin',
-                scrollBehavior: 'smooth'
-              }}
+              className="overflow-x-auto"
             >
-              <div className="flex gap-3 pb-2">
+              <div className="flex gap-4 pb-2">
                 {sevenDays.map((dayForecast, index) => {
-                  const highTemp = convertTemp(dayForecast.day.temperature)
-                  const lowTemp = dayForecast.night?.temperature
-                    ? convertTemp(dayForecast.night.temperature)
-                    : undefined
+                const highTemp = convertTemp(dayForecast.day.temperature)
+                const lowTemp = dayForecast.night?.temperature
+                  ? convertTemp(dayForecast.night.temperature)
+                  : undefined
 
-                  return (
-                    <button
-                      key={dayForecast.day.number}
-                      onClick={(e) => handlePeriodClick(dayForecast.day, e.currentTarget)}
-                      className="group/day relative flex min-w-[150px] flex-col items-center gap-3 overflow-hidden rounded-2xl border-[0.5px] border-border/50 bg-gradient-to-br from-card/80 via-card/60 to-card/80 p-5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-border/70 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label={generateAriaLabel(dayForecast, index)}
-                    >
-                      {/* Animated background gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-accent/0 to-primary/0 opacity-0 transition-all duration-500 group-hover/day:from-primary/10 group-hover/day:via-accent/5 group-hover/day:to-primary/10 group-hover/day:opacity-100" />
+                return (
+                  <button
+                    key={dayForecast.day.number}
+                    onClick={(e) => handlePeriodClick(dayForecast.day, e.currentTarget)}
+                    className="flex min-w-[140px] flex-col items-center gap-2 rounded-lg border p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label={generateAriaLabel(dayForecast, index)}
+                  >
+                    <div className="text-sm font-semibold">
+                      {index === 0 ? 'Today' : getDayName(dayForecast.day.name)}
+                    </div>
 
-                      {/* Content */}
-                      <div className="relative z-10 w-full space-y-3">
-                        {/* Day Name */}
-                        <div className="text-sm font-bold uppercase tracking-wider text-foreground/90">
-                          {index === 0 ? 'Today' : getDayName(dayForecast.day.name)}
-                        </div>
+                    <img
+                      src={dayForecast.day.icon}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-16 w-16"
+                    />
 
-                        {/* Weather Icon */}
-                        <div className="relative mx-auto">
-                          <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 blur-xl transition-all duration-500 group-hover/day:opacity-100" />
-                          <img
-                            src={dayForecast.day.icon}
-                            alt=""
-                            aria-hidden="true"
-                            className="relative h-20 w-20 transform transition-all duration-500 group-hover/day:scale-110 group-hover/day:drop-shadow-lg"
-                          />
-                        </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground">
+                        {dayForecast.day.shortForecast}
+                      </div>
+                    </div>
 
-                        {/* Weather Description */}
-                        <div className="min-h-[32px] text-center text-xs leading-tight text-muted-foreground/80">
-                          {dayForecast.day.shortForecast}
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold">{highTemp}{tempUnit}</span>
+                      {lowTemp !== undefined && (
+                        <span className="text-sm text-muted-foreground">
+                          {lowTemp}{tempUnit}
+                        </span>
+                      )}
+                    </div>
 
-                        {/* Temperature Display */}
-                        <div className="flex items-baseline justify-center gap-2.5">
-                          <span className={`bg-gradient-to-r ${getTempGradient(highTemp)} bg-clip-text text-2xl font-black tabular-nums text-transparent drop-shadow-sm`}>
-                            {highTemp}{tempUnit}
-                          </span>
-                          {lowTemp !== undefined && (
-                            <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-base font-semibold tabular-nums text-transparent dark:from-blue-400 dark:to-cyan-400">
-                              {lowTemp}{tempUnit}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Weather Metrics */}
-                        <div className="space-y-2 border-t border-border/30 pt-3">
-                          {dayForecast.day.probabilityOfPrecipitation?.value !== null &&
-                            dayForecast.day.probabilityOfPrecipitation?.value !== undefined && (
-                              <div className="flex items-center justify-center gap-2 rounded-lg bg-blue-500/10 px-3 py-1.5 backdrop-blur-sm">
-                                <Droplets className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-                                <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                  {dayForecast.day.probabilityOfPrecipitation.value}%
-                                </span>
-                              </div>
-                            )}
-
-                          <div className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 backdrop-blur-sm">
-                            <Wind className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-                              {dayForecast.day.windDirection} {convertWind(dayForecast.day.windSpeed)}
+                    <div className="w-full space-y-1 text-xs text-muted-foreground">
+                      {dayForecast.day.probabilityOfPrecipitation?.value !==
+                        null &&
+                        dayForecast.day.probabilityOfPrecipitation?.value !==
+                          undefined && (
+                          <div className="flex items-center justify-center gap-1">
+                            <Droplets className="h-3 w-3" aria-hidden="true" />
+                            <span>
+                              {dayForecast.day.probabilityOfPrecipitation.value}
+                              %
                             </span>
                           </div>
-                        </div>
-                      </div>
+                        )}
 
-                      {/* Hover indicator */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-300 group-hover/day:opacity-100" />
-                    </button>
-                  )
-                })}
+                      <div className="flex items-center justify-center gap-1">
+                        <Wind className="h-3 w-3" aria-hidden="true" />
+                        <span className="text-[10px]">
+                          {dayForecast.day.windDirection}{' '}
+                          {convertWind(dayForecast.day.windSpeed)}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
               </div>
             </div>
-
-            {/* Scroll indicator with gradient */}
             {showScrollIndicator && (
-              <div className="pointer-events-none absolute right-0 top-0 flex h-full w-20 items-center justify-end">
-                <div className="h-full w-full bg-gradient-to-l from-card via-card/50 to-transparent" />
-                <div className="absolute right-4 animate-pulse text-muted-foreground/50">
-                  →
-                </div>
-              </div>
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-card to-transparent" />
             )}
           </div>
         </CardContent>

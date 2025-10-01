@@ -242,9 +242,9 @@ describe('CurrentConditions', () => {
         <CurrentConditions todayForecast={todayForecast} tonightForecast={tonightForecast} />
       )
 
-      expect(screen.getByText('High')).toBeInTheDocument()
+      expect(screen.getByText(/High:/)).toBeInTheDocument()
       expect(screen.getAllByText(/75°F/).length).toBeGreaterThan(0)
-      expect(screen.getByText('Low')).toBeInTheDocument()
+      expect(screen.getByText(/Low:/)).toBeInTheDocument()
       expect(screen.getAllByText(/55°F/).length).toBeGreaterThan(0)
     })
   })
@@ -255,10 +255,9 @@ describe('CurrentConditions', () => {
         temperature: { value: 30, unitCode: 'wmoUnit:degC' }, // 86°F
         heatIndex: { value: 35, unitCode: 'wmoUnit:degC' }, // 95°F
       })
-      const { container } = render(<CurrentConditions observation={observation} />)
+      render(<CurrentConditions observation={observation} />)
 
-      expect(container.textContent).toMatch(/Feels like/)
-      expect(container.textContent).toMatch(/95°F/)
+      expect(screen.getByText(/Feels like 95°F/)).toBeInTheDocument()
     })
 
     it('should display wind chill when lower than temperature', () => {
@@ -294,11 +293,10 @@ describe('CurrentConditions', () => {
         heatIndex: { value: 25, unitCode: 'wmoUnit:degC' }, // 77°F
         windChill: { value: 15, unitCode: 'wmoUnit:degC' }, // 59°F
       })
-      const { container } = render(<CurrentConditions observation={observation} />)
+      render(<CurrentConditions observation={observation} />)
 
       // Should show heat index (77°F), not wind chill
-      expect(container.textContent).toMatch(/Feels like/)
-      expect(container.textContent).toMatch(/77°F/)
+      expect(screen.getByText(/Feels like 77°F/)).toBeInTheDocument()
     })
 
     it('should not display heat index when lower than or equal to temperature', () => {
@@ -695,8 +693,8 @@ describe('CurrentConditions', () => {
 
       // Should render without forecast
       expect(screen.getByText('Current Conditions')).toBeInTheDocument()
-      expect(screen.queryByText('High')).not.toBeInTheDocument()
-      expect(screen.queryByText('Low')).not.toBeInTheDocument()
+      expect(screen.queryByText('High:')).not.toBeInTheDocument()
+      expect(screen.queryByText('Low:')).not.toBeInTheDocument()
     })
 
     it('should handle missing tonight forecast gracefully', () => {
@@ -747,13 +745,12 @@ describe('CurrentConditions', () => {
         heatIndex: { value: 25, unitCode: 'wmoUnit:degC' },
       })
 
-      const { container } = render(<CurrentConditions observation={observation} />)
+      render(<CurrentConditions observation={observation} />)
 
       // All should be in Fahrenheit
       expect(screen.getByText(/68°F/)).toBeInTheDocument() // current temp
       expect(screen.getByText(/59°F/)).toBeInTheDocument() // dewpoint
-      expect(container.textContent).toMatch(/Feels like/)
-      expect(container.textContent).toMatch(/77°F/) // heat index
+      expect(screen.getByText(/Feels like 77°F/)).toBeInTheDocument() // heat index
     })
 
     it('should convert all wind values consistently', () => {
@@ -854,7 +851,7 @@ describe('CurrentConditions', () => {
       })
       const forecast = createMockForecastPeriod({ shortForecast: 'Hot and Humid' })
 
-      const { container } = render(
+      render(
         <CurrentConditions
           observation={observation}
           todayForecast={forecast}
@@ -862,8 +859,7 @@ describe('CurrentConditions', () => {
       )
 
       expect(screen.getByText(/95°F/)).toBeInTheDocument()
-      expect(container.textContent).toMatch(/Feels like/)
-      expect(container.textContent).toMatch(/104°F/)
+      expect(screen.getByText(/Feels like 104°F/)).toBeInTheDocument()
       expect(screen.getByText('85%')).toBeInTheDocument()
     })
 
@@ -877,11 +873,10 @@ describe('CurrentConditions', () => {
       })
       const forecast = createMockForecastPeriod({ shortForecast: 'Cold and Windy' })
 
-      const { container } = render(<CurrentConditions observation={observation} todayForecast={forecast} />)
+      render(<CurrentConditions observation={observation} todayForecast={forecast} />)
 
       expect(screen.getByText(/14°F/)).toBeInTheDocument()
-      expect(container.textContent).toMatch(/Feels like/)
-      expect(container.textContent).toMatch(/-4°F/)
+      expect(screen.getByText(/Feels like -4°F/)).toBeInTheDocument()
       expect(screen.getByText(/34 mph/)).toBeInTheDocument() // wind speed
       expect(screen.getByText(/56 mph/)).toBeInTheDocument() // gusts
     })
@@ -929,7 +924,7 @@ describe('CurrentConditions', () => {
 
       // Verify all major sections are present
       expect(screen.getByText('Current Conditions')).toBeInTheDocument()
-      expect(screen.getAllByText('Sunny').length).toBeGreaterThan(0)
+      expect(screen.getByText('Sunny')).toBeInTheDocument()
       expect(screen.getByText('Tonight')).toBeInTheDocument()
       expect(screen.getByText('Sunrise')).toBeInTheDocument()
       expect(screen.getByText('Sunset')).toBeInTheDocument()
