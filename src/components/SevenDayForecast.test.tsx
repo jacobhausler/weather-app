@@ -2,7 +2,6 @@ import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SevenDayForecast } from './SevenDayForecast'
 import { ForecastPeriod } from '@/types/weather'
-import { useUnitStore } from '@/stores/unitStore'
 import userEvent from '@testing-library/user-event'
 
 // Mock the ForecastModal component
@@ -37,8 +36,10 @@ const createMockForecastPeriod = (overrides: Partial<ForecastPeriod> = {}): Fore
 
 describe('SevenDayForecast', () => {
   beforeEach(() => {
-    // Reset unit store to imperial before each test
-    useUnitStore.setState({ unitSystem: 'imperial' })
+    // Clear localStorage before each test
+    localStorage.clear()
+    // Set default unit system to imperial
+    localStorage.setItem('unit-system', JSON.stringify('imperial'))
   })
 
   describe('Rendering with forecast data', () => {
@@ -71,9 +72,11 @@ describe('SevenDayForecast', () => {
       ]
       render(<SevenDayForecast forecast={forecast} />)
 
-      const icon = screen.getByAltText('Sunny')
+      const button = screen.getByRole('button')
+      const icon = within(button).getByRole('presentation', { hidden: true })
       expect(icon).toBeInTheDocument()
       expect(icon).toHaveAttribute('src', 'https://api.weather.gov/icons/land/day/sunny')
+      expect(icon).toHaveAttribute('aria-hidden', 'true')
     })
 
     it('should render short forecast text for each day', () => {
@@ -163,7 +166,7 @@ describe('SevenDayForecast', () => {
 
   describe('Temperature display and conversion', () => {
     it('should display high temperature in Fahrenheit for imperial system', () => {
-      useUnitStore.setState({ unitSystem: 'imperial' })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
       const forecast = [
         createMockForecastPeriod({ number: 1, temperature: 75, isDaytime: true })
       ]
@@ -196,7 +199,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert temperatures to Celsius in metric system', () => {
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -216,7 +219,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should round temperatures correctly when converting', () => {
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -230,7 +233,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should handle freezing temperatures correctly', () => {
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -244,7 +247,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should handle negative temperatures correctly', () => {
-      useUnitStore.setState({ unitSystem: 'imperial' })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -341,7 +344,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert wind speed to km/h in metric system', () => {
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -382,7 +385,7 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert larger wind speeds correctly', () => {
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -558,8 +561,10 @@ describe('SevenDayForecast', () => {
       ]
       render(<SevenDayForecast forecast={forecast} />)
 
-      const icon = screen.getByAltText('Unknown')
+      const button = screen.getByRole('button')
+      const icon = within(button).getByRole('presentation', { hidden: true })
       expect(icon).toHaveAttribute('src', '')
+      expect(icon).toHaveAttribute('aria-hidden', 'true')
     })
 
     it('should handle unusual forecast period count', () => {
@@ -649,6 +654,112 @@ describe('SevenDayForecast', () => {
       expect(button.tagName).toBe('BUTTON')
     })
 
+    it('should have comprehensive aria-label for screen readers', () => {
+      const forecast = [
+        createMockForecastPeriod({
+          number: 1,
+          name: 'Monday',
+          temperature: 72,
+          isDaytime: true,
+          shortForecast: 'Partly Sunny',
+          probabilityOfPrecipitation: { value: 20 },
+          windDirection: 'S',
+          windSpeed: '10 mph'
+        }),
+        createMockForecastPeriod({
+          number: 2,
+          name: 'Monday Night',
+          temperature: 55,
+          isDaytime: false
+        })
+      ]
+      render(<SevenDayForecast forecast={forecast} />)
+
+      const button = screen.getByRole('button')
+      const ariaLabel = button.getAttribute('aria-label')
+
+      // Verify all key information is included in aria-label
+      expect(ariaLabel).toContain('Today')
+      expect(ariaLabel).toContain('High 72°F')
+      expect(ariaLabel).toContain('Low 55°F')
+      expect(ariaLabel).toContain('Partly Sunny')
+      expect(ariaLabel).toContain('20% chance of precipitation')
+      expect(ariaLabel).toContain('Wind S at 10 mph')
+      expect(ariaLabel).toContain('Click to view detailed forecast')
+    })
+
+    it('should have aria-label without precipitation when not available', () => {
+      const forecast = [
+        createMockForecastPeriod({
+          number: 1,
+          name: 'Tuesday',
+          temperature: 68,
+          isDaytime: true,
+          shortForecast: 'Clear',
+          probabilityOfPrecipitation: { value: null },
+          windDirection: 'NE',
+          windSpeed: '5 mph'
+        })
+      ]
+      render(<SevenDayForecast forecast={forecast} />)
+
+      const button = screen.getByRole('button')
+      const ariaLabel = button.getAttribute('aria-label')
+
+      // Should not include precipitation
+      expect(ariaLabel).toContain('Today')
+      expect(ariaLabel).toContain('68°F')
+      expect(ariaLabel).toContain('Clear')
+      expect(ariaLabel).not.toContain('precipitation')
+      expect(ariaLabel).toContain('Wind NE at 5 mph')
+    })
+
+    it('should have aria-label with metric units when in metric mode', () => {
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const forecast = [
+        createMockForecastPeriod({
+          number: 1,
+          name: 'Wednesday',
+          temperature: 77, // 25°C
+          isDaytime: true,
+          shortForecast: 'Sunny',
+          probabilityOfPrecipitation: { value: 10 },
+          windDirection: 'W',
+          windSpeed: '10 mph' // 16 km/h
+        }),
+        createMockForecastPeriod({
+          number: 2,
+          name: 'Wednesday Night',
+          temperature: 59, // 15°C
+          isDaytime: false
+        })
+      ]
+      render(<SevenDayForecast forecast={forecast} />)
+
+      const button = screen.getByRole('button')
+      const ariaLabel = button.getAttribute('aria-label')
+
+      // Verify metric units in aria-label
+      expect(ariaLabel).toContain('High 25°C')
+      expect(ariaLabel).toContain('Low 15°C')
+      expect(ariaLabel).toContain('16 km/h')
+    })
+
+    it('should mark decorative icons as aria-hidden', () => {
+      const forecast = [
+        createMockForecastPeriod({
+          number: 1,
+          isDaytime: true,
+          probabilityOfPrecipitation: { value: 30 }
+        })
+      ]
+      render(<SevenDayForecast forecast={forecast} />)
+
+      const button = screen.getByRole('button')
+      const weatherIcon = within(button).getByRole('presentation', { hidden: true })
+      expect(weatherIcon).toHaveAttribute('aria-hidden', 'true')
+    })
+
     it('should have hover effects on day cards', () => {
       const forecast = [
         createMockForecastPeriod({ number: 1, isDaytime: true })
@@ -690,7 +801,12 @@ describe('SevenDayForecast', () => {
       expect(screen.getByText(/68°F/)).toBeInTheDocument()
 
       // Change to metric
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      // Dispatch storage event to trigger useLocalStorage update
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'unit-system',
+        newValue: JSON.stringify('metric')
+      }))
       rerender(<SevenDayForecast forecast={forecast} />)
 
       // 68°F = 20°C
@@ -711,7 +827,12 @@ describe('SevenDayForecast', () => {
       expect(screen.getByText(/20 mph/)).toBeInTheDocument()
 
       // Change to metric
-      useUnitStore.setState({ unitSystem: 'metric' })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      // Dispatch storage event to trigger useLocalStorage update
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'unit-system',
+        newValue: JSON.stringify('metric')
+      }))
       rerender(<SevenDayForecast forecast={forecast} />)
 
       // 20 mph = 32 km/h

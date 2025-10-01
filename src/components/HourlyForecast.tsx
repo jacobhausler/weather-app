@@ -20,7 +20,7 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { useUnitStore, getTempUnit, getSpeedUnit } from '@/stores/unitStore'
+import { useUnitConversion } from '@/hooks/useUnitConversion'
 
 interface HourlyForecastProps {
   hourlyForecast: HourlyForecastType[]
@@ -30,7 +30,7 @@ type DataType = 'temperature' | 'precipitation' | 'wind' | 'humidity'
 type Period = '12' | '24' | '48'
 
 export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
-  const { unitSystem } = useUnitStore()
+  const { convertTemperature, convertWindSpeed } = useUnitConversion()
   const [dataType, setDataType] = useLocalStorage<DataType>('hourly-chart-dataType', 'temperature')
   const [period, setPeriod] = useLocalStorage<Period>('hourly-chart-period', '24')
 
@@ -39,24 +39,17 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
     return hourlyForecast.slice(0, hours)
   }
 
-  // Convert temperature from Fahrenheit (NWS default) to current unit system
-  const convertTemperature = (tempF: number) => {
-    if (unitSystem === 'metric') {
-      return Math.round(((tempF - 32) * 5) / 9)
-    }
-    return tempF
+  // Helper to convert temperature from F (NWS format) to current unit system
+  const convertTemp = (tempF: number) => {
+    return convertTemperature(tempF, 'F').value
   }
 
-  // Parse and convert wind speed
+  // Helper to parse and convert wind speed from mph (NWS format) to current unit system
   const parseWindSpeed = (windSpeed?: string): number => {
     if (!windSpeed) return 0
     const match = windSpeed.match(/(\d+)/)
     const speedMph = match && match[1] ? parseInt(match[1], 10) : 0
-
-    if (unitSystem === 'metric') {
-      return Math.round(speedMph * 1.60934) // Convert to km/h
-    }
-    return speedMph
+    return convertWindSpeed(speedMph, 'mph').value
   }
 
   const formatChartData = () => {
@@ -69,9 +62,9 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         case 'temperature':
           return {
             time,
-            value: convertTemperature(forecast.temperature),
+            value: convertTemp(forecast.temperature),
             label: 'Temperature',
-            unit: getTempUnit(unitSystem),
+            unit: convertTemperature(0, 'F').unit === 'F' ? '°F' : '°C',
           }
         case 'precipitation':
           return {
@@ -85,7 +78,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
             time,
             value: parseWindSpeed(forecast.windSpeed),
             label: 'Wind Speed',
-            unit: getSpeedUnit(unitSystem),
+            unit: convertWindSpeed(0, 'mph').unit,
           }
         case 'humidity':
           return {
@@ -143,7 +136,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
           <div className="flex flex-wrap gap-3">
             {/* Period Selector */}
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
-              <SelectTrigger className="w-[120px]">
+              <SelectTrigger className="w-[120px]" aria-label="Time period selection">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +147,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
             </Select>
 
             {/* Data Type Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="group" aria-label="Data type selection">
               <Button
                 size="sm"
                 variant={dataType === 'temperature' ? 'default' : 'outline'}

@@ -1,5 +1,5 @@
 import { Alert } from '@/types/weather'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
@@ -46,6 +46,10 @@ const formatAlertTime = (dateString: string) => {
   }
 }
 
+const getAriaLive = (severity: Alert['severity']): 'assertive' | 'polite' => {
+  return severity === 'Extreme' || severity === 'Severe' ? 'assertive' : 'polite'
+}
+
 export function AlertCard({ alerts }: AlertCardProps) {
   if (!alerts || alerts.length === 0) {
     return null
@@ -57,12 +61,15 @@ export function AlertCard({ alerts }: AlertCardProps) {
         <Card
           key={alert.id}
           className="border-l-4 border-l-red-600 dark:border-l-red-400"
+          role="alert"
+          aria-live={getAriaLive(alert.severity)}
+          aria-label={`${alert.severity} severity weather alert: ${alert.event}`}
         >
           <CardHeader>
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-1 h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400" />
+              <AlertTriangle className="mt-1 h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
               <div className="flex-1 space-y-2">
-                <CardTitle className="text-xl">{alert.headline}</CardTitle>
+                <h3 className="text-xl font-semibold leading-none tracking-tight">{alert.headline}</h3>
                 <div className="flex flex-wrap gap-2">
                   <Badge className={getSeverityColor(alert.severity)}>
                     {alert.severity}

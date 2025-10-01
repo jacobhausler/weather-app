@@ -1,16 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HourlyForecast } from './HourlyForecast'
 import { HourlyForecast as HourlyForecastType } from '@/types/weather'
-import { useUnitStore } from '@/stores/unitStore'
-
-// Mock the unit store
-vi.mock('@/stores/unitStore', () => ({
-  useUnitStore: vi.fn(),
-  getTempUnit: vi.fn((system: string) => (system === 'imperial' ? '°F' : '°C')),
-  getSpeedUnit: vi.fn((system: string) => (system === 'imperial' ? 'mph' : 'km/h')),
-}))
 
 describe('HourlyForecast', () => {
   // Helper function to create mock hourly forecast data
@@ -40,18 +32,10 @@ describe('HourlyForecast', () => {
   }
 
   beforeEach(() => {
-    // Setup default unit store mock
-    vi.mocked(useUnitStore).mockReturnValue({
-      unitSystem: 'imperial',
-      setUnitSystem: vi.fn(),
-    })
-
     // Clear localStorage before each test
     localStorage.clear()
-  })
-
-  afterEach(() => {
-    vi.clearAllMocks()
+    // Set default unit system to imperial
+    localStorage.setItem('unit-system', JSON.stringify('imperial'))
   })
 
   describe('Component rendering', () => {
@@ -307,10 +291,7 @@ describe('HourlyForecast', () => {
 
   describe('Temperature conversion (Imperial/Metric)', () => {
     it('should display temperature in Fahrenheit for imperial system', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(24)
       // Set specific temperature
@@ -324,10 +305,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should convert temperature to Celsius for metric system', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = createMockHourlyForecast(24)
       // 32°F should convert to 0°C
@@ -341,10 +319,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 32°F to 0°C', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = [
         {
@@ -362,10 +337,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 212°F to 100°C', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = [
         {
@@ -382,10 +354,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 68°F to 20°C', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = [
         {
@@ -402,10 +371,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should round temperature conversions to nearest integer', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = [
         {
@@ -424,10 +390,7 @@ describe('HourlyForecast', () => {
 
   describe('Wind speed conversion (Imperial/Metric)', () => {
     it('should display wind speed in mph for imperial system', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(24)
       mockData[0]!.windSpeed = '15 mph'
@@ -441,10 +404,7 @@ describe('HourlyForecast', () => {
 
     it('should convert wind speed to km/h for metric system', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = createMockHourlyForecast(24)
       mockData[0]!.windSpeed = '10 mph' // 10 mph ≈ 16 km/h
@@ -461,10 +421,7 @@ describe('HourlyForecast', () => {
 
     it('should parse wind speed from string format correctly', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.windSpeed = '5 mph'
@@ -482,10 +439,7 @@ describe('HourlyForecast', () => {
 
     it('should handle missing wind speed data', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(1)
       mockData[0]!.windSpeed = ''
@@ -501,10 +455,7 @@ describe('HourlyForecast', () => {
 
     it('should correctly convert 10 mph to 16 km/h', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'metric',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('metric'))
 
       const mockData = [
         {
@@ -674,10 +625,7 @@ describe('HourlyForecast', () => {
 
     it('should calculate stats for wind speed data', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(5)
       mockData[0]!.windSpeed = '5 mph'
@@ -887,10 +835,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should handle negative temperature values', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.temperature = -10
@@ -932,10 +877,7 @@ describe('HourlyForecast', () => {
 
     it('should handle very high wind speeds', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(1)
       mockData[0]!.windSpeed = '150 mph' // Hurricane force
@@ -949,10 +891,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should handle extreme temperature values', () => {
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(2)
       mockData[0]!.temperature = -50 // Extreme cold
@@ -969,10 +908,7 @@ describe('HourlyForecast', () => {
 
     it('should handle malformed wind speed strings gracefully', async () => {
       const user = userEvent.setup()
-      vi.mocked(useUnitStore).mockReturnValue({
-        unitSystem: 'imperial',
-        setUnitSystem: vi.fn(),
-      })
+      localStorage.setItem('unit-system', JSON.stringify('imperial'))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.windSpeed = 'calm'

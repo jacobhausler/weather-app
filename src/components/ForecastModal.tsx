@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { format } from 'date-fns'
 import { Cloud, Droplets, Wind } from 'lucide-react'
-import { useUnitStore, getTempUnit } from '@/stores/unitStore'
+import { useUnitConversion } from '@/hooks/useUnitConversion'
 
 interface ForecastModalProps {
   period: ForecastPeriod | null
@@ -16,30 +16,24 @@ interface ForecastModalProps {
 }
 
 export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
-  const { unitSystem } = useUnitStore()
+  const { convertTemperature, convertWindSpeed } = useUnitConversion()
 
   if (!period) return null
 
-  // Convert temperature from Fahrenheit (NWS default) to current unit system
-  const convertTemperature = (tempF: number) => {
-    if (unitSystem === 'metric') {
-      return Math.round(((tempF - 32) * 5) / 9)
-    }
-    return tempF
+  // Helper to convert temperature from F (NWS format) to current unit system
+  const convertTemp = (tempF: number) => {
+    return convertTemperature(tempF, 'F').value
   }
 
-  // Convert wind speed from mph (NWS format like "10 mph") to current unit system
-  const convertWindSpeed = (windSpeed?: string) => {
+  // Helper to convert wind speed from mph (NWS format like "10 mph") to current unit system
+  const convertWind = (windSpeed?: string) => {
     if (!windSpeed) return 'N/A'
     const match = windSpeed.match(/(\d+)/)
     if (!match || !match[1]) return windSpeed
 
     const speedMph = parseInt(match[1], 10)
-    if (unitSystem === 'metric') {
-      const speedKmh = Math.round(speedMph * 1.60934)
-      return windSpeed.replace(/\d+/, speedKmh.toString()).replace('mph', 'km/h')
-    }
-    return windSpeed
+    const converted = convertWindSpeed(speedMph, 'mph')
+    return windSpeed.replace(/\d+/, converted.value.toString()).replace('mph', converted.unit)
   }
 
   const formatTime = (dateString: string) => {
@@ -50,12 +44,16 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
     }
   }
 
-  const tempUnit = getTempUnit(unitSystem)
-  const convertedTemp = convertTemperature(period.temperature)
+  // Get temperature unit from the conversion function
+  const tempUnit = convertTemperature(0, 'F').unit === 'F' ? '°F' : '°C'
+  const convertedTemp = convertTemp(period.temperature)
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        aria-describedby="forecast-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl">{period.name}</DialogTitle>
         </DialogHeader>
@@ -90,7 +88,7 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
               <div>
                 <div className="text-xs text-muted-foreground">Wind</div>
                 <div className="font-medium">
-                  {period.windDirection} {convertWindSpeed(period.windSpeed)}
+                  {period.windDirection} {convertWind(period.windSpeed)}
                 </div>
               </div>
             </div>
@@ -134,7 +132,7 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
           {/* Detailed Forecast */}
           <div>
             <h3 className="mb-2 font-semibold">Detailed Forecast</h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p id="forecast-description" className="text-sm leading-relaxed text-muted-foreground">
               {period.detailedForecast}
             </p>
           </div>
