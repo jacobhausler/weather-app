@@ -405,8 +405,6 @@ describe('NWSService', () => {
     it('should not cache alerts (always fresh)', async () => {
       const { lat, lon } = TEST_LOCATIONS.CHICAGO_IL;
 
-      const statsBefore = service.getCacheStats();
-
       // First call
       await service.getActiveAlerts(lat, lon);
       const statsAfterFirst = service.getCacheStats();
@@ -588,7 +586,7 @@ describe('NWSService', () => {
       expect(hourlyForecast.properties.periods.length).toBeGreaterThan(0);
 
       // Step 4: Get current conditions
-      const observation = await service.getCurrentConditions(gridId, gridX, gridY);
+      await service.getCurrentConditions(gridId, gridX, gridY);
       // May be null, but should not throw
 
       // Step 5: Get alerts

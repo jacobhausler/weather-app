@@ -557,7 +557,7 @@ describe('Bug #2: Data Structure Mismatch - REGRESSION TESTS', () => {
     expect(transformed.forecast[0].temperature).toBe(75);
 
     // Ensure it's a direct array, not nested in properties
-    expect('properties' in (transformed as any)).toBe(false);
+    expect('properties' in (transformed as Record<string, unknown>)).toBe(false);
   });
 
   it('should flatten hourlyForecast.properties.periods[] to hourlyForecast[]', () => {
@@ -594,7 +594,7 @@ describe('Bug #2: Data Structure Mismatch - REGRESSION TESTS', () => {
     expect(transformed.alerts[0].severity).toBe('Moderate');
 
     // Ensure it's a direct array, not nested in features
-    expect('features' in (transformed as any)).toBe(false);
+    expect('features' in (transformed as Record<string, unknown>)).toBe(false);
   });
 
   it('should transform metadata.fetchedAt to lastUpdated', () => {

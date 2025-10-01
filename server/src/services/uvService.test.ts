@@ -3,9 +3,15 @@
  * Tests real functionality including API calls, caching, retry logic, and error handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import axios, { AxiosError } from 'axios';
-import { UVService, UVIndexData } from './uvService';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { UVService } from './uvService';
+
+// Helper type for accessing private properties in tests
+type UVServiceInternal = UVService & {
+  client: { get: ReturnType<typeof vi.fn> };
+  delay: (ms: number) => Promise<void>;
+};
 
 // Mock axios module before importing anything that uses it
 vi.mock('axios', () => {
@@ -13,7 +19,7 @@ vi.mock('axios', () => {
     get: vi.fn(),
     interceptors: {
       response: {
-        use: vi.fn((successHandler: any) => successHandler),
+        use: vi.fn((successHandler: (response: unknown) => unknown) => successHandler),
       },
     },
   };
@@ -21,7 +27,7 @@ vi.mock('axios', () => {
   return {
     default: {
       create: vi.fn(() => mockAxiosInstance),
-      isAxiosError: vi.fn((error: any) => error.isAxiosError === true),
+      isAxiosError: vi.fn((error: unknown) => (error as AxiosError).isAxiosError === true),
     },
   };
 });
@@ -60,7 +66,7 @@ describe('UVService', () => {
     status: 200,
     statusText: 'OK',
     headers: {},
-    config: {} as any,
+    config: {} as InternalAxiosRequestConfig,
   };
 
   beforeEach(() => {
@@ -92,7 +98,7 @@ describe('UVService', () => {
     });
 
     it('should return false when API key is null', () => {
-      service = new UVService(null as any);
+      service = new UVService(null as unknown as undefined);
       expect(service.isServiceEnabled()).toBe(false);
     });
 
@@ -115,7 +121,7 @@ describe('UVService', () => {
 
     it('should fetch UV index data successfully', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -158,7 +164,7 @@ describe('UVService', () => {
         };
 
         const mockGet = vi.fn().mockResolvedValue(mockResponse);
-        (service as any).client.get = mockGet;
+        (service as UVServiceInternal).client.get = mockGet;
 
         // Clear cache for each test case
         service.clearCache();
@@ -170,7 +176,7 @@ describe('UVService', () => {
 
     it('should format coordinates to 4 decimal places in API call', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const preciseLat = 33.158123456;
       const preciseLon = -96.598987654;
@@ -200,7 +206,7 @@ describe('UVService', () => {
 
     it('should not make API calls when service is disabled', async () => {
       const mockGet = vi.fn();
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       await service.getUVIndex(testLat, testLon);
       expect(mockGet).not.toHaveBeenCalled();
@@ -214,7 +220,7 @@ describe('UVService', () => {
 
     it('should cache successful UV index data', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // First call - should hit API
       const result1 = await service.getUVIndex(testLat, testLon);
@@ -232,7 +238,7 @@ describe('UVService', () => {
 
     it('should use separate cache entries for different coordinates', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const lat1 = 33.1581;
       const lon1 = -96.5989;
@@ -254,7 +260,7 @@ describe('UVService', () => {
 
     it('should round coordinates to 4 decimals for cache key', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // These coordinates round to the same 4 decimal places
       await service.getUVIndex(33.15811, -96.59891);
@@ -266,7 +272,7 @@ describe('UVService', () => {
 
     it('should clear specific location cache', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // First call
       await service.getUVIndex(testLat, testLon);
@@ -282,7 +288,7 @@ describe('UVService', () => {
 
     it('should clear all cache entries', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const lat1 = 33.1581;
       const lon1 = -96.5989;
@@ -305,7 +311,7 @@ describe('UVService', () => {
 
     it('should track cache statistics', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // Initial stats
       let stats = service.getCacheStats();
@@ -341,7 +347,7 @@ describe('UVService', () => {
         .mockRejectedValueOnce(networkError) // First attempt fails
         .mockResolvedValueOnce(mockSuccessResponse); // Second attempt succeeds
 
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const startTime = Date.now();
       const result = await service.getUVIndex(testLat, testLon);
@@ -365,10 +371,10 @@ describe('UVService', () => {
         .mockRejectedValueOnce(networkError) // Second attempt fails
         .mockResolvedValueOnce(mockSuccessResponse); // Third attempt succeeds (won't reach)
 
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // Spy on delay method to check backoff
-      const delaySpy = vi.spyOn(service as any, 'delay');
+      const delaySpy = vi.spyOn(service as UVServiceInternal, 'delay');
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -389,7 +395,7 @@ describe('UVService', () => {
       networkError.isAxiosError = true;
 
       const mockGet = vi.fn().mockRejectedValue(networkError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -413,11 +419,11 @@ describe('UVService', () => {
         data: {},
         statusText: 'Unauthorized',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi.fn().mockRejectedValue(authError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -441,11 +447,11 @@ describe('UVService', () => {
         data: {},
         statusText: 'Too Many Requests',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi.fn().mockRejectedValue(rateLimitError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -469,7 +475,7 @@ describe('UVService', () => {
         data: {},
         statusText: 'Internal Server Error',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi
@@ -477,7 +483,7 @@ describe('UVService', () => {
         .mockRejectedValueOnce(serverError)
         .mockResolvedValueOnce(mockSuccessResponse);
 
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -496,7 +502,7 @@ describe('UVService', () => {
         .mockRejectedValueOnce(timeoutError)
         .mockResolvedValueOnce(mockSuccessResponse);
 
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -516,7 +522,7 @@ describe('UVService', () => {
       networkError.isAxiosError = true;
 
       const mockGet = vi.fn().mockRejectedValue(networkError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -534,11 +540,11 @@ describe('UVService', () => {
         data: { message: 'Invalid API key' },
         statusText: 'Unauthorized',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi.fn().mockRejectedValue(authError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -556,11 +562,11 @@ describe('UVService', () => {
         data: {},
         statusText: 'Too Many Requests',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi.fn().mockRejectedValue(rateLimitError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -580,11 +586,11 @@ describe('UVService', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {} as any,
+        config: {} as InternalAxiosRequestConfig,
       };
 
       const mockGet = vi.fn().mockResolvedValue(malformedResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -601,7 +607,7 @@ describe('UVService', () => {
       networkError.message = 'Connection refused';
 
       const mockGet = vi.fn().mockRejectedValue(networkError);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -657,7 +663,7 @@ describe('UVService', () => {
       };
 
       const mockGet = vi.fn().mockResolvedValue(zeroUVResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -678,7 +684,7 @@ describe('UVService', () => {
       };
 
       const mockGet = vi.fn().mockResolvedValue(highUVResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -688,7 +694,7 @@ describe('UVService', () => {
 
     it('should handle extreme coordinate values', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // North Pole
       await service.getUVIndex(90, 0);
@@ -730,7 +736,7 @@ describe('UVService', () => {
 
     it('should handle negative coordinates correctly', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       await service.getUVIndex(-33.8688, 151.2093); // Sydney, Australia
 
@@ -758,7 +764,7 @@ describe('UVService', () => {
       };
 
       const mockGet = vi.fn().mockResolvedValue(timestampResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const result = await service.getUVIndex(testLat, testLon);
 
@@ -774,7 +780,7 @@ describe('UVService', () => {
 
     it('should handle multiple concurrent requests for same location', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       // Make 3 concurrent requests
       const promises = [
@@ -797,7 +803,7 @@ describe('UVService', () => {
 
     it('should handle mixed success and failure scenarios', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       const lat1 = 33.1581;
       const lon1 = -96.5989;
@@ -834,7 +840,7 @@ describe('UVService', () => {
 
       // Add some data to cache
       const mockGet = vi.fn().mockResolvedValue(mockSuccessResponse);
-      (service as any).client.get = mockGet;
+      (service as UVServiceInternal).client.get = mockGet;
 
       service.getUVIndex(testLat, testLon);
 

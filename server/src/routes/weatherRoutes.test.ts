@@ -714,7 +714,7 @@ describe('Weather Routes Integration Tests', () => {
       expect(data.forecast[0]).not.toHaveProperty('properties');
 
       // All forecast periods should be at top level
-      data.forecast.forEach((period: any) => {
+      data.forecast.forEach((period: { number: number; name: string; temperature: number; startTime: string; endTime: string }) => {
         expect(period.number).toBeDefined();
         expect(period.name).toBeDefined();
         expect(period.temperature).toBeDefined();
@@ -738,7 +738,7 @@ describe('Weather Routes Integration Tests', () => {
       expect(data.hourlyForecast[0]).not.toHaveProperty('properties');
 
       // All hourly periods should be at top level
-      data.hourlyForecast.forEach((period: any) => {
+      data.hourlyForecast.forEach((period: { number: number; temperature: number; startTime: string; endTime: string }) => {
         expect(period.number).toBeDefined();
         expect(period.temperature).toBeDefined();
         expect(period.startTime).toBeDefined();
@@ -761,7 +761,7 @@ describe('Weather Routes Integration Tests', () => {
 
       // If alerts exist, verify structure
       if (data.alerts.length > 0) {
-        data.alerts.forEach((alert: any) => {
+        data.alerts.forEach((alert: { id: string; event: string; severity: string; urgency: string }) => {
           expect(alert).not.toHaveProperty('properties');
           expect(alert.id).toBeDefined();
           expect(alert.event).toBeDefined();
@@ -821,7 +821,7 @@ describe('Weather Routes Integration Tests', () => {
       }
 
       // Precipitation probability can be null
-      data.forecast.forEach((period: any) => {
+      data.forecast.forEach((period: { probabilityOfPrecipitation: { value: number | null } }) => {
         expect(period.probabilityOfPrecipitation).toBeDefined();
         // Value can be null or a number
         if (period.probabilityOfPrecipitation.value !== null) {
@@ -978,7 +978,7 @@ describe('Weather Routes Integration Tests', () => {
       expect(lastUpdated.getTime()).not.toBeNaN();
 
       // Check forecast times
-      data.forecast.forEach((period: any) => {
+      data.forecast.forEach((period: { startTime: string; endTime: string }) => {
         const startTime = new Date(period.startTime);
         const endTime = new Date(period.endTime);
         expect(startTime.getTime()).not.toBeNaN();
@@ -1009,13 +1009,13 @@ describe('Weather Routes Integration Tests', () => {
       expect(Array.isArray(data.hourlyForecast)).toBe(true);
 
       // Check forecast temperatures (Fahrenheit)
-      data.forecast.forEach((period: any) => {
+      data.forecast.forEach((period: { temperature: number }) => {
         expect(period.temperature).toBeGreaterThan(-50);
         expect(period.temperature).toBeLessThan(150);
       });
 
       // Check hourly temperatures
-      data.hourlyForecast.forEach((period: any) => {
+      data.hourlyForecast.forEach((period: { temperature: number }) => {
         expect(period.temperature).toBeGreaterThan(-50);
         expect(period.temperature).toBeLessThan(150);
       });
