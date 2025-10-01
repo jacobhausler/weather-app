@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ZipInput } from './ZipInput';
 import { useWeatherStore } from '@/stores/weatherStore';
 import { apiService } from '@/services/api';
+import type { WeatherData } from '@/types/weather';
 
 // Mock the API service
 vi.mock('@/services/api', () => ({
@@ -135,7 +136,7 @@ describe('ZipInput', () => {
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
         location: { lat: 33.0, lon: -96.0, city: 'Test', state: 'TX' },
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -163,7 +164,7 @@ describe('ZipInput', () => {
 
       // Clear and enter valid ZIP
       await user.clear(input);
-      vi.mocked(apiService.getWeatherByZip).mockResolvedValue({ zipCode: '75454' } as any);
+      vi.mocked(apiService.getWeatherByZip).mockResolvedValue({ zipCode: '75454' } as unknown as WeatherData);
       await user.type(input, '75454{Enter}');
 
       // Now API should be called
@@ -184,7 +185,7 @@ describe('ZipInput', () => {
 
       // Test exactly 5 digits does call API
       await user.clear(input);
-      vi.mocked(apiService.getWeatherByZip).mockResolvedValue({ zipCode: '12345' } as any);
+      vi.mocked(apiService.getWeatherByZip).mockResolvedValue({ zipCode: '12345' } as unknown as WeatherData);
       await user.type(input, '12345{Enter}');
 
       await waitFor(() => {
@@ -199,7 +200,7 @@ describe('ZipInput', () => {
       const mockWeatherData = {
         zipCode: '75454',
         location: { lat: 33.0, lon: -96.0, city: 'McKinney', state: 'TX' },
-      } as any;
+      } as unknown as WeatherData;
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue(mockWeatherData);
 
       render(<ZipInput />);
@@ -222,7 +223,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -240,7 +241,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -256,11 +257,11 @@ describe('ZipInput', () => {
 
     it('should set loading state during fetch', async () => {
       const user = userEvent.setup();
-      let resolvePromise: (value: any) => void;
-      const promise = new Promise((resolve) => {
+      let resolvePromise: (value: WeatherData) => void;
+      const promise = new Promise<WeatherData>((resolve) => {
         resolvePromise = resolve;
       });
-      vi.mocked(apiService.getWeatherByZip).mockReturnValue(promise as any);
+      vi.mocked(apiService.getWeatherByZip).mockReturnValue(promise);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -273,7 +274,7 @@ describe('ZipInput', () => {
       expect(useWeatherStore.getState().isLoading).toBe(true);
 
       // Resolve the promise
-      resolvePromise!({ zipCode: '75454' } as any);
+      resolvePromise!({ zipCode: '75454' } as unknown as WeatherData);
 
       await waitFor(() => {
         expect(useWeatherStore.getState().isLoading).toBe(false);
@@ -317,7 +318,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -333,7 +334,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code') as HTMLInputElement;
@@ -382,7 +383,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
       useWeatherStore.setState({ recentZipCodes: ['75454', '75070'] });
 
       render(<ZipInput />);
@@ -507,7 +508,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -553,7 +554,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '75454',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');
@@ -599,7 +600,7 @@ describe('ZipInput', () => {
       const user = userEvent.setup();
       vi.mocked(apiService.getWeatherByZip).mockResolvedValue({
         zipCode: '01234',
-      } as any);
+      } as unknown as WeatherData);
 
       render(<ZipInput />);
       const input = screen.getByPlaceholderText('Enter ZIP code');

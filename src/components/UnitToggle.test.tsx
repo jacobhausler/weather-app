@@ -504,7 +504,7 @@ describe('UnitToggle', () => {
 
       rerender(<UnitToggle />)
 
-      let imperialLabel = screen.getByText('Imperial')
+      const imperialLabel = screen.getByText('Imperial')
       expect(imperialLabel.className).toContain('text-foreground')
 
       act(() => {

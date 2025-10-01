@@ -715,7 +715,7 @@ describe('useWeatherData', () => {
         .mockResolvedValueOnce(mockWeatherData)
         .mockRejectedValue(new Error('Network error'))
 
-      let hiddenValue = false
+      const hiddenValue = false
       Object.defineProperty(document, 'hidden', {
         configurable: true,
         get: () => hiddenValue

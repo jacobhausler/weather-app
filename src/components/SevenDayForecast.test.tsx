@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 
 // Mock the ForecastModal component
 vi.mock('./ForecastModal', () => ({
-  ForecastModal: ({ period, open, onClose }: any) => {
+  ForecastModal: ({ period, open, onClose }: { period: ForecastPeriod | null; open: boolean; onClose: () => void }) => {
     if (!open || !period) return null
     return (
       <div data-testid="forecast-modal">

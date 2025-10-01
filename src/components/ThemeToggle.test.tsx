@@ -414,7 +414,7 @@ describe('ThemeToggle', () => {
     it('should respond to system theme changes when using system theme', async () => {
       let changeHandler: ((e: MediaQueryListEvent) => void) | null = null
 
-      const addEventListenerMock = vi.fn((event: string, handler: any) => {
+      const addEventListenerMock = vi.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
         if (event === 'change') {
           changeHandler = handler
         }
