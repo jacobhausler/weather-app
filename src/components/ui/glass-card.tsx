@@ -10,12 +10,6 @@ export interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   blur?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 
   /**
-   * Background opacity percentage (0-100)
-   * @default 20
-   */
-  opacity?: number
-
-  /**
    * Enable gradient overlay (from top-left to bottom-right)
    * @default false
    */
@@ -52,7 +46,6 @@ export const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
   ({
     className,
     blur = 'lg',
-    opacity = 20,
     gradient = false,
     severity,
     interactive = false,
