@@ -712,7 +712,8 @@ describe('weatherIconMapper', () => {
 
     it('should return empty array for non-existent category', () => {
       // TypeScript won't allow this normally, but testing runtime behavior
-      const codes = getCodesByCategory('nonexistent' as any);
+      type WeatherCategory = 'sky' | 'wind' | 'precipitation' | 'visibility' | 'severe' | 'temperature';
+      const codes = getCodesByCategory('nonexistent' as WeatherCategory);
       expect(codes).toEqual([]);
     });
   });
@@ -766,8 +767,9 @@ describe('weatherIconMapper', () => {
         temperature: 2,
       };
 
+      type WeatherCategory = 'sky' | 'wind' | 'precipitation' | 'visibility' | 'severe' | 'temperature';
       Object.entries(categoryCounts).forEach(([category, expectedCount]) => {
-        const codes = getCodesByCategory(category as any);
+        const codes = getCodesByCategory(category as WeatherCategory);
         expect(codes).toHaveLength(expectedCount);
       });
     });
