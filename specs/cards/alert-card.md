@@ -4,12 +4,14 @@
 
 - **File**: `/workspaces/weather-app/src/components/AlertCard.tsx`
 - **Type Definition**: `/workspaces/weather-app/src/types/weather.ts` (Alert interface)
-- **Component Size**: ~100 lines
+- **Component Size**: ~170 lines
 - **Dependencies**:
   - `@/components/ui/card` (shadcn/ui)
   - `@/components/ui/badge` (shadcn/ui)
-  - `lucide-react` (AlertTriangle icon)
+  - `@/components/ui/button` (shadcn/ui)
+  - `lucide-react` (AlertTriangle, ChevronDown, ChevronUp icons)
   - `date-fns` (format function)
+  - `react` (useState hook)
 
 ## Purpose and Overview
 
@@ -40,15 +42,34 @@ interface Alert {
 
 **Note**: The component receives alerts via props. It does not use Zustand stores or manage loading states internally - the parent component is responsible for data fetching and state management.
 
+**Component Structure**: The AlertCard component renders a list of SingleAlert sub-components. Each SingleAlert manages its own expanded/collapsed state independently using the `useState` hook.
+
 ## Layout and Visual Design
 
 ### Card Structure
 - Outer container (`div` with `space-y-4` for vertical spacing)
-- Each alert rendered as a separate shadcn/ui `Card` component
+- Each alert rendered as a separate `SingleAlert` sub-component
 - Alerts stacked vertically with consistent 1rem spacing
 - Returns `null` when `alerts` array is empty or undefined
+- Each alert has independent expand/collapse state (default: collapsed)
 
 ### Individual Alert Layout
+
+**Collapsed State (Default)**:
+```
+┌─────────────────────────────────────────┐
+│ [⚠️ ICON] Headline Text                 │
+│          Severity Badge | Urgency Badge │
+│          Event Badge (outline)          │
+│                                         │
+│          Effective: [date/time]         │
+│          Expires: [date/time]           │
+│                                         │
+│      [ ⌄ Show Details ]                 │
+└─────────────────────────────────────────┘
+```
+
+**Expanded State**:
 ```
 ┌─────────────────────────────────────────┐
 │ [⚠️ ICON] Headline Text                 │
@@ -62,13 +83,16 @@ interface Alert {
 │ provides full context of the alert...   │
 │                                         │
 │ Areas: [area description]               │
+│                                         │
+│      [ ∧ Show Less ]                    │
 └─────────────────────────────────────────┘
 ```
 
 **Actual Layout Components**:
 - `Card` with left border accent (`border-l-4 border-l-red-600 dark:border-l-red-400`)
-- `CardHeader` contains icon, headline, and badges
-- `CardContent` contains timestamps, description, and area information
+- `CardHeader` contains icon, headline, badges, and timestamps (collapsed view)
+- `CardContent` (conditionally rendered when expanded) contains timestamps, description, and area information
+- Expand/collapse `Button` at bottom of card (`variant="ghost"`, `size="sm"`, full width)
 
 ### Severity-Based Styling
 
@@ -123,10 +147,23 @@ GET /alerts/active?point={lat},{lon}
 
 ## User Interactions
 
-**Current Implementation**: No interactive features. All alerts are displayed in expanded state.
+### Implemented
+
+**Alert Expansion/Collapse**:
+- Alerts start in collapsed state by default (showing headline, badges, and timestamps only)
+- "Show Details" button expands to reveal full description and area
+- "Show Less" button collapses back to summary view
+- Each alert manages its own expanded/collapsed state independently
+- Button includes chevron icon (ChevronDown/ChevronUp) for visual indication
+- Click anywhere on the button to toggle state
+
+**Keyboard Accessibility**:
+- Expand/collapse button is keyboard accessible (standard button behavior)
+- `aria-expanded` attribute reflects current state
+- `aria-controls` attribute links button to content (using `alert-content-{index}` ID)
+- Chevron icons use `aria-hidden="true"` (decorative only)
 
 ### Not Implemented
-- Alert expansion/collapse
 - Alert dismissal
 - Automatic URL linkification in descriptions
 
@@ -142,20 +179,27 @@ GET /alerts/active?point={lat},{lon}
 
 ## Accessibility Considerations
 
-**Current Implementation**: Basic accessibility through semantic HTML and color contrast.
+**Current Implementation**: Comprehensive accessibility through semantic HTML, ARIA attributes, and keyboard support.
 
 ### Implemented
 - Semantic HTML via shadcn/ui Card components
+- `role="alert"` on each card for screen reader announcement
+- `aria-live` attribute with dynamic values:
+  - `"assertive"` for Extreme/Severe alerts (interrupts screen reader)
+  - `"polite"` for Moderate/Minor/Unknown alerts (waits for pause)
+- `aria-label` on each card provides full context: severity, event type
 - Visual indicators beyond color: AlertTriangle icon for all alerts
 - Text labels for severity/urgency (not color-only)
-- `<strong>` tags for timestamp labels
+- `<strong>` tags for timestamp and area labels
 - Dark mode support with appropriate contrast
+- Explicit heading hierarchy: `<h3>` for alert headlines
+- Keyboard accessible expand/collapse button
+- `aria-expanded` attribute on button (true/false based on state)
+- `aria-controls` attribute links button to content section
+- Decorative icons marked with `aria-hidden="true"`
 
 ### Not Implemented
-- ARIA roles (`role="alert"`, `aria-live`)
-- ARIA labels for screen reader context
-- Keyboard navigation features (no interactive elements)
-- Explicit heading hierarchy (`<h3>` for headlines)
+- Alert dismissal functionality
 
 ## Loading States
 
@@ -214,12 +258,15 @@ function WeatherDashboard() {
 **Current Implementation**:
 - No memoization
 - No `React.memo` wrapper
-- Helper functions (`getSeverityColor`, `getUrgencyColor`, `formatAlertTime`) are pure functions defined outside component
-- Uses static imports for `AlertTriangle` icon from lucide-react
+- Helper functions (`getSeverityColor`, `getUrgencyColor`, `formatAlertTime`, `getAriaLive`) are pure functions defined outside component
+- Uses static imports for icons from lucide-react (AlertTriangle, ChevronDown, ChevronUp)
+- Each `SingleAlert` component maintains its own state via `useState`
+- Expand/collapse state changes only trigger re-render of individual alert, not entire list
 
 **Optimization Opportunities**:
-- Could wrap in `React.memo` if re-rendering becomes an issue
+- Could wrap `SingleAlert` in `React.memo` if re-rendering becomes an issue
 - Could memoize color calculation functions (currently recalculated on each render)
+- State management is already efficient (isolated to individual alerts)
 
 ## Testing Requirements
 
@@ -233,9 +280,20 @@ function WeatherDashboard() {
 - Verify color classes applied correctly for each severity/urgency
 - Test responsive badge wrapping behavior
 - Verify dark mode color variants
+- **Test expansion/collapse behavior**:
+  - Alerts start in collapsed state by default
+  - Clicking "Show Details" expands to reveal description and area
+  - Clicking "Show Less" collapses back to summary view
+  - Each alert's state is independent (expanding one doesn't affect others)
+  - Button text and icon change based on state
+  - `aria-expanded` attribute updates correctly
+- **Test accessibility attributes**:
+  - Verify `role="alert"` on each card
+  - Verify `aria-live` is "assertive" for Extreme/Severe, "polite" for others
+  - Verify `aria-label` provides full context
+  - Verify `aria-expanded` and `aria-controls` on button
+  - Verify button is keyboard accessible
 
 ### Not Required (No Implementation)
 - Sorting verification (handled server-side)
-- Keyboard navigation (no interactive elements)
-- Screen reader testing (no ARIA implementation)
-- Expansion/collapse behavior (not implemented)
+- Alert dismissal (not implemented)

@@ -1,11 +1,18 @@
+import { useState } from 'react'
 import { Alert } from '@/types/weather'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface AlertCardProps {
   alerts: Alert[]
+}
+
+interface SingleAlertProps {
+  alert: Alert
+  index: number
 }
 
 const getSeverityColor = (severity: Alert['severity']) => {
@@ -50,6 +57,102 @@ const getAriaLive = (severity: Alert['severity']): 'assertive' | 'polite' => {
   return severity === 'Extreme' || severity === 'Severe' ? 'assertive' : 'polite'
 }
 
+function SingleAlert({ alert, index }: SingleAlertProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded)
+  }
+
+  return (
+    <Card
+      className="border-l-4 border-l-red-600 dark:border-l-red-400"
+      role="alert"
+      aria-live={getAriaLive(alert.severity)}
+      aria-label={`${alert.severity} severity weather alert: ${alert.event}`}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-1 h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
+          <div className="flex-1 space-y-2">
+            <h3 className="text-xl font-semibold leading-none tracking-tight">{alert.headline}</h3>
+            <div className="flex flex-wrap gap-2">
+              <Badge className={getSeverityColor(alert.severity)}>
+                {alert.severity}
+              </Badge>
+              <Badge className={getUrgencyColor(alert.urgency)}>
+                {alert.urgency}
+              </Badge>
+              <Badge variant="outline">{alert.event}</Badge>
+            </div>
+            {/* Collapsed view: Show effective time and expiry */}
+            {!isExpanded && (
+              <div className="text-sm text-muted-foreground pt-1">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <span>
+                    <strong>Effective:</strong> {formatAlertTime(alert.onset)}
+                  </span>
+                  <span>
+                    <strong>Expires:</strong> {formatAlertTime(alert.expires)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      {/* Expanded content */}
+      {isExpanded && (
+        <CardContent className="space-y-3 pt-0">
+          <div className="text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <span>
+                <strong>Effective:</strong> {formatAlertTime(alert.onset)}
+              </span>
+              <span>
+                <strong>Expires:</strong> {formatAlertTime(alert.expires)}
+              </span>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed whitespace-pre-line">
+            {alert.description}
+          </p>
+          {alert.areaDesc && (
+            <p className="text-xs text-muted-foreground">
+              <strong>Areas:</strong> {alert.areaDesc}
+            </p>
+          )}
+        </CardContent>
+      )}
+
+      {/* Expand/Collapse button */}
+      <div className="px-6 pb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleExpand}
+          className="w-full justify-center gap-2"
+          aria-expanded={isExpanded}
+          aria-controls={`alert-content-${index}`}
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
+              Show Less
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              Show Details
+            </>
+          )}
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
 export function AlertCard({ alerts }: AlertCardProps) {
   if (!alerts || alerts.length === 0) {
     return null
@@ -57,52 +160,8 @@ export function AlertCard({ alerts }: AlertCardProps) {
 
   return (
     <div className="space-y-4">
-      {alerts.map((alert) => (
-        <Card
-          key={alert.id}
-          className="border-l-4 border-l-red-600 dark:border-l-red-400"
-          role="alert"
-          aria-live={getAriaLive(alert.severity)}
-          aria-label={`${alert.severity} severity weather alert: ${alert.event}`}
-        >
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-1 h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-              <div className="flex-1 space-y-2">
-                <h3 className="text-xl font-semibold leading-none tracking-tight">{alert.headline}</h3>
-                <div className="flex flex-wrap gap-2">
-                  <Badge className={getSeverityColor(alert.severity)}>
-                    {alert.severity}
-                  </Badge>
-                  <Badge className={getUrgencyColor(alert.urgency)}>
-                    {alert.urgency}
-                  </Badge>
-                  <Badge variant="outline">{alert.event}</Badge>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                <span>
-                  <strong>Effective:</strong> {formatAlertTime(alert.onset)}
-                </span>
-                <span>
-                  <strong>Expires:</strong> {formatAlertTime(alert.expires)}
-                </span>
-              </div>
-            </div>
-            <p className="text-sm leading-relaxed whitespace-pre-line">
-              {alert.description}
-            </p>
-            {alert.areaDesc && (
-              <p className="text-xs text-muted-foreground">
-                <strong>Areas:</strong> {alert.areaDesc}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      {alerts.map((alert, index) => (
+        <SingleAlert key={alert.id} alert={alert} index={index} />
       ))}
     </div>
   )

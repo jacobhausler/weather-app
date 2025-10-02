@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import { AlertCard } from './AlertCard'
 import { Alert } from '@/types/weather'
 
@@ -20,15 +21,53 @@ describe('AlertCard', () => {
   }
 
   describe('Rendering and conditional display', () => {
-    it('should render alert card with all alert information', () => {
+    it('should render alert card with key information collapsed by default', () => {
       render(<AlertCard alerts={[mockAlert]} />)
 
+      // Key info should be visible when collapsed
       expect(screen.getByText('Severe Thunderstorm Warning issued for the area')).toBeInTheDocument()
-      expect(screen.getByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).toBeInTheDocument()
       expect(screen.getByText('Severe')).toBeInTheDocument()
       expect(screen.getByText('Immediate')).toBeInTheDocument()
       expect(screen.getByText('Severe Thunderstorm Warning')).toBeInTheDocument()
+      expect(screen.getByText(/Effective:/)).toBeInTheDocument()
+      expect(screen.getByText(/Expires:/)).toBeInTheDocument()
+
+      // Description and areas should not be visible when collapsed
+      expect(screen.queryByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).not.toBeInTheDocument()
+      expect(screen.queryByText(/Areas:/)).not.toBeInTheDocument()
+    })
+
+    it('should show full details when expanded', async () => {
+      const user = userEvent.setup()
+      render(<AlertCard alerts={[mockAlert]} />)
+
+      // Click the expand button
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
+      // Full details should now be visible
+      expect(screen.getByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).toBeInTheDocument()
       expect(screen.getByText('Collin County; Denton County', { exact: false })).toBeInTheDocument()
+      expect(screen.getByText(/Areas:/)).toBeInTheDocument()
+    })
+
+    it('should collapse when show less is clicked', async () => {
+      const user = userEvent.setup()
+      render(<AlertCard alerts={[mockAlert]} />)
+
+      // Expand first
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
+      // Verify expanded
+      expect(screen.getByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).toBeInTheDocument()
+
+      // Now collapse
+      const collapseButton = screen.getByRole('button', { name: /show less/i })
+      await user.click(collapseButton)
+
+      // Description should be hidden again
+      expect(screen.queryByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).not.toBeInTheDocument()
     })
 
     it('should not render when alerts array is empty', () => {
@@ -46,7 +85,8 @@ describe('AlertCard', () => {
       expect(container.firstChild).toBeNull()
     })
 
-    it('should render multiple alerts in separate cards', () => {
+    it('should render multiple alerts in separate cards', async () => {
+      const user = userEvent.setup()
       const secondAlert: Alert = {
         ...mockAlert,
         id: 'alert-2',
@@ -61,6 +101,17 @@ describe('AlertCard', () => {
 
       expect(screen.getByText('Severe Thunderstorm Warning issued for the area')).toBeInTheDocument()
       expect(screen.getByText('Flash Flood Warning issued')).toBeInTheDocument()
+
+      // Descriptions should not be visible when collapsed
+      expect(screen.queryByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).not.toBeInTheDocument()
+      expect(screen.queryByText('Flash flooding is occurring in the area.')).not.toBeInTheDocument()
+
+      // Expand both alerts
+      const expandButtons = screen.getAllByRole('button', { name: /show details/i })
+      await user.click(expandButtons[0]!)
+      await user.click(expandButtons[1]!)
+
+      // Now descriptions should be visible
       expect(screen.getByText('A severe thunderstorm warning has been issued. Take shelter immediately.')).toBeInTheDocument()
       expect(screen.getByText('Flash flooding is occurring in the area.')).toBeInTheDocument()
     })
@@ -256,14 +307,24 @@ describe('AlertCard', () => {
   })
 
   describe('Area description handling', () => {
-    it('should render area description when provided', () => {
+    it('should render area description when expanded', async () => {
+      const user = userEvent.setup()
       render(<AlertCard alerts={[mockAlert]} />)
 
+      // Area should not be visible when collapsed
+      expect(screen.queryByText(/Areas:/)).not.toBeInTheDocument()
+
+      // Expand
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
+      // Now area should be visible
       expect(screen.getByText(/Areas:/)).toBeInTheDocument()
       expect(screen.getByText('Collin County; Denton County', { exact: false })).toBeInTheDocument()
     })
 
-    it('should not render area section when areaDesc is empty', () => {
+    it('should not render area section when areaDesc is empty even when expanded', async () => {
+      const user = userEvent.setup()
       const noAreaAlert: Alert = {
         ...mockAlert,
         areaDesc: ''
@@ -271,28 +332,44 @@ describe('AlertCard', () => {
 
       render(<AlertCard alerts={[noAreaAlert]} />)
 
+      // Expand
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
+      // Area should still not appear
       expect(screen.queryByText(/Areas:/)).not.toBeInTheDocument()
     })
 
-    it('should not render area section when areaDesc is undefined', () => {
+    it('should not render area section when areaDesc is undefined even when expanded', async () => {
+      const user = userEvent.setup()
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { areaDesc, ...alertWithoutArea } = mockAlert
       const noAreaAlert: Alert = alertWithoutArea as Alert
 
       render(<AlertCard alerts={[noAreaAlert]} />)
 
+      // Expand
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
+      // Area should still not appear
       expect(screen.queryByText(/Areas:/)).not.toBeInTheDocument()
     })
   })
 
   describe('Description text formatting', () => {
-    it('should preserve newlines in description text', () => {
+    it('should preserve newlines in description text when expanded', async () => {
+      const user = userEvent.setup()
       const multiLineAlert: Alert = {
         ...mockAlert,
         description: 'Line 1\nLine 2\nLine 3'
       }
 
       const { container } = render(<AlertCard alerts={[multiLineAlert]} />)
+
+      // Expand
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
 
       // Check for whitespace-pre-line class that preserves newlines
       const descriptionElement = container.querySelector('.whitespace-pre-line')
@@ -302,7 +379,8 @@ describe('AlertCard', () => {
       expect(descriptionElement).toHaveTextContent('Line 3')
     })
 
-    it('should render long descriptions without truncation', () => {
+    it('should render long descriptions without truncation when expanded', async () => {
+      const user = userEvent.setup()
       const longDescription = 'A'.repeat(500)
       const longDescAlert: Alert = {
         ...mockAlert,
@@ -310,6 +388,10 @@ describe('AlertCard', () => {
       }
 
       render(<AlertCard alerts={[longDescAlert]} />)
+
+      // Expand
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
 
       expect(screen.getByText(longDescription)).toBeInTheDocument()
     })
@@ -374,7 +456,8 @@ describe('AlertCard', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle alerts with minimal required fields', () => {
+    it('should handle alerts with minimal required fields', async () => {
+      const user = userEvent.setup()
       const minimalAlert: Alert = {
         id: 'minimal-1',
         areaDesc: '',
@@ -393,6 +476,11 @@ describe('AlertCard', () => {
       render(<AlertCard alerts={[minimalAlert]} />)
 
       expect(screen.getByText('Test Headline')).toBeInTheDocument()
+
+      // Expand to see description
+      const expandButton = screen.getByRole('button', { name: /show details/i })
+      await user.click(expandButton)
+
       expect(screen.getByText('Test Description')).toBeInTheDocument()
     })
 
