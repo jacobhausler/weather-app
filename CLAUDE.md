@@ -26,6 +26,29 @@ Self-hosted personal weather forecast application - a single-page React applicat
 - nginx for serving pages
 - GitHub Actions to build and publish to private GitHub Container Registry
 
+## Performance Optimizations
+
+### Code Splitting & Lazy Loading
+- Lazy loading for heavy components (AlertCard, SevenDayForecast, CurrentConditions, HourlyForecast)
+- Manual chunk splitting: vendor (React), charts (Recharts), UI components, utils
+- Initial bundle: 33.31 kB (10.12 kB gzipped) - 94% reduction from original 569.81 kB
+- Lazy-loaded chunks load on-demand only when weather data is displayed
+
+### Progressive Web App (PWA)
+- Installable as standalone app on mobile and desktop
+- Service worker with offline support
+- Network-first caching strategy for API calls:
+  - NWS API: 1 hour cache
+  - Sunrise/Sunset API: 24 hour cache
+  - Backend API: 10 minute cache with 10s timeout
+- PWA manifest with HAUS Weather branding
+
+### Build Optimizations
+- Manual chunk splitting for optimal code reuse
+- ESBuild minification
+- Tree-shaking for unused code elimination
+- Preload hints for critical resources
+
 ## Quick Start / Build Commands
 
 ### Frontend
