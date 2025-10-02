@@ -3,7 +3,7 @@ import { ZipInput } from './ZipInput'
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/20 backdrop-blur-md shadow-glass">
       <div className="container mx-auto px-4 py-4">
         {/* Mobile Layout - Only visible on screens smaller than md (768px) */}
         <div className="md:hidden">

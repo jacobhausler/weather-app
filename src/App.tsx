@@ -127,7 +127,7 @@ function App() {
       </main>
 
       {/* Footer with theme and unit toggles */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{ height: 'var(--footer-height)' }}>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/15 bg-white/5 dark:bg-black/15 backdrop-blur-sm" style={{ height: 'var(--footer-height)' }}>
         <div className="container mx-auto flex items-center justify-between px-4 h-full">
           <UnitToggle />
           <ThemeToggle />

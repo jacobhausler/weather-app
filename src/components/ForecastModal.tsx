@@ -51,11 +51,11 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/20 dark:bg-black/30 backdrop-blur-2xl border border-white/30 dark:border-white/15 shadow-glass-lg"
         aria-describedby="forecast-description"
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl">{period.name}</DialogTitle>
+          <DialogTitle className="text-2xl text-white dark:text-gray-100">{period.name}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -67,15 +67,15 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
               className="h-24 w-24"
             />
             <div>
-              <div className="text-4xl font-bold">
+              <div className="text-4xl font-bold text-white dark:text-gray-100">
                 {convertedTemp}{tempUnit}
               </div>
               {period.temperatureTrend && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-900 dark:text-gray-100">
                   Trending {period.temperatureTrend}
                 </div>
               )}
-              <div className="mt-1 text-lg text-muted-foreground">
+              <div className="mt-1 text-lg text-gray-900 dark:text-gray-100">
                 {period.shortForecast}
               </div>
             </div>
@@ -84,10 +84,10 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
           {/* Weather Details Grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg border p-3">
-              <Wind className="h-5 w-5 text-muted-foreground" />
+              <Wind className="h-5 w-5 text-gray-900 dark:text-gray-100" />
               <div>
-                <div className="text-xs text-muted-foreground">Wind</div>
-                <div className="font-medium">
+                <div className="text-xs text-gray-900 dark:text-gray-100">Wind</div>
+                <div className="font-medium text-gray-900 dark:text-gray-100">
                   {period.windDirection} {convertWind(period.windSpeed)}
                 </div>
               </div>
@@ -96,12 +96,12 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
             {period.probabilityOfPrecipitation?.value !== null &&
               period.probabilityOfPrecipitation?.value !== undefined && (
                 <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <Droplets className="h-5 w-5 text-muted-foreground" />
+                  <Droplets className="h-5 w-5 text-gray-900 dark:text-gray-100" />
                   <div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-gray-900 dark:text-gray-100">
                       Precipitation
                     </div>
-                    <div className="font-medium">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       {period.probabilityOfPrecipitation.value}%
                     </div>
                   </div>
@@ -109,10 +109,10 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
               )}
 
             <div className="flex items-center gap-3 rounded-lg border p-3">
-              <Cloud className="h-5 w-5 text-muted-foreground" />
+              <Cloud className="h-5 w-5 text-gray-900 dark:text-gray-100" />
               <div>
-                <div className="text-xs text-muted-foreground">Day/Night</div>
-                <div className="font-medium">
+                <div className="text-xs text-gray-900 dark:text-gray-100">Day/Night</div>
+                <div className="font-medium text-gray-900 dark:text-gray-100">
                   {period.isDaytime ? 'Day' : 'Night'}
                 </div>
               </div>
@@ -122,8 +122,8 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
           {/* Time Range */}
           <div className="rounded-lg bg-muted p-4">
             <div className="text-sm">
-              <div className="font-medium">Time Period</div>
-              <div className="mt-1 text-muted-foreground">
+              <div className="font-medium text-gray-900 dark:text-gray-100">Time Period</div>
+              <div className="mt-1 text-gray-900 dark:text-gray-100">
                 {formatTime(period.startTime)} - {formatTime(period.endTime)}
               </div>
             </div>
@@ -131,8 +131,8 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
 
           {/* Detailed Forecast */}
           <div>
-            <h3 className="mb-2 font-semibold">Detailed Forecast</h3>
-            <p id="forecast-description" className="text-sm leading-relaxed text-muted-foreground">
+            <h3 className="mb-2 font-semibold text-white dark:text-gray-100">Detailed Forecast</h3>
+            <p id="forecast-description" className="text-sm leading-relaxed text-gray-900 dark:text-gray-100">
               {period.detailedForecast}
             </p>
           </div>
