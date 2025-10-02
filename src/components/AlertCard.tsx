@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert } from '@/types/weather'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { GlassCard, CardContent, CardHeader } from '@/components/ui/glass-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
@@ -57,6 +57,16 @@ const getAriaLive = (severity: Alert['severity']): 'assertive' | 'polite' => {
   return severity === 'Extreme' || severity === 'Severe' ? 'assertive' : 'polite'
 }
 
+const getSeverityGlass = (severity: Alert['severity']): 'extreme' | 'severe' | 'moderate' | 'minor' => {
+  switch (severity) {
+    case 'Extreme': return 'extreme'
+    case 'Severe': return 'severe'
+    case 'Moderate': return 'moderate'
+    case 'Minor': return 'minor'
+    default: return 'minor'
+  }
+}
+
 function SingleAlert({ alert, index }: SingleAlertProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -65,7 +75,10 @@ function SingleAlert({ alert, index }: SingleAlertProps) {
   }
 
   return (
-    <Card
+    <GlassCard
+      severity={getSeverityGlass(alert.severity)}
+      blur="xl"
+      interactive
       className="border-l-4 border-l-red-600 dark:border-l-red-400"
       role="alert"
       aria-live={getAriaLive(alert.severity)}
@@ -149,7 +162,7 @@ function SingleAlert({ alert, index }: SingleAlertProps) {
           )}
         </Button>
       </div>
-    </Card>
+    </GlassCard>
   )
 }
 

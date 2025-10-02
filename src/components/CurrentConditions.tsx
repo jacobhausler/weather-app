@@ -1,5 +1,5 @@
 import { Observation, ForecastPeriod, SunTimes } from '@/types/weather'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GlassCard, CardContent, CardHeader, CardTitle } from '@/components/ui/glass-card'
 import {
   Thermometer,
   Droplets,
@@ -102,9 +102,9 @@ export function CurrentConditions({
   const distanceUnit = getDistanceUnit(unitSystem)
 
   return (
-    <Card>
+    <GlassCard blur="xl" gradient interactive className="shadow-glass-lg">
       <CardHeader>
-        <CardTitle>Current Conditions</CardTitle>
+        <CardTitle className="text-white dark:text-gray-100">Current Conditions</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
@@ -223,9 +223,9 @@ export function CurrentConditions({
 
         {/* Detailed Forecast */}
         {todayForecast?.detailedForecast && (
-          <div className="mt-4 rounded-lg bg-muted p-3">
-            <h3 className="mb-1 text-sm font-semibold">Forecast</h3>
-            <p className="text-xs leading-relaxed text-muted-foreground">
+          <div className="mt-4 rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-3">
+            <h3 className="mb-1 text-sm font-semibold text-white dark:text-gray-100">Forecast</h3>
+            <p className="text-xs leading-relaxed text-gray-100 dark:text-gray-200">
               {todayForecast.detailedForecast}
             </p>
           </div>
@@ -233,7 +233,7 @@ export function CurrentConditions({
 
         {/* Tonight's Forecast */}
         {tonightForecast && (
-          <div className="mt-3 rounded-lg border p-3">
+          <div className="mt-3 rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-3">
             <div className="flex items-center gap-2">
               <img
                 src={tonightForecast.icon}
@@ -241,8 +241,8 @@ export function CurrentConditions({
                 className="h-10 w-10"
               />
               <div>
-                <div className="text-sm font-semibold">{tonightForecast.name}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-sm font-semibold text-white dark:text-gray-100">{tonightForecast.name}</div>
+                <div className="text-xs text-gray-100 dark:text-gray-200">
                   {tonightForecast.shortForecast} -{' '}
                   {tonightForecast.temperature}{tempUnit}
                 </div>
@@ -251,7 +251,7 @@ export function CurrentConditions({
           </div>
         )}
       </CardContent>
-    </Card>
+    </GlassCard>
   )
 }
 

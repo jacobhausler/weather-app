@@ -21,7 +21,7 @@ function App() {
   const tonightForecast = weatherData?.forecast.find((p) => !p.isDaytime && p.number === 2)
 
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ paddingBottom: 'var(--footer-height)' }}>
+    <div className="min-h-screen bg-gradient-sky dark:bg-gradient-midnight text-foreground" style={{ paddingBottom: 'var(--footer-height)' }}>
       <ErrorBanner />
       <Header />
 

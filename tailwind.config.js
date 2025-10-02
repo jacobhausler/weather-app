@@ -56,6 +56,21 @@ export default {
           5: "hsl(var(--chart-5))",
         },
       },
+      backdropBlur: {
+        xs: '2px',
+        '4xl': '80px',
+      },
+      backgroundImage: {
+        'gradient-glass-light': 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+        'gradient-glass-dark': 'linear-gradient(135deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 100%)',
+        'gradient-sky': 'linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%)',
+        'gradient-midnight': 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+      },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
+        'glass-lg': '0 8px 32px 0 rgba(0, 0, 0, 0.15)',
+        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

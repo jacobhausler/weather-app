@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { ForecastPeriod } from '@/types/weather'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GlassCard, CardContent, CardHeader, CardTitle } from '@/components/ui/glass-card'
 import { ForecastModal } from './ForecastModal'
 import { Droplets, Wind } from 'lucide-react'
 import { useUnitConversion } from '@/hooks/useUnitConversion'
@@ -145,9 +145,9 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
 
   return (
     <>
-      <Card>
+      <GlassCard blur="lg" gradient interactive>
         <CardHeader>
-          <CardTitle>7-Day Forecast</CardTitle>
+          <CardTitle className="text-white dark:text-gray-100">7-Day Forecast</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
@@ -227,7 +227,7 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
             )}
           </div>
         </CardContent>
-      </Card>
+      </GlassCard>
 
       <ForecastModal
         period={selectedPeriod}

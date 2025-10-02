@@ -1,5 +1,5 @@
 import { HourlyForecast as HourlyForecastType } from '@/types/weather'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GlassCard, CardContent, CardHeader, CardTitle } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -128,10 +128,10 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
   }
 
   return (
-    <Card>
+    <GlassCard blur="lg" interactive className="shadow-glass">
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Hourly Forecast</CardTitle>
+          <CardTitle className="text-white dark:text-gray-100">Hourly Forecast</CardTitle>
 
           <div className="flex flex-wrap gap-2">
             {/* Period Selector */}
@@ -181,8 +181,8 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[250px] w-full bg-transparent">
+          <ResponsiveContainer width="100%" height="100%" className="bg-transparent">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
@@ -225,7 +225,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-3 flex justify-around rounded-lg bg-muted p-2 text-xs">
+        <div className="mt-3 flex justify-around rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-2 text-xs">
           <div className="text-center">
             <div className="text-[10px] text-muted-foreground">Min</div>
             <div className="font-semibold">
@@ -252,6 +252,6 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
           </div>
         </div>
       </CardContent>
-    </Card>
+    </GlassCard>
   )
 }

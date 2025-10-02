@@ -30,6 +30,18 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --footer-height: 4rem;
+
+    /* Glass effect tokens */
+    --glass-bg-light: rgba(255, 255, 255, 0.2);
+    --glass-bg-dark: rgba(0, 0, 0, 0.3);
+    --glass-border-light: rgba(255, 255, 255, 0.3);
+    --glass-border-dark: rgba(255, 255, 255, 0.15);
+    --glass-blur: 12px;
+    --glass-blur-intense: 20px;
+
+    /* Gradient backgrounds */
+    --bg-gradient-light: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+    --bg-gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   }
 
   .dark {
@@ -57,6 +69,10 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Dark mode overrides for glass tokens */
+    --glass-blur: 16px;
+    --glass-blur-intense: 24px;
   }
 }
 
@@ -81,5 +97,66 @@
   textarea:focus-visible,
   [role="button"]:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Base glass effect */
+  .glass-base {
+    @apply backdrop-filter backdrop-blur-lg bg-clip-padding;
+    @apply transition-all duration-300;
+  }
+
+  /* Glass card variants */
+  .glass-light {
+    @apply bg-white/20 border border-white/30;
+    @apply shadow-xl;
+  }
+
+  .glass-dark {
+    @apply bg-black/30 border border-white/15;
+    @apply shadow-2xl;
+  }
+
+  .glass-card {
+    @apply glass-base glass-light dark:glass-dark;
+    @apply rounded-xl;
+  }
+
+  /* Hover states */
+  .glass-card-hover {
+    @apply hover:backdrop-blur-2xl hover:shadow-2xl;
+    @apply hover:bg-white/25 dark:hover:bg-black/35;
+  }
+
+  /* Gradient glass with overlay */
+  .glass-gradient {
+    @apply bg-gradient-to-br from-white/20 to-white/10;
+    @apply dark:from-black/35 dark:to-black/25;
+  }
+
+  /* Alert severity glasses */
+  .glass-alert-extreme {
+    @apply bg-red-500/20 dark:bg-red-900/30;
+    @apply border border-red-300/30;
+    @apply shadow-[0_8px_32px_0_rgba(239,68,68,0.2)];
+  }
+
+  .glass-alert-severe {
+    @apply bg-orange-500/20 dark:bg-orange-900/30;
+    @apply border border-orange-300/30;
+    @apply shadow-[0_8px_32px_0_rgba(249,115,22,0.2)];
+  }
+
+  .glass-alert-moderate {
+    @apply bg-yellow-500/20 dark:bg-yellow-900/30;
+    @apply border border-yellow-300/30;
+    @apply shadow-[0_8px_32px_0_rgba(234,179,8,0.2)];
+  }
+
+  .glass-alert-minor {
+    @apply bg-blue-500/20 dark:bg-blue-900/30;
+    @apply border border-blue-300/30;
+    @apply shadow-[0_8px_32px_0_rgba(59,130,246,0.2)];
   }
 }
