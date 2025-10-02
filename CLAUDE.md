@@ -26,6 +26,14 @@ Self-hosted personal weather forecast application - a single-page React applicat
 - nginx for serving pages
 - GitHub Actions to build and publish to private GitHub Container Registry
 
+## Glassmorphism Design System
+
+- **GlassCard Component**: Located in `src/components/ui/glass-card.tsx` - reusable wrapper with props for blur intensity, opacity, gradient, severity, and interactive states
+- **Utility Classes**: `glass-card`, `glass-alert-extreme/severe/moderate/minor`, `glass-gradient` defined in `index.css` @layer utilities
+- **Design Tokens**: Glass-specific CSS variables in `index.css` (--glass-bg-light/dark, --glass-border-light/dark, --glass-blur)
+- **Tailwind Extensions**: Custom backdrop blur values, gradient backgrounds (bg-gradient-sky/midnight), glass shadows in `tailwind.config.js`
+- **Implementation Status**: Phases 1-3 complete (foundation, core components, layout). All weather cards refactored with glass aesthetic. See `MODERN_DESIGN_REFACTOR.md` for complete implementation details.
+
 ## Performance Optimizations
 
 ### Code Splitting & Lazy Loading
