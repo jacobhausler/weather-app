@@ -20,7 +20,7 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { useUnitConversion } from '@/hooks/useUnitConversion'
+import { useUnitStore, convertTempFromF, convertSpeedFromMph, getTempUnit, getSpeedUnit } from '@/stores/unitStore'
 
 interface HourlyForecastProps {
   hourlyForecast: HourlyForecastType[]
@@ -30,7 +30,7 @@ type DataType = 'temperature' | 'precipitation' | 'wind' | 'humidity'
 type Period = '12' | '24' | '48'
 
 export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
-  const { convertTemperature, convertWindSpeed } = useUnitConversion()
+  const { unitSystem } = useUnitStore()
   const [dataType, setDataType] = useLocalStorage<DataType>('hourly-chart-dataType', 'temperature')
   const [period, setPeriod] = useLocalStorage<Period>('hourly-chart-period', '24')
 
@@ -41,7 +41,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
 
   // Helper to convert temperature from F (NWS format) to current unit system
   const convertTemp = (tempF: number) => {
-    return convertTemperature(tempF, 'F').value
+    return Math.round(convertTempFromF(tempF, unitSystem))
   }
 
   // Helper to parse and convert wind speed from mph (NWS format) to current unit system
@@ -49,7 +49,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
     if (!windSpeed) return 0
     const match = windSpeed.match(/(\d+)/)
     const speedMph = match && match[1] ? parseInt(match[1], 10) : 0
-    return convertWindSpeed(speedMph, 'mph').value
+    return Math.round(convertSpeedFromMph(speedMph, unitSystem))
   }
 
   const formatChartData = () => {
@@ -64,7 +64,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
             time,
             value: convertTemp(forecast.temperature),
             label: 'Temperature',
-            unit: convertTemperature(0, 'F').unit === 'F' ? '°F' : '°C',
+            unit: getTempUnit(unitSystem),
           }
         case 'precipitation':
           return {
@@ -78,7 +78,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
             time,
             value: parseWindSpeed(forecast.windSpeed),
             label: 'Wind Speed',
-            unit: convertWindSpeed(0, 'mph').unit,
+            unit: getSpeedUnit(unitSystem),
           }
         case 'humidity':
           return {

@@ -28,6 +28,13 @@ export const convertTemp = (celsius: number, toSystem: UnitSystem): number => {
   return celsius
 }
 
+export const convertTempFromF = (fahrenheit: number, toSystem: UnitSystem): number => {
+  if (toSystem === 'metric') {
+    return (fahrenheit - 32) * 5 / 9
+  }
+  return fahrenheit
+}
+
 export const convertSpeed = (
   metersPerSecond: number,
   toSystem: UnitSystem
@@ -38,6 +45,13 @@ export const convertSpeed = (
   }
   // Convert to km/h
   return metersPerSecond * 3.6
+}
+
+export const convertSpeedFromMph = (mph: number, toSystem: UnitSystem): number => {
+  if (toSystem === 'metric') {
+    return mph * 1.60934
+  }
+  return mph
 }
 
 export const convertDistance = (meters: number, toSystem: UnitSystem): number => {

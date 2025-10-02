@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { format } from 'date-fns'
 import { Cloud, Droplets, Wind } from 'lucide-react'
-import { useUnitConversion } from '@/hooks/useUnitConversion'
+import { useUnitStore, convertTempFromF, convertSpeedFromMph, getTempUnit, getSpeedUnit } from '@/stores/unitStore'
 import { WeatherIcon } from './WeatherIcon'
 
 interface ForecastModalProps {
@@ -17,13 +17,13 @@ interface ForecastModalProps {
 }
 
 export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
-  const { convertTemperature, convertWindSpeed } = useUnitConversion()
+  const { unitSystem } = useUnitStore()
 
   if (!period) return null
 
   // Helper to convert temperature from F (NWS format) to current unit system
   const convertTemp = (tempF: number) => {
-    return convertTemperature(tempF, 'F').value
+    return Math.round(convertTempFromF(tempF, unitSystem))
   }
 
   // Helper to convert wind speed from mph (NWS format like "10 mph") to current unit system
@@ -33,8 +33,9 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
     if (!match || !match[1]) return windSpeed
 
     const speedMph = parseInt(match[1], 10)
-    const converted = convertWindSpeed(speedMph, 'mph')
-    return windSpeed.replace(/\d+/, converted.value.toString()).replace('mph', converted.unit)
+    const converted = Math.round(convertSpeedFromMph(speedMph, unitSystem))
+    const unit = getSpeedUnit(unitSystem)
+    return windSpeed.replace(/\d+/, converted.toString()).replace('mph', unit)
   }
 
   const formatTime = (dateString: string) => {
@@ -45,8 +46,8 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
     }
   }
 
-  // Get temperature unit from the conversion function
-  const tempUnit = convertTemperature(0, 'F').unit === 'F' ? '°F' : '°C'
+  // Get temperature unit from the unit store
+  const tempUnit = getTempUnit(unitSystem)
   const convertedTemp = convertTemp(period.temperature)
 
   return (

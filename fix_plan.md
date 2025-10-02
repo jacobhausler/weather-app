@@ -18,6 +18,16 @@
 
 ## Recent Updates (2025-10-01)
 
+### ✅ Unit Conversion System Unification (2025-10-02)
+- **Issue**: Imperial/Metric unit toggle only working on CurrentConditions card, not on 7-Day Forecast, Hourly Forecast, or Forecast Modal
+- **Root Cause**: Two separate unit conversion systems existed (useUnitConversion hook storing in 'unit-system' localStorage vs unitStore Zustand store storing in 'unit-storage'). UnitToggle component only updated unitStore, so only CurrentConditions responded.
+- **Resolution**: Consolidated all components to use unitStore by:
+  1. Extended unitStore with convertTempFromF() and convertSpeedFromMph() functions
+  2. Migrated SevenDayForecast, HourlyForecast, and ForecastModal to use unitStore
+  3. Removed deprecated useUnitConversion hook and test file
+  4. Updated hooks/index.ts to remove hook exports
+- **Impact**: All cards now respond to unit toggle consistently
+
 ### ✅ Production Verification (2025-10-02)
 - Comprehensive codebase audit: Zero TODO/FIXME comments found
 - All 12 component specifications verified with implementations

@@ -3,7 +3,7 @@ import { ForecastPeriod } from '@/types/weather'
 import { GlassCard, CardContent, CardHeader, CardTitle } from '@/components/ui/glass-card'
 import { ForecastModal } from './ForecastModal'
 import { Droplets, Wind } from 'lucide-react'
-import { useUnitConversion } from '@/hooks/useUnitConversion'
+import { useUnitStore, convertTempFromF, convertSpeedFromMph, getTempUnit, getSpeedUnit } from '@/stores/unitStore'
 import { WeatherIcon } from './WeatherIcon'
 
 interface SevenDayForecastProps {
@@ -16,7 +16,7 @@ interface DayForecast {
 }
 
 export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
-  const { convertTemperature, convertWindSpeed } = useUnitConversion()
+  const { unitSystem } = useUnitStore()
   const [selectedPeriod, setSelectedPeriod] = useState<ForecastPeriod | null>(
     null
   )
@@ -54,7 +54,7 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
 
   // Helper to convert temperature from F (NWS format) to current unit system
   const convertTemp = (tempF: number) => {
-    return convertTemperature(tempF, 'F').value
+    return Math.round(convertTempFromF(tempF, unitSystem))
   }
 
   // Helper to convert wind speed from mph (NWS format like "10 mph") to current unit system
@@ -64,8 +64,9 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
     if (!match || !match[1]) return windSpeed
 
     const speedMph = parseInt(match[1], 10)
-    const converted = convertWindSpeed(speedMph, 'mph')
-    return windSpeed.replace(/\d+/, converted.value.toString()).replace('mph', converted.unit)
+    const converted = Math.round(convertSpeedFromMph(speedMph, unitSystem))
+    const unit = getSpeedUnit(unitSystem)
+    return windSpeed.replace(/\d+/, converted.toString()).replace('mph', unit)
   }
 
   // Combine day and night forecasts
@@ -108,8 +109,8 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
     return name.replace(' Night', '').replace(' Afternoon', '')
   }
 
-  // Get temperature unit from the conversion function
-  const tempUnit = convertTemperature(0, 'F').unit === 'F' ? '°F' : '°C'
+  // Get temperature unit from the unit store
+  const tempUnit = getTempUnit(unitSystem)
 
   // Generate comprehensive aria-label for screen readers
   const generateAriaLabel = (dayForecast: DayForecast, index: number) => {
