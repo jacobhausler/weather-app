@@ -79,42 +79,49 @@ function App() {
               </Suspense>
             )}
 
-            {/* 7-Day Forecast Card */}
+            {/* 7-Day Forecast Card - Centered with max-width */}
             {weatherData.forecast && weatherData.forecast.length > 0 && (
-              <Suspense fallback={
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-32" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                      {[...Array(7)].map((_, i) => (
-                        <Skeleton key={i} className="min-w-[140px] h-48" />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              }>
-                <SevenDayForecast forecast={weatherData.forecast} />
-              </Suspense>
+              <div className="flex justify-center">
+                <div className="w-full max-w-4xl">
+                  <Suspense fallback={
+                    <Card>
+                      <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                          {[...Array(7)].map((_, i) => (
+                            <Skeleton key={i} className="min-w-[140px] h-48" />
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  }>
+                    <SevenDayForecast forecast={weatherData.forecast} />
+                  </Suspense>
+                </div>
+              </div>
             )}
 
-            {/* Current Conditions + Daily Forecast Card */}
-            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-              <CurrentConditions
-                observation={weatherData.currentObservation}
-                todayForecast={todayForecast}
-                tonightForecast={tonightForecast}
-                sunTimes={weatherData.sunTimes}
-              />
-            </Suspense>
-
-            {/* Hourly Forecast Card */}
-            {weatherData.hourlyForecast && weatherData.hourlyForecast.length > 0 && (
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <HourlyForecast hourlyForecast={weatherData.hourlyForecast} />
+            {/* Current Conditions + Hourly Forecast - Side by side on larger screens */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Current Conditions + Daily Forecast Card */}
+              <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                <CurrentConditions
+                  observation={weatherData.currentObservation}
+                  todayForecast={todayForecast}
+                  tonightForecast={tonightForecast}
+                  sunTimes={weatherData.sunTimes}
+                />
               </Suspense>
-            )}
+
+              {/* Hourly Forecast Card */}
+              {weatherData.hourlyForecast && weatherData.hourlyForecast.length > 0 && (
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <HourlyForecast hourlyForecast={weatherData.hourlyForecast} />
+                </Suspense>
+              )}
+            </div>
           </div>
         )}
       </main>

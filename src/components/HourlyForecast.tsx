@@ -130,13 +130,13 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Hourly Forecast</CardTitle>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {/* Period Selector */}
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
-              <SelectTrigger className="w-[120px]" aria-label="Time period selection">
+              <SelectTrigger className="w-[110px]" aria-label="Time period selection">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -147,7 +147,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
             </Select>
 
             {/* Data Type Buttons */}
-            <div className="flex gap-2" role="group" aria-label="Data type selection">
+            <div className="flex gap-1.5" role="group" aria-label="Data type selection">
               <Button
                 size="sm"
                 variant={dataType === 'temperature' ? 'default' : 'outline'}
@@ -181,7 +181,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -225,23 +225,23 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-4 flex justify-around rounded-lg bg-muted p-3 text-sm">
+        <div className="mt-3 flex justify-around rounded-lg bg-muted p-2 text-xs">
           <div className="text-center">
-            <div className="text-muted-foreground">Min</div>
+            <div className="text-[10px] text-muted-foreground">Min</div>
             <div className="font-semibold">
               {Math.min(...chartData.map((d) => d.value))}
               {unit}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-muted-foreground">Max</div>
+            <div className="text-[10px] text-muted-foreground">Max</div>
             <div className="font-semibold">
               {Math.max(...chartData.map((d) => d.value))}
               {unit}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-muted-foreground">Avg</div>
+            <div className="text-[10px] text-muted-foreground">Avg</div>
             <div className="font-semibold">
               {Math.round(
                 chartData.reduce((acc, d) => acc + d.value, 0) /

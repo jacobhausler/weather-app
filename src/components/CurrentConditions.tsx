@@ -107,19 +107,19 @@ export function CurrentConditions({
         <CardTitle>Current Conditions</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {/* Current Weather */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
               {todayForecast && (
                 <img
                   src={todayForecast.icon}
                   alt={todayForecast.shortForecast}
-                  className="h-20 w-20"
+                  className="h-16 w-16"
                 />
               )}
               <div>
-                <div className="text-5xl font-bold">
+                <div className="text-4xl font-bold">
                   {currentTemp !== null && currentTemp !== undefined
                     ? `${currentTemp}${tempUnit}`
                     : 'N/A'}
@@ -127,7 +127,7 @@ export function CurrentConditions({
                 {feelsLike !== null &&
                   feelsLike !== undefined &&
                   feelsLike !== currentTemp && (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Feels like {feelsLike}{tempUnit}
                     </div>
                   )}
@@ -135,14 +135,14 @@ export function CurrentConditions({
             </div>
 
             {todayForecast && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 {todayForecast.shortForecast}
               </div>
             )}
 
             {/* Today's High/Low */}
             {todayForecast && tonightForecast && (
-              <div className="flex gap-4 text-sm">
+              <div className="flex gap-3 text-xs">
                 <div>
                   <span className="text-muted-foreground">High: </span>
                   <span className="font-semibold">
@@ -160,21 +160,21 @@ export function CurrentConditions({
           </div>
 
           {/* Weather Details Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <WeatherDetailItem
-              icon={<Thermometer className="h-4 w-4" />}
+              icon={<Thermometer className="h-3 w-3" />}
               label="Dewpoint"
               value={dewpoint !== null ? `${dewpoint}${tempUnit}` : 'N/A'}
             />
 
             <WeatherDetailItem
-              icon={<Droplets className="h-4 w-4" />}
+              icon={<Droplets className="h-3 w-3" />}
               label="Humidity"
               value={humidity !== null ? `${humidity}%` : 'N/A'}
             />
 
             <WeatherDetailItem
-              icon={<Wind className="h-4 w-4" />}
+              icon={<Wind className="h-3 w-3" />}
               label="Wind"
               value={
                 windSpeed !== null
@@ -185,20 +185,20 @@ export function CurrentConditions({
 
             {windGust !== null && windGust > 0 && (
               <WeatherDetailItem
-                icon={<Wind className="h-4 w-4" />}
+                icon={<Wind className="h-3 w-3" />}
                 label="Gusts"
                 value={`${windGust} ${speedUnit}`}
               />
             )}
 
             <WeatherDetailItem
-              icon={<Eye className="h-4 w-4" />}
+              icon={<Eye className="h-3 w-3" />}
               label="Visibility"
               value={visibility ? `${visibility} ${distanceUnit}` : 'N/A'}
             />
 
             <WeatherDetailItem
-              icon={<Cloud className="h-4 w-4" />}
+              icon={<Cloud className="h-3 w-3" />}
               label="Cloud Cover"
               value={cloudCover}
             />
@@ -206,13 +206,13 @@ export function CurrentConditions({
             {sunTimes && (
               <>
                 <WeatherDetailItem
-                  icon={<Sunrise className="h-4 w-4" />}
+                  icon={<Sunrise className="h-3 w-3" />}
                   label="Sunrise"
                   value={formatTime(sunTimes.sunrise)}
                 />
 
                 <WeatherDetailItem
-                  icon={<Sunset className="h-4 w-4" />}
+                  icon={<Sunset className="h-3 w-3" />}
                   label="Sunset"
                   value={formatTime(sunTimes.sunset)}
                 />
@@ -223,9 +223,9 @@ export function CurrentConditions({
 
         {/* Detailed Forecast */}
         {todayForecast?.detailedForecast && (
-          <div className="mt-6 rounded-lg bg-muted p-4">
-            <h3 className="mb-2 font-semibold">Forecast</h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
+          <div className="mt-4 rounded-lg bg-muted p-3">
+            <h3 className="mb-1 text-sm font-semibold">Forecast</h3>
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {todayForecast.detailedForecast}
             </p>
           </div>
@@ -233,16 +233,16 @@ export function CurrentConditions({
 
         {/* Tonight's Forecast */}
         {tonightForecast && (
-          <div className="mt-4 rounded-lg border p-4">
-            <div className="flex items-center gap-3">
+          <div className="mt-3 rounded-lg border p-3">
+            <div className="flex items-center gap-2">
               <img
                 src={tonightForecast.icon}
                 alt={tonightForecast.shortForecast}
-                className="h-12 w-12"
+                className="h-10 w-10"
               />
               <div>
-                <div className="font-semibold">{tonightForecast.name}</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm font-semibold">{tonightForecast.name}</div>
+                <div className="text-xs text-muted-foreground">
                   {tonightForecast.shortForecast} -{' '}
                   {tonightForecast.temperature}{tempUnit}
                 </div>
@@ -263,11 +263,11 @@ interface WeatherDetailItemProps {
 
 function WeatherDetailItem({ icon, label, value }: WeatherDetailItemProps) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border p-3">
+    <div className="flex items-center gap-1.5 rounded-lg border p-2">
       <div className="text-muted-foreground">{icon}</div>
       <div className="min-w-0 flex-1">
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <div className="truncate text-sm font-medium">{value}</div>
+        <div className="text-[10px] text-muted-foreground">{label}</div>
+        <div className="truncate text-xs font-medium">{value}</div>
       </div>
     </div>
   )
