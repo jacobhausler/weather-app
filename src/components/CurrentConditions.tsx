@@ -10,6 +10,7 @@ import {
   Sunset,
 } from 'lucide-react'
 import { useUnitStore, convertTemp, convertSpeed, convertDistance, getTempUnit, getSpeedUnit, getDistanceUnit } from '@/stores/unitStore'
+import { WeatherIcon } from './WeatherIcon'
 
 interface CurrentConditionsProps {
   observation?: Observation
@@ -112,9 +113,10 @@ export function CurrentConditions({
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               {todayForecast && (
-                <img
-                  src={todayForecast.icon}
-                  alt={todayForecast.shortForecast}
+                <WeatherIcon
+                  nwsIconUrl={todayForecast.icon}
+                  shortForecast={todayForecast.shortForecast}
+                  size="md"
                   className="h-16 w-16"
                 />
               )}
@@ -235,9 +237,10 @@ export function CurrentConditions({
         {tonightForecast && (
           <div className="mt-3 rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-3">
             <div className="flex items-center gap-2">
-              <img
-                src={tonightForecast.icon}
-                alt={tonightForecast.shortForecast}
+              <WeatherIcon
+                nwsIconUrl={tonightForecast.icon}
+                shortForecast={tonightForecast.shortForecast}
+                size="sm"
                 className="h-10 w-10"
               />
               <div>

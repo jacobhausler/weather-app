@@ -4,6 +4,19 @@ import { SevenDayForecast } from './SevenDayForecast'
 import { ForecastPeriod } from '@/types/weather'
 import userEvent from '@testing-library/user-event'
 
+// Mock the WeatherIcon component
+vi.mock('./WeatherIcon', () => ({
+  WeatherIcon: ({ nwsIconUrl, shortForecast, className }: { nwsIconUrl: string; shortForecast?: string; className?: string }) => (
+    <img
+      src={nwsIconUrl}
+      alt={shortForecast || 'Weather icon'}
+      aria-label={shortForecast}
+      className={className}
+      data-testid="weather-icon"
+    />
+  )
+}))
+
 // Mock the ForecastModal component
 vi.mock('./ForecastModal', () => ({
   ForecastModal: ({ period, open, onClose }: { period: ForecastPeriod | null; open: boolean; onClose: () => void }) => {
@@ -73,10 +86,10 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const button = screen.getByRole('button')
-      const icon = within(button).getByRole('presentation', { hidden: true })
+      const icon = within(button).getByTestId('weather-icon')
       expect(icon).toBeInTheDocument()
       expect(icon).toHaveAttribute('src', 'https://api.weather.gov/icons/land/day/sunny')
-      expect(icon).toHaveAttribute('aria-hidden', 'true')
+      expect(icon).toHaveAttribute('aria-label', 'Sunny')
     })
 
     it('should render short forecast text for each day', () => {
@@ -562,9 +575,9 @@ describe('SevenDayForecast', () => {
       render(<SevenDayForecast forecast={forecast} />)
 
       const button = screen.getByRole('button')
-      const icon = within(button).getByRole('presentation', { hidden: true })
+      const icon = within(button).getByTestId('weather-icon')
       expect(icon).toHaveAttribute('src', '')
-      expect(icon).toHaveAttribute('aria-hidden', 'true')
+      expect(icon).toHaveAttribute('aria-label', 'Unknown')
     })
 
     it('should handle unusual forecast period count', () => {
@@ -745,19 +758,20 @@ describe('SevenDayForecast', () => {
       expect(ariaLabel).toContain('16 km/h')
     })
 
-    it('should mark decorative icons as aria-hidden', () => {
+    it('should render weather icons with accessible labels', () => {
       const forecast = [
         createMockForecastPeriod({
           number: 1,
           isDaytime: true,
+          shortForecast: 'Partly Cloudy',
           probabilityOfPrecipitation: { value: 30 }
         })
       ]
       render(<SevenDayForecast forecast={forecast} />)
 
       const button = screen.getByRole('button')
-      const weatherIcon = within(button).getByRole('presentation', { hidden: true })
-      expect(weatherIcon).toHaveAttribute('aria-hidden', 'true')
+      const weatherIcon = within(button).getByTestId('weather-icon')
+      expect(weatherIcon).toHaveAttribute('aria-label', 'Partly Cloudy')
     })
 
     it('should have hover effects on day cards', () => {

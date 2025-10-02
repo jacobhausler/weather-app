@@ -4,6 +4,7 @@ import { GlassCard, CardContent, CardHeader, CardTitle } from '@/components/ui/g
 import { ForecastModal } from './ForecastModal'
 import { Droplets, Wind } from 'lucide-react'
 import { useUnitConversion } from '@/hooks/useUnitConversion'
+import { WeatherIcon } from './WeatherIcon'
 
 interface SevenDayForecastProps {
   forecast: ForecastPeriod[]
@@ -173,10 +174,10 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
                       {index === 0 ? 'Today' : getDayName(dayForecast.day.name)}
                     </div>
 
-                    <img
-                      src={dayForecast.day.icon}
-                      alt=""
-                      aria-hidden="true"
+                    <WeatherIcon
+                      nwsIconUrl={dayForecast.day.icon}
+                      shortForecast={dayForecast.day.shortForecast}
+                      size="md"
                       className="h-16 w-16"
                     />
 

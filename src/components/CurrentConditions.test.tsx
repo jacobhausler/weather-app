@@ -148,7 +148,9 @@ describe('CurrentConditions', () => {
 
       const img = screen.getByAltText('Sunny')
       expect(img).toBeInTheDocument()
-      expect(img).toHaveAttribute('src', forecast.icon)
+      // WeatherIcon component converts NWS URLs to custom icon paths
+      expect(img).toHaveAttribute('src')
+      expect(img.getAttribute('src')).toContain('.svg')
     })
 
     it('should display detailed forecast when available', () => {

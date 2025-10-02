@@ -8,6 +8,7 @@ import {
 import { format } from 'date-fns'
 import { Cloud, Droplets, Wind } from 'lucide-react'
 import { useUnitConversion } from '@/hooks/useUnitConversion'
+import { WeatherIcon } from './WeatherIcon'
 
 interface ForecastModalProps {
   period: ForecastPeriod | null
@@ -61,9 +62,10 @@ export function ForecastModal({ period, open, onClose }: ForecastModalProps) {
         <div className="space-y-6">
           {/* Weather Icon and Temperature */}
           <div className="flex items-center gap-6">
-            <img
-              src={period.icon}
-              alt={period.shortForecast}
+            <WeatherIcon
+              nwsIconUrl={period.icon}
+              shortForecast={period.shortForecast}
+              size="lg"
               className="h-24 w-24"
             />
             <div>

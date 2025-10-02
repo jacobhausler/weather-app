@@ -1,0 +1,443 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NWS Weather Icon Codes",
+  "description": "Complete mapping of National Weather Service icon condition codes",
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-02",
+  "source": "https://api.weather.gov/icons",
+  "deprecationStatus": "deprecated-but-active",
+  "icons": {
+    "skc": {
+      "code": "skc",
+      "description": "Fair/clear",
+      "longDescription": "Sky Clear (0 oktas cloud coverage)",
+      "category": "sky",
+      "dayNightVariants": true,
+      "metar": "SKC",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "few": {
+      "code": "few",
+      "description": "A few clouds",
+      "longDescription": "Few clouds (1-2 oktas cloud coverage)",
+      "category": "sky",
+      "dayNightVariants": true,
+      "metar": "FEW",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "sct": {
+      "code": "sct",
+      "description": "Partly cloudy",
+      "longDescription": "Scattered clouds (3-4 oktas cloud coverage)",
+      "category": "sky",
+      "dayNightVariants": true,
+      "metar": "SCT",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "bkn": {
+      "code": "bkn",
+      "description": "Mostly cloudy",
+      "longDescription": "Broken clouds (5-7 oktas cloud coverage)",
+      "category": "sky",
+      "dayNightVariants": true,
+      "metar": "BKN",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "ovc": {
+      "code": "ovc",
+      "description": "Overcast",
+      "longDescription": "Overcast (8 oktas cloud coverage)",
+      "category": "sky",
+      "dayNightVariants": true,
+      "metar": "OVC",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "wind_skc": {
+      "code": "wind_skc",
+      "description": "Fair/clear and windy",
+      "longDescription": "Fair/clear and windy conditions",
+      "category": "wind",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common",
+      "baseCondition": "skc"
+    },
+    "wind_few": {
+      "code": "wind_few",
+      "description": "A few clouds and windy",
+      "longDescription": "A few clouds and windy conditions",
+      "category": "wind",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common",
+      "baseCondition": "few"
+    },
+    "wind_sct": {
+      "code": "wind_sct",
+      "description": "Partly cloudy and windy",
+      "longDescription": "Partly cloudy and windy conditions",
+      "category": "wind",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common",
+      "baseCondition": "sct"
+    },
+    "wind_bkn": {
+      "code": "wind_bkn",
+      "description": "Mostly cloudy and windy",
+      "longDescription": "Mostly cloudy and windy conditions",
+      "category": "wind",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common",
+      "baseCondition": "bkn"
+    },
+    "wind_ovc": {
+      "code": "wind_ovc",
+      "description": "Overcast and windy",
+      "longDescription": "Overcast and windy conditions",
+      "category": "wind",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common",
+      "baseCondition": "ovc"
+    },
+    "snow": {
+      "code": "snow",
+      "description": "Snow",
+      "longDescription": "Snow",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "priority": 1,
+      "commonality": "common"
+    },
+    "rain_snow": {
+      "code": "rain_snow",
+      "description": "Rain/snow",
+      "longDescription": "Rain and snow mix",
+      "category": "precipitation-mixed",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "uncommon"
+    },
+    "rain_sleet": {
+      "code": "rain_sleet",
+      "description": "Rain/sleet",
+      "longDescription": "Rain and sleet mix",
+      "category": "precipitation-mixed",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "uncommon"
+    },
+    "snow_sleet": {
+      "code": "snow_sleet",
+      "description": "Snow/sleet",
+      "longDescription": "Snow and sleet mix",
+      "category": "precipitation-mixed",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "uncommon"
+    },
+    "fzra": {
+      "code": "fzra",
+      "description": "Freezing rain",
+      "longDescription": "Freezing rain",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "metar": "FZRA",
+      "priority": 2,
+      "commonality": "uncommon"
+    },
+    "rain_fzra": {
+      "code": "rain_fzra",
+      "description": "Rain/freezing rain",
+      "longDescription": "Rain and freezing rain mix",
+      "category": "precipitation-mixed",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "rare"
+    },
+    "snow_fzra": {
+      "code": "snow_fzra",
+      "description": "Freezing rain/snow",
+      "longDescription": "Freezing rain and snow mix",
+      "category": "precipitation-mixed",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "rare"
+    },
+    "sleet": {
+      "code": "sleet",
+      "description": "Sleet",
+      "longDescription": "Sleet (ice pellets)",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "uncommon"
+    },
+    "rain": {
+      "code": "rain",
+      "description": "Rain",
+      "longDescription": "Rain",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "metar": "RA",
+      "priority": 1,
+      "commonality": "very-common"
+    },
+    "rain_showers": {
+      "code": "rain_showers",
+      "description": "Rain showers (high cloud cover)",
+      "longDescription": "Rain showers with high cloud cover",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "metar": "SHRA",
+      "priority": 2,
+      "commonality": "common"
+    },
+    "rain_showers_hi": {
+      "code": "rain_showers_hi",
+      "description": "Rain showers (low cloud cover)",
+      "longDescription": "Rain showers with low cloud cover",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common"
+    },
+    "tsra": {
+      "code": "tsra",
+      "description": "Thunderstorm (high cloud cover)",
+      "longDescription": "Thunderstorm with rain and high cloud cover",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "metar": "TSRA",
+      "priority": 1,
+      "commonality": "common"
+    },
+    "tsra_sct": {
+      "code": "tsra_sct",
+      "description": "Thunderstorm (medium cloud cover)",
+      "longDescription": "Thunderstorm with rain and medium cloud cover",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common"
+    },
+    "tsra_hi": {
+      "code": "tsra_hi",
+      "description": "Thunderstorm (low cloud cover)",
+      "longDescription": "Thunderstorm with rain and low cloud cover",
+      "category": "precipitation",
+      "dayNightVariants": true,
+      "priority": 2,
+      "commonality": "common"
+    },
+    "tornado": {
+      "code": "tornado",
+      "description": "Tornado",
+      "longDescription": "Tornado",
+      "category": "severe",
+      "dayNightVariants": false,
+      "priority": 4,
+      "commonality": "rare"
+    },
+    "hurricane": {
+      "code": "hurricane",
+      "description": "Hurricane conditions",
+      "longDescription": "Hurricane conditions",
+      "category": "severe",
+      "dayNightVariants": false,
+      "priority": 4,
+      "commonality": "rare"
+    },
+    "tropical_storm": {
+      "code": "tropical_storm",
+      "description": "Tropical storm conditions",
+      "longDescription": "Tropical storm conditions",
+      "category": "severe",
+      "dayNightVariants": false,
+      "priority": 4,
+      "commonality": "rare"
+    },
+    "dust": {
+      "code": "dust",
+      "description": "Dust",
+      "longDescription": "Dust",
+      "category": "visibility",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "rare"
+    },
+    "smoke": {
+      "code": "smoke",
+      "description": "Smoke",
+      "longDescription": "Smoke",
+      "category": "visibility",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "uncommon"
+    },
+    "haze": {
+      "code": "haze",
+      "description": "Haze",
+      "longDescription": "Haze",
+      "category": "visibility",
+      "dayNightVariants": true,
+      "metar": "HZ",
+      "priority": 3,
+      "commonality": "uncommon"
+    },
+    "hot": {
+      "code": "hot",
+      "description": "Hot",
+      "longDescription": "Hot conditions",
+      "category": "temperature",
+      "dayNightVariants": false,
+      "dayOnly": true,
+      "priority": 4,
+      "commonality": "uncommon"
+    },
+    "cold": {
+      "code": "cold",
+      "description": "Cold",
+      "longDescription": "Cold conditions",
+      "category": "temperature",
+      "dayNightVariants": true,
+      "priority": 4,
+      "commonality": "uncommon"
+    },
+    "blizzard": {
+      "code": "blizzard",
+      "description": "Blizzard",
+      "longDescription": "Blizzard conditions",
+      "category": "severe",
+      "dayNightVariants": true,
+      "priority": 3,
+      "commonality": "rare"
+    },
+    "fog": {
+      "code": "fog",
+      "description": "Fog/mist",
+      "longDescription": "Fog or mist",
+      "category": "visibility",
+      "dayNightVariants": true,
+      "metar": "FG",
+      "priority": 2,
+      "commonality": "common"
+    }
+  },
+  "categories": {
+    "sky": {
+      "name": "Sky Conditions",
+      "description": "Cloud coverage levels without precipitation",
+      "codes": ["skc", "few", "sct", "bkn", "ovc"]
+    },
+    "wind": {
+      "name": "Windy Conditions",
+      "description": "Sky conditions combined with windy weather",
+      "codes": ["wind_skc", "wind_few", "wind_sct", "wind_bkn", "wind_ovc"]
+    },
+    "precipitation": {
+      "name": "Precipitation",
+      "description": "Rain, snow, ice, and thunderstorms",
+      "codes": ["rain", "rain_showers", "rain_showers_hi", "tsra", "tsra_sct", "tsra_hi", "snow", "sleet", "fzra"]
+    },
+    "precipitation-mixed": {
+      "name": "Mixed Precipitation",
+      "description": "Combinations of different precipitation types",
+      "codes": ["rain_snow", "rain_sleet", "snow_sleet", "rain_fzra", "snow_fzra"]
+    },
+    "visibility": {
+      "name": "Visibility Conditions",
+      "description": "Fog, dust, smoke, and haze affecting visibility",
+      "codes": ["fog", "dust", "smoke", "haze"]
+    },
+    "severe": {
+      "name": "Severe Weather",
+      "description": "Severe and dangerous weather conditions",
+      "codes": ["blizzard", "tornado", "hurricane", "tropical_storm"]
+    },
+    "temperature": {
+      "name": "Temperature Extremes",
+      "description": "Extreme hot or cold conditions",
+      "codes": ["hot", "cold"]
+    }
+  },
+  "priorities": {
+    "1": {
+      "level": "Critical",
+      "description": "Most common conditions, required for basic functionality",
+      "codes": ["skc", "few", "sct", "bkn", "ovc", "rain", "tsra", "snow"]
+    },
+    "2": {
+      "level": "Important",
+      "description": "Common conditions that should be supported",
+      "codes": ["wind_skc", "wind_few", "wind_sct", "wind_bkn", "wind_ovc", "rain_showers", "rain_showers_hi", "tsra_sct", "tsra_hi", "fog", "sleet", "fzra"]
+    },
+    "3": {
+      "level": "Useful",
+      "description": "Less common but important conditions",
+      "codes": ["rain_snow", "rain_sleet", "snow_sleet", "rain_fzra", "snow_fzra", "dust", "smoke", "haze", "blizzard"]
+    },
+    "4": {
+      "level": "Rare",
+      "description": "Rare or special conditions",
+      "codes": ["tornado", "hurricane", "tropical_storm", "hot", "cold"]
+    }
+  },
+  "urlPattern": {
+    "base": "https://api.weather.gov/icons",
+    "format": "{base}/{set}/{timeOfDay}/{condition}",
+    "parameters": {
+      "set": ["land", "marine"],
+      "timeOfDay": ["day", "night"],
+      "condition": "Icon code from the list above",
+      "size": ["small", "medium", "large"]
+    },
+    "examples": [
+      "https://api.weather.gov/icons/land/day/skc?size=medium",
+      "https://api.weather.gov/icons/land/night/tsra?size=medium",
+      "https://api.weather.gov/icons/land/day/tsra_hi,40?size=medium",
+      "https://api.weather.gov/icons/land/day/sct,0/rain,40?size=medium"
+    ]
+  },
+  "splitIconFormat": {
+    "description": "Icons can represent changing conditions within a forecast period",
+    "pattern": "{condition1}[,{percentage1}]/{condition2}[,{percentage2}]",
+    "examples": [
+      "tsra_hi,20/tsra_hi,50",
+      "sct,0/rain,40",
+      "few/tsra,30"
+    ],
+    "interpretation": {
+      "split": "Two 6-hour segments within a 12-hour period",
+      "percentage": "Probability of precipitation (0-100)",
+      "order": "First segment is earlier, second is later"
+    }
+  },
+  "metarAbbreviations": {
+    "SKC": "Sky Clear",
+    "FEW": "Few (1-2 oktas)",
+    "SCT": "Scattered (3-4 oktas)",
+    "BKN": "Broken (5-7 oktas)",
+    "OVC": "Overcast (8 oktas)",
+    "TSRA": "Thunderstorms and Rain",
+    "FZRA": "Freezing Rain",
+    "SHRA": "Rain Showers",
+    "FG": "Fog",
+    "HZ": "Haze",
+    "RA": "Rain"
+  },
+  "oktaScale": {
+    "0": "SKC - Sky Clear",
+    "1-2": "FEW - Few clouds",
+    "3-4": "SCT - Scattered clouds",
+    "5-7": "BKN - Broken clouds",
+    "8": "OVC - Overcast"
+  }
+}
