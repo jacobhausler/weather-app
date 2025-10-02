@@ -437,7 +437,7 @@ describe('WeatherIcon', () => {
       fireEvent.error(img);
 
       await waitFor(() => {
-        expect(img).toHaveAttribute('src', '/src/assets/weather-icons/animated/cloudy.svg');
+        expect(img).toHaveAttribute('src', '/weather-icons/animated/cloudy.svg');
       });
     });
 

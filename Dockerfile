@@ -17,8 +17,9 @@ COPY index.html ./
 # Install frontend dependencies
 RUN npm ci --only=production=false
 
-# Copy frontend source code
+# Copy frontend source code and public assets
 COPY src ./src
+COPY public ./public
 
 # Build frontend for production
 RUN npm run build

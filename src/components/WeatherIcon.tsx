@@ -49,7 +49,7 @@ export function WeatherIcon({
 
   // Get the custom icon path from the NWS URL
   const iconPath = hasError
-    ? '/src/assets/weather-icons/animated/cloudy.svg'
+    ? '/weather-icons/animated/cloudy.svg'
     : getWeatherIconFromUrl(nwsIconUrl, animated)
 
   // Generate accessible alt text
