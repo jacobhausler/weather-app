@@ -383,53 +383,53 @@ describe('weatherIconMapper', () => {
     describe('mapped conditions', () => {
       it('should return day icon for daytime sky condition', () => {
         const result = getWeatherIconPath('skc', true);
-        expect(result).toBe('/src/assets/weather-icons/animated/clear-day.svg');
+        expect(result).toBe('/weather-icons/animated/clear-day.svg');
       });
 
       it('should return night icon for nighttime sky condition', () => {
         const result = getWeatherIconPath('skc', false);
-        expect(result).toBe('/src/assets/weather-icons/animated/clear-night.svg');
+        expect(result).toBe('/weather-icons/animated/clear-night.svg');
       });
 
       it('should return day thunderstorm icon', () => {
         const result = getWeatherIconPath('tsra_hi', true);
-        expect(result).toBe('/src/assets/weather-icons/animated/isolated-thunderstorms-day.svg');
+        expect(result).toBe('/weather-icons/animated/isolated-thunderstorms-day.svg');
       });
 
       it('should return night thunderstorm icon', () => {
         const result = getWeatherIconPath('tsra_hi', false);
-        expect(result).toBe('/src/assets/weather-icons/animated/isolated-thunderstorms-night.svg');
+        expect(result).toBe('/weather-icons/animated/isolated-thunderstorms-night.svg');
       });
 
       it('should return same icon for day/night when no variant exists', () => {
         const dayResult = getWeatherIconPath('rain', true);
         const nightResult = getWeatherIconPath('rain', false);
 
-        expect(dayResult).toBe('/src/assets/weather-icons/animated/rainy-3.svg');
-        expect(nightResult).toBe('/src/assets/weather-icons/animated/rainy-3.svg');
+        expect(dayResult).toBe('/weather-icons/animated/rainy-3.svg');
+        expect(nightResult).toBe('/weather-icons/animated/rainy-3.svg');
       });
 
       it('should handle wind variants correctly', () => {
         const result = getWeatherIconPath('wind_skc', true);
-        expect(result).toBe('/src/assets/weather-icons/animated/clear-day.svg');
+        expect(result).toBe('/weather-icons/animated/clear-day.svg');
       });
 
       it('should handle snow conditions', () => {
         const result = getWeatherIconPath('snow', true);
-        expect(result).toBe('/src/assets/weather-icons/animated/snowy-3.svg');
+        expect(result).toBe('/weather-icons/animated/snowy-3.svg');
       });
 
       it('should handle severe weather', () => {
         const result = getWeatherIconPath('tornado', true);
-        expect(result).toBe('/src/assets/weather-icons/animated/tornado.svg');
+        expect(result).toBe('/weather-icons/animated/tornado.svg');
       });
 
       it('should handle visibility conditions', () => {
         const dayResult = getWeatherIconPath('haze', true);
         const nightResult = getWeatherIconPath('haze', false);
 
-        expect(dayResult).toBe('/src/assets/weather-icons/animated/haze-day.svg');
-        expect(nightResult).toBe('/src/assets/weather-icons/animated/haze-night.svg');
+        expect(dayResult).toBe('/weather-icons/animated/haze-day.svg');
+        expect(nightResult).toBe('/weather-icons/animated/haze-night.svg');
       });
     });
 
@@ -437,7 +437,7 @@ describe('weatherIconMapper', () => {
       it('should use fallback for unmapped code and log warning', () => {
         const result = getWeatherIconPath('unknown_code', true);
 
-        expect(result).toBe('/src/assets/weather-icons/animated/cloudy-2-day.svg');
+        expect(result).toBe('/weather-icons/animated/cloudy-2-day.svg');
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           'No icon mapping found for NWS code: unknown_code. Using fallback.'
         );
@@ -446,14 +446,14 @@ describe('weatherIconMapper', () => {
       it('should use rain fallback for unmapped rain code', () => {
         const result = getWeatherIconPath('heavy_rain', true);
 
-        expect(result).toBe('/src/assets/weather-icons/animated/rainy-2.svg');
+        expect(result).toBe('/weather-icons/animated/rainy-2.svg');
         expect(consoleWarnSpy).toHaveBeenCalled();
       });
 
       it('should use snow fallback for unmapped snow code', () => {
         const result = getWeatherIconPath('heavy_snow', false);
 
-        expect(result).toBe('/src/assets/weather-icons/animated/snowy-2.svg');
+        expect(result).toBe('/weather-icons/animated/snowy-2.svg');
         expect(consoleWarnSpy).toHaveBeenCalled();
       });
     });
@@ -471,7 +471,7 @@ describe('weatherIconMapper', () => {
 
       it('should use static folder when animated=false', () => {
         const result = getWeatherIconPath('skc', true, false);
-        expect(result).toBe('/src/assets/weather-icons/static/clear-day.svg');
+        expect(result).toBe('/weather-icons/static/clear-day.svg');
         expect(result).toContain('/static/');
       });
 
@@ -519,35 +519,35 @@ describe('weatherIconMapper', () => {
       const url = 'https://api.weather.gov/icons/land/day/tsra_hi,20?size=medium';
       const result = getWeatherIconFromUrl(url);
 
-      expect(result).toBe('/src/assets/weather-icons/animated/isolated-thunderstorms-day.svg');
+      expect(result).toBe('/weather-icons/animated/isolated-thunderstorms-day.svg');
     });
 
     it('should parse URL and return correct night icon path', () => {
       const url = 'https://api.weather.gov/icons/land/night/skc?size=small';
       const result = getWeatherIconFromUrl(url);
 
-      expect(result).toBe('/src/assets/weather-icons/animated/clear-night.svg');
+      expect(result).toBe('/weather-icons/animated/clear-night.svg');
     });
 
     it('should handle split icon URL correctly', () => {
       const url = 'https://api.weather.gov/icons/land/day/sct/rain,40?size=medium';
       const result = getWeatherIconFromUrl(url);
 
-      expect(result).toBe('/src/assets/weather-icons/animated/rainy-3.svg');
+      expect(result).toBe('/weather-icons/animated/rainy-3.svg');
     });
 
     it('should respect animated parameter', () => {
       const url = 'https://api.weather.gov/icons/land/day/few?size=medium';
       const result = getWeatherIconFromUrl(url, false);
 
-      expect(result).toBe('/src/assets/weather-icons/static/cloudy-1-day.svg');
+      expect(result).toBe('/weather-icons/static/cloudy-1-day.svg');
     });
 
     it('should handle invalid URL gracefully', () => {
       const url = 'https://invalid.com/path';
       const result = getWeatherIconFromUrl(url);
 
-      expect(result).toBe('/src/assets/weather-icons/animated/clear-day.svg');
+      expect(result).toBe('/weather-icons/animated/clear-day.svg');
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
 
@@ -560,7 +560,7 @@ describe('weatherIconMapper', () => {
 
       urls.forEach((url) => {
         const result = getWeatherIconFromUrl(url);
-        expect(result).toBe('/src/assets/weather-icons/animated/rainy-3.svg');
+        expect(result).toBe('/weather-icons/animated/rainy-3.svg');
       });
     });
   });

@@ -413,13 +413,13 @@ export function getFallbackIcon(nwsCode: string): string {
  * @example
  * ```typescript
  * getWeatherIconPath('tsra_hi', true, true);
- * // Returns: "/src/assets/weather-icons/animated/isolated-thunderstorms-day.svg"
+ * // Returns: "/weather-icons/animated/isolated-thunderstorms-day.svg"
  * ```
  *
  * @example
  * ```typescript
  * getWeatherIconPath('skc', false, true);
- * // Returns: "/src/assets/weather-icons/animated/clear-night.svg"
+ * // Returns: "/weather-icons/animated/clear-night.svg"
  * ```
  */
 export function getWeatherIconPath(
@@ -433,13 +433,13 @@ export function getWeatherIconPath(
   if (!mapping) {
     console.warn(`No icon mapping found for NWS code: ${nwsCode}. Using fallback.`);
     const fallbackFilename = getFallbackIcon(nwsCode);
-    return `/src/assets/weather-icons/${baseFolder}/${fallbackFilename}`;
+    return `/weather-icons/${baseFolder}/${fallbackFilename}`;
   }
 
   // Select appropriate icon based on time of day
   const iconFilename = isDaytime ? mapping.day : mapping.night;
 
-  return `/src/assets/weather-icons/${baseFolder}/${iconFilename}`;
+  return `/weather-icons/${baseFolder}/${iconFilename}`;
 }
 
 /**
@@ -453,7 +453,7 @@ export function getWeatherIconPath(
  * @example
  * ```typescript
  * getWeatherIconFromUrl("https://api.weather.gov/icons/land/day/tsra_hi,20?size=medium");
- * // Returns: "/src/assets/weather-icons/animated/isolated-thunderstorms-day.svg"
+ * // Returns: "/weather-icons/animated/isolated-thunderstorms-day.svg"
  * ```
  */
 export function getWeatherIconFromUrl(nwsIconUrl: string, animated = true): string {
