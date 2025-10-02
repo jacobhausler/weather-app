@@ -4,6 +4,27 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 
 ## Completed Items
 
+### ✓ GitHub Actions Build Failures - Unused Opacity Prop in GlassCard (P0)
+**Status**: RESOLVED (2025-10-02)
+
+**Issue**: GitHub Actions CI/CD pipeline was failing during lint step for frontend builds. ESLint error in `src/components/ui/glass-card.tsx:55` - unused `opacity` prop parameter that was declared in the interface and destructured but never used in implementation.
+
+**Root Cause**: The glassmorphism implementation (commits 2221aa0 through 39f55ed) introduced a GlassCard component with an `opacity` prop that was never utilized. Opacity is controlled via CSS variables (--glass-bg-light/dark) in the design system.
+
+**Timeline**:
+- Last successful build: 2025-10-02 15:29:50 (commit b98cb90)
+- First failure: 2025-10-02 15:52:32 (commit 2221aa0)
+- 4 consecutive failed builds
+- Fixed: 2025-10-02 16:20:24 (commit c96941d)
+
+**Resolution**: Removed unused `opacity` prop from GlassCardProps interface and component destructuring. This aligns with the "SIMPLICITY IS PARAMOUNT" principle.
+
+**Files Modified**: src/components/ui/glass-card.tsx
+
+**Impact**: CI/CD pipeline restored, automated builds and deployments to GHCR operational.
+
+---
+
 ### ✓ GitHub Actions Build Failures - ESLint Configuration Missing
 **Status**: RESOLVED (2025-09-30)
 

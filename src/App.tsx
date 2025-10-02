@@ -79,28 +79,24 @@ function App() {
               </Suspense>
             )}
 
-            {/* 7-Day Forecast Card - Centered with max-width */}
+            {/* 7-Day Forecast Card - Same width as row below */}
             {weatherData.forecast && weatherData.forecast.length > 0 && (
-              <div className="flex justify-center">
-                <div className="w-full max-w-4xl">
-                  <Suspense fallback={
-                    <Card>
-                      <CardHeader>
-                        <Skeleton className="h-6 w-32" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex gap-4 overflow-x-auto pb-2">
-                          {[...Array(7)].map((_, i) => (
-                            <Skeleton key={i} className="min-w-[140px] h-48" />
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  }>
-                    <SevenDayForecast forecast={weatherData.forecast} />
-                  </Suspense>
-                </div>
-              </div>
+              <Suspense fallback={
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {[...Array(7)].map((_, i) => (
+                        <Skeleton key={i} className="min-w-[140px] h-48" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              }>
+                <SevenDayForecast forecast={weatherData.forecast} />
+              </Suspense>
             )}
 
             {/* Current Conditions + Hourly Forecast - Side by side on larger screens */}
