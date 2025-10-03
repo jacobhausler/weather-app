@@ -128,7 +128,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
   }
 
   return (
-    <GlassCard blur="lg" interactive className="shadow-glass">
+    <GlassCard blur="lg" gradient interactive className="shadow-glass border border-white/30 dark:border-white/15">
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-white dark:text-gray-100">Hourly Forecast</CardTitle>
