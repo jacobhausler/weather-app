@@ -1,8 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, renderHook } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { act } from 'react'
 import { SevenDayForecast } from './SevenDayForecast'
 import { ForecastPeriod } from '@/types/weather'
 import userEvent from '@testing-library/user-event'
+import { useUnitStore } from '@/stores/unitStore'
 
 // Mock the WeatherIcon component
 vi.mock('./WeatherIcon', () => ({
@@ -51,8 +53,12 @@ describe('SevenDayForecast', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear()
-    // Set default unit system to imperial
-    localStorage.setItem('unit-system', JSON.stringify('imperial'))
+
+    // Reset Zustand store to imperial
+    const { result } = renderHook(() => useUnitStore())
+    act(() => {
+      result.current.setUnitSystem('imperial')
+    })
   })
 
   describe('Rendering with forecast data', () => {
@@ -179,7 +185,11 @@ describe('SevenDayForecast', () => {
 
   describe('Temperature display and conversion', () => {
     it('should display high temperature in Fahrenheit for imperial system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('imperial')
+      })
+
       const forecast = [
         createMockForecastPeriod({ number: 1, temperature: 75, isDaytime: true })
       ]
@@ -212,7 +222,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert temperatures to Celsius in metric system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -232,7 +246,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should round temperatures correctly when converting', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -246,7 +264,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should handle freezing temperatures correctly', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -260,7 +282,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should handle negative temperatures correctly', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('imperial')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -357,7 +383,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert wind speed to km/h in metric system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -398,7 +428,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should convert larger wind speeds correctly', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -728,7 +762,11 @@ describe('SevenDayForecast', () => {
     })
 
     it('should have aria-label with metric units when in metric mode', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -807,6 +845,8 @@ describe('SevenDayForecast', () => {
 
   describe('Unit system reactivity', () => {
     it('should update temperatures when unit system changes', () => {
+      const { result } = renderHook(() => useUnitStore())
+
       const forecast = [
         createMockForecastPeriod({ number: 1, temperature: 68, isDaytime: true })
       ]
@@ -815,12 +855,9 @@ describe('SevenDayForecast', () => {
       expect(screen.getByText(/68°F/)).toBeInTheDocument()
 
       // Change to metric
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
-      // Dispatch storage event to trigger useLocalStorage update
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'unit-system',
-        newValue: JSON.stringify('metric')
-      }))
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
       rerender(<SevenDayForecast forecast={forecast} />)
 
       // 68°F = 20°C
@@ -829,6 +866,8 @@ describe('SevenDayForecast', () => {
     })
 
     it('should update wind speeds when unit system changes', () => {
+      const { result } = renderHook(() => useUnitStore())
+
       const forecast = [
         createMockForecastPeriod({
           number: 1,
@@ -841,12 +880,9 @@ describe('SevenDayForecast', () => {
       expect(screen.getByText(/20 mph/)).toBeInTheDocument()
 
       // Change to metric
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
-      // Dispatch storage event to trigger useLocalStorage update
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'unit-system',
-        newValue: JSON.stringify('metric')
-      }))
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
       rerender(<SevenDayForecast forecast={forecast} />)
 
       // 20 mph = 32 km/h

@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, renderHook } from '@testing-library/react'
+import { act } from 'react'
 import userEvent from '@testing-library/user-event'
 import { HourlyForecast } from './HourlyForecast'
 import { HourlyForecast as HourlyForecastType } from '@/types/weather'
+import { useUnitStore } from '@/stores/unitStore'
 
 describe('HourlyForecast', () => {
   // Helper function to create mock hourly forecast data
@@ -34,8 +36,12 @@ describe('HourlyForecast', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear()
-    // Set default unit system to imperial
-    localStorage.setItem('unit-system', JSON.stringify('imperial'))
+
+    // Reset Zustand store to imperial
+    const { result } = renderHook(() => useUnitStore())
+    act(() => {
+      result.current.setUnitSystem('imperial')
+    })
   })
 
   describe('Component rendering', () => {
@@ -291,7 +297,7 @@ describe('HourlyForecast', () => {
 
   describe('Temperature conversion (Imperial/Metric)', () => {
     it('should display temperature in Fahrenheit for imperial system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(24)
       // Set specific temperature
@@ -305,7 +311,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should convert temperature to Celsius for metric system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'metric' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(24)
       // 32°F should convert to 0°C
@@ -319,7 +325,10 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 32°F to 0°C', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
 
       const mockData = [
         {
@@ -337,7 +346,10 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 212°F to 100°C', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
 
       const mockData = [
         {
@@ -354,7 +366,10 @@ describe('HourlyForecast', () => {
     })
 
     it('should correctly convert 68°F to 20°C', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
 
       const mockData = [
         {
@@ -371,7 +386,10 @@ describe('HourlyForecast', () => {
     })
 
     it('should round temperature conversions to nearest integer', () => {
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
 
       const mockData = [
         {
@@ -390,7 +408,7 @@ describe('HourlyForecast', () => {
 
   describe('Wind speed conversion (Imperial/Metric)', () => {
     it('should display wind speed in mph for imperial system', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(24)
       mockData[0]!.windSpeed = '15 mph'
@@ -404,7 +422,7 @@ describe('HourlyForecast', () => {
 
     it('should convert wind speed to km/h for metric system', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'metric' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(24)
       mockData[0]!.windSpeed = '10 mph' // 10 mph ≈ 16 km/h
@@ -421,7 +439,7 @@ describe('HourlyForecast', () => {
 
     it('should parse wind speed from string format correctly', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.windSpeed = '5 mph'
@@ -439,7 +457,7 @@ describe('HourlyForecast', () => {
 
     it('should handle missing wind speed data', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(1)
       mockData[0]!.windSpeed = ''
@@ -455,7 +473,10 @@ describe('HourlyForecast', () => {
 
     it('should correctly convert 10 mph to 16 km/h', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('metric'))
+      const { result } = renderHook(() => useUnitStore())
+      act(() => {
+        result.current.setUnitSystem('metric')
+      })
 
       const mockData = [
         {
@@ -625,7 +646,7 @@ describe('HourlyForecast', () => {
 
     it('should calculate stats for wind speed data', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(5)
       mockData[0]!.windSpeed = '5 mph'
@@ -835,7 +856,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should handle negative temperature values', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.temperature = -10
@@ -877,7 +898,7 @@ describe('HourlyForecast', () => {
 
     it('should handle very high wind speeds', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(1)
       mockData[0]!.windSpeed = '150 mph' // Hurricane force
@@ -891,7 +912,7 @@ describe('HourlyForecast', () => {
     })
 
     it('should handle extreme temperature values', () => {
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(2)
       mockData[0]!.temperature = -50 // Extreme cold
@@ -908,7 +929,7 @@ describe('HourlyForecast', () => {
 
     it('should handle malformed wind speed strings gracefully', async () => {
       const user = userEvent.setup()
-      localStorage.setItem('unit-system', JSON.stringify('imperial'))
+      localStorage.setItem('unit-storage', JSON.stringify({ state: { unitSystem: 'imperial' }, version: 0 }))
 
       const mockData = createMockHourlyForecast(3)
       mockData[0]!.windSpeed = 'calm'
