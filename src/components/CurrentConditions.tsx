@@ -103,7 +103,7 @@ export function CurrentConditions({
   const distanceUnit = getDistanceUnit(unitSystem)
 
   return (
-    <GlassCard blur="xl" gradient interactive className="shadow-glass-lg">
+    <GlassCard blur="lg" gradient interactive className="shadow-glass">
       <CardHeader>
         <CardTitle className="text-white dark:text-gray-100">Current Conditions</CardTitle>
       </CardHeader>

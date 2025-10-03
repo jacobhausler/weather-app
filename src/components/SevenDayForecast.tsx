@@ -147,7 +147,7 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
 
   return (
     <>
-      <GlassCard blur="lg" gradient interactive>
+      <GlassCard blur="lg" gradient interactive className="shadow-glass">
         <CardHeader>
           <CardTitle className="text-white dark:text-gray-100">7-Day Forecast</CardTitle>
         </CardHeader>
