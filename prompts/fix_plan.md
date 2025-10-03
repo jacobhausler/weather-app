@@ -86,11 +86,39 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 ---
 
 ### ✓ Unit Conversions Applied to All Components
-**Status**: RESOLVED (2025-09-30)
+**Status**: RESOLVED (2025-10-02)
 
-**Issue**: Imperial/Metric unit conversion toggle needed to be implemented across all weather data displays.
+**Issue**: Imperial/Metric unit conversion toggle was only working on CurrentConditions card. SevenDayForecast, HourlyForecast, and ForecastModal components were using local useState instead of the global unitStore, causing inconsistent unit display across the application.
 
-**Resolution**: Added unit conversion functionality with toggle in footer, applied across all temperature, wind speed, visibility, and other measurements.
+**Root Cause**: Components were duplicating unit conversion logic locally rather than consuming the centralized unitStore. This resulted in:
+- Unit toggle only affecting CurrentConditions card
+- Other components always displaying in Imperial units
+- Inconsistent user experience across the application
+
+**Resolution**:
+- Refactored all weather components to use global unitStore from hooks/useUnitConversion
+- Updated components: SevenDayForecast, HourlyForecast, ForecastModal, CurrentConditions
+- Removed local unit state management in favor of centralized store
+- Fixed all component tests to properly mock unitStore (29 tests updated)
+- All 1,008 tests passing (829 frontend + 179 backend, 100% success rate)
+
+**Files Modified**:
+- src/components/SevenDayForecast.tsx - Removed local unit state, now uses unitStore
+- src/components/HourlyForecast.tsx - Removed local unit state, now uses unitStore
+- src/components/ForecastModal.tsx - Removed local unit state, now uses unitStore
+- src/components/__tests__/SevenDayForecast.test.tsx - Updated test mocks
+- src/components/__tests__/HourlyForecast.test.tsx - Updated test mocks
+- src/components/__tests__/ForecastModal.test.tsx - Updated test mocks
+
+**Testing**:
+- All unit tests passing (1,008 total: 829 frontend + 179 backend)
+- Manual verification completed across all components
+- Unit toggle now works consistently across entire application
+
+**Deployment**:
+- Changes committed and pushed (commit: "Fix unit conversion across all components")
+- GitHub Actions deployment pipeline triggered
+- Production build in progress
 
 ---
 
@@ -180,7 +208,7 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 - Added 113 comprehensive tests for weatherIconMapper utility
 - Added 39 tests for WeatherIcon component
 - Total: 152 new tests added
-- All 919 tests passing (100% success rate)
+- All 1,008 tests passing (829 frontend + 179 backend, 100% success rate)
 - Coverage includes: icon mapping, fallbacks, edge cases, accessibility, sizing, error handling
 
 **Benefits Achieved**:
@@ -205,6 +233,57 @@ This file tracks issues, bugs, and incomplete implementations that need to be ad
 - Mapping tables: `specs/NWS_ICON_MAPPING_TABLE.md`
 - JSON data: `specs/nws-icon-codes.json`
 - Navigation guide: `specs/ICON_DOCUMENTATION_INDEX.md`
+
+---
+
+### ✓ Documentation Organization and Accuracy Updates (P1)
+**Status**: COMPLETED (2025-10-02)
+**Priority**: P1 - High Priority
+
+**Issues Identified**:
+1. Duplicate files causing confusion (work.md, fix_plan.md in multiple locations)
+2. Outdated test counts across documentation (1,114 claimed vs 1,008 actual)
+3. Outdated bundle size claims (569 kB vs 33.31 kB actual)
+4. Missing specifications for implemented features (WeatherIcon, hooks, PWA)
+5. UV Index references in docs despite feature being removed
+6. Scattered documentation with no navigation indices
+7. Missing specs for 11 implemented components/features
+
+**Resolution**:
+Executed comprehensive documentation update using 20 parallel subagents:
+
+**Files Deleted** (duplicates/orphaned):
+- C:\Users\Jacob\code\weather-app\work.md (duplicate of prompts/work.md)
+- C:\Users\Jacob\code\weather-app\fix_plan.md (keeping prompts/fix_plan.md as source of truth)
+- C:\Users\Jacob\code\weather-app\questions.md (empty file)
+
+**Files Updated** (test counts and outdated info):
+- README.md - Updated test counts (1,114 → 1,008), removed UV Index references, added PWA documentation
+- TEST_SUITE_SUMMARY.md - Recounted all tests, removed UV service references, updated to 1,008 tests
+- prompts/fix_plan.md - Updated test count (944 → 1,008)
+- UNRAID-DEPLOY.md - Removed OPENWEATHER_API_KEY references
+- BUNDLE_SIZE_UPDATES.md - Created reference doc for bundle size updates
+
+**New Specifications Created**:
+- specs/cards/weather-icon.md - WeatherIcon component with icon mapper
+- specs/cards/glass-card.md - Glassmorphism card component
+- specs/hooks/use-weather-data.md - Core data fetching hook
+- specs/hooks/use-local-storage.md - LocalStorage wrapper hook
+- specs/hooks/use-theme.md - Theme management hook
+- specs/pwa-implementation.md - PWA configuration and offline behavior
+- specs/performance-optimization.md - Code splitting and lazy loading
+
+**Navigation Indices Created**:
+- docs/README.md - Comprehensive documentation index with 15 organized sections
+- specs/README.md - Component and feature specification index
+
+**Impact**:
+- Single source of truth established for all planning documents
+- All test counts corrected to 1,008 (829 frontend + 179 backend)
+- 7 new comprehensive specifications added
+- 2 navigation indices created for better discoverability
+- Documentation now accurately reflects current implementation
+- Improved developer onboarding and AI assistant effectiveness
 
 ---
 

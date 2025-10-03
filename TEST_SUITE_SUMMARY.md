@@ -2,7 +2,7 @@
 
 **Date Completed**: September 30, 2025
 **Status**: ✅ COMPLETE
-**Total Tests**: 700+ real, substantive tests
+**Total Tests**: 1,008 real, substantive tests (829 frontend + 179 backend)
 **Test Philosophy**: No mocks, no placeholders - testing actual functionality
 
 ---
@@ -13,7 +13,7 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 
 ### Key Achievements
 
-- ✅ **700+ tests** created across backend and frontend
+- ✅ **1,008 tests** created across backend and frontend (829 frontend + 179 backend)
 - ✅ **Zero test infrastructure** → **Full Vitest setup** with React Testing Library
 - ✅ **All critical bugs** now have regression tests to prevent reoccurrence
 - ✅ **CI/CD integration** - tests run automatically on every commit
@@ -23,33 +23,34 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 
 ## Test Suite Statistics
 
-### Backend Tests: 350+ tests
+### Backend Tests: 179 tests
 
 | Category | Tests | Files |
 |----------|-------|-------|
-| Service Tests | 282 | 6 files |
-| API Endpoint Tests | 40 | 1 file |
-| Regression Tests | 25 | 1 file |
-| **Total Backend** | **347** | **8 files** |
+| Service Tests | ~150 | 3 files |
+| API Endpoint Tests | ~24 | 1 file |
+| Regression Tests | ~5 | 1 file |
+| **Total Backend** | **179** | **5 files** |
 
-### Frontend Tests: 350+ tests
+### Frontend Tests: 829 tests
 
 | Category | Tests | Files |
 |----------|-------|-------|
-| Component Tests | 446 | 9 files |
-| Hook & Store Tests | 298 | 5 files |
-| Regression Tests | 23 | 1 file |
-| **Total Frontend** | **767** | **15 files** |
+| Component Tests | ~650 | 10 files |
+| Hook & Store Tests | ~130 | 2 files |
+| Utility Tests | ~26 | 1 file |
+| Regression Tests | ~23 | 1 file |
+| **Total Frontend** | **829** | **16 files** |
 
-### Grand Total: **1,114 tests** across **23 test files**
+### Grand Total: **1,008 tests** across **21 test files**
 
 ---
 
 ## Backend Test Coverage
 
-### Service Tests (282 tests across 6 files)
+### Service Tests (3 files)
 
-#### 1. **geocodingService.test.ts** - 44 tests
+#### 1. **geocodingService.test.ts**
 - Valid ZIP code geocoding with real API calls
 - Invalid ZIP format validation (4-digit, 6-digit, letters, special chars)
 - Coordinate validation for US geographic bounds
@@ -63,35 +64,7 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 - Tests real ZIP codes (75454, 75070, 75035, 10001, 90210)
 - No mocked API responses
 
-#### 2. **cacheService.test.ts** - 93 tests
-- Basic operations (get, set, delete, has, keys)
-- TTL expiration with real setTimeout timing
-- Cache statistics tracking (hits, misses, key counts)
-- Bulk operations (mget, mset, mdel)
-- Edge cases (null, empty strings, special characters, very long strings)
-- Multiple cache instances with isolation
-- Real-world weather caching scenarios
-
-**Key Features**:
-- Actual NodeCache implementation
-- Real timing tests with TTL expiration
-- No artificial delays or mocked timers for TTL tests
-
-#### 3. **nwsClient.test.ts** - 36 tests
-- Error handling for 404, 400, 500, 502, 503 errors
-- Retry logic with exponential backoff (1s, 2s, 4s intervals)
-- Rate limit handling (429 errors with 5s, 10s, 20s backoff)
-- User-Agent header verification
-- Real NWS API integration tests (13 tests)
-- Coordinate rounding to 4 decimal places
-- Weather data validation (forecast structure, observation fields)
-
-**Key Features**:
-- Real NWS API calls for integration tests
-- Actual retry timing verification
-- No mocked HTTP client for unit tests (axios mock at instance level)
-
-#### 4. **nwsService.test.ts** - 34 tests
+#### 2. **nwsService.test.ts**
 - Point data retrieval with real coordinates
 - 7-day and hourly forecast fetching
 - Current conditions with station selection logic
@@ -105,20 +78,7 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 - Tests actual service-to-client interaction
 - Cache behavior validation with real TTLs
 
-#### 5. **uvService.test.ts** - 38 tests
-- Service enabled/disabled based on API key
-- UV Index retrieval from OpenWeatherMap API
-- 1-hour caching behavior
-- Retry logic (2 retries with exponential backoff)
-- Graceful failure (returns null on errors)
-- No retry on 401/429 errors
-
-**Key Features**:
-- Tests with and without API key
-- Real axios interceptor configuration
-- Graceful degradation testing
-
-#### 6. **sunService.test.ts** - 37 tests
+#### 3. **sunService.test.ts**
 - Sunrise/sunset calculations using SunCalc
 - Geographic diversity (Dallas, NYC, LA, Sydney, Singapore, Anchorage)
 - Seasonal variation (solstices, equinoxes)
@@ -131,9 +91,9 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 - Tests 12 months of data for accuracy
 - Validates astronomical correctness
 
-### API Endpoint Tests (40 tests)
+### API Endpoint Tests (1 file)
 
-#### **weatherRoutes.test.ts** - 40 tests
+#### **weatherRoutes.test.ts**
 - GET `/api/weather/:zipcode` - Complete weather package retrieval
 - POST `/api/weather/:zipcode/refresh` - Cache clearing and refresh
 - POST `/api/weather/cache/clear` - Clear all cache
@@ -149,22 +109,22 @@ A comprehensive test suite has been established for the HAUS Weather Station app
 - Actual NWS API calls in tests
 - Full request/response cycle validation
 
-### Backend Regression Tests (25 tests)
+### Backend Regression Tests (1 file)
 
-#### **server/src/regression.test.ts** - 25 tests
-Prevents reoccurrence of 5 critical bugs:
+#### **server/src/regression.test.ts**
+Prevents reoccurrence of critical bugs:
 
-1. **Bug #1: SunCalc Import Error** (8 tests)
+1. **Bug #1: SunCalc Import Error**
    - Verifies correct default import
    - Tests all sun service functions
    - Validates data format and edge cases
 
-2. **Bug #2: Data Structure Mismatch** (14 tests)
+2. **Bug #2: Data Structure Mismatch**
    - Tests transformWeatherPackage thoroughly
    - Validates all field transformations
    - Tests edge cases (null, empty arrays)
 
-3. **Bug #3: Health Check Endpoint** (3 tests)
+3. **Bug #3: Health Check Endpoint**
    - Documents correct `/api/health` path
    - Ensures frontend uses correct endpoint
 
@@ -172,9 +132,9 @@ Prevents reoccurrence of 5 critical bugs:
 
 ## Frontend Test Coverage
 
-### Hook & Store Tests (298 tests across 5 files)
+### Hook Tests (1 file)
 
-#### 1. **useLocalStorage.test.tsx** - 57 tests
+#### 1. **useLocalStorage.test.tsx**
 - Initial value setting and retrieval
 - JSON serialization/deserialization
 - Cross-tab synchronization with storage events
@@ -188,35 +148,9 @@ Prevents reoccurrence of 5 critical bugs:
 - Actual storage events simulation
 - No React hooks mocked
 
-#### 2. **useUnitConversion.test.tsx** - 90 tests
-- Temperature conversions (C ↔ F) with mathematical accuracy
-- Wind speed conversions (m/s, km/h, mph)
-- Visibility conversions (m, km, mi)
-- Pressure conversions (Pa, hPa, inHg)
-- WMO unit code parsing
-- Edge cases (0, negative, very large values)
-- Round-trip conversion integrity
+### Store Tests (2 files)
 
-**Key Features**:
-- Real conversion formulas validated
-- Precision and rounding tested
-- Integration with unit store
-
-#### 3. **useWeatherData.test.tsx** - 30 tests
-- fetchWeather with valid ZIP codes
-- Loading state management
-- Background refresh (60-second interval)
-- Exponential backoff on failures (4s, 8s, 16s, 32s max)
-- Auto-refresh pause after 3 failures
-- Page Visibility API integration
-- Consecutive failure tracking
-
-**Key Features**:
-- Fake timers for timing tests
-- Real Zustand store integration
-- API service mocked, internal logic not mocked
-
-#### 4. **unitStore.test.ts** - 75 tests
+#### 1. **unitStore.test.ts**
 - Initial state (imperial default)
 - Toggle between imperial/metric
 - convertTemp mathematical accuracy
@@ -231,7 +165,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Mathematical formula verification
 - No state management mocks
 
-#### 5. **weatherStore.test.ts** - 46 tests
+#### 2. **weatherStore.test.ts**
 - Initial state validation
 - All action methods (setZipCode, setWeatherData, setLoading, setError, clearError)
 - Recent ZIP codes tracking (max 5, newest first)
@@ -245,9 +179,16 @@ Prevents reoccurrence of 5 critical bugs:
 - Actual localStorage persistence
 - Complete workflow testing
 
-### Component Tests (446 tests across 9 files)
+### Utility Tests (1 file)
 
-#### 1. **AlertCard.test.tsx** - 33 tests
+#### **weatherIconMapper.test.ts**
+- Icon mapping from NWS weather data
+- URL generation and validation
+- Edge case handling
+
+### Component Tests (10 files)
+
+#### 1. **AlertCard.test.tsx**
 - Rendering with different alert data
 - Severity color mapping (Extreme, Severe, Moderate, Minor)
 - Urgency color mapping (Immediate, Expected, Future, Past)
@@ -256,7 +197,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Area description handling
 - Conditional rendering (only when alerts exist)
 
-#### 2. **RefreshButton.test.tsx** - 30 tests
+#### 2. **RefreshButton.test.tsx**
 - Basic rendering and click handling
 - Loading state behavior (disabled, spinning icon)
 - No ZIP code behavior (disabled)
@@ -264,7 +205,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Accessibility (aria-label, keyboard navigation)
 - Integration scenarios (async completion, recovery from pause)
 
-#### 3. **ThemeToggle.test.tsx** - 40 tests
+#### 3. **ThemeToggle.test.tsx**
 - Initial rendering with correct icons
 - Theme switching (light ↔ dark)
 - DOM class application (add/remove on document element)
@@ -274,7 +215,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Accessibility (keyboard navigation, ARIA labels)
 - Edge cases (rapid clicks, external changes)
 
-#### 4. **UnitToggle.test.tsx** - 48 tests
+#### 4. **UnitToggle.test.tsx**
 - Initial rendering (imperial default)
 - Unit system switching (imperial ↔ metric)
 - Store integration
@@ -283,7 +224,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Layout and structure
 - Edge cases (rapid clicks, remounts)
 
-#### 5. **SevenDayForecast.test.tsx** - 53 tests
+#### 5. **SevenDayForecast.test.tsx**
 - Rendering with forecast data (7-day limit)
 - Day name extraction from period names
 - Temperature display and conversion (F ↔ C)
@@ -293,18 +234,17 @@ Prevents reoccurrence of 5 critical bugs:
 - Empty/missing data handling
 - Day/night grouping logic
 
-#### 6. **CurrentConditions.test.tsx** - 87 tests
+#### 6. **CurrentConditions.test.tsx**
 - Component rendering with all data
 - Temperature display and conversion
 - "Feels like" calculation (heat index vs wind chill)
 - Wind direction calculation (degrees → cardinal, 16 directions)
 - Wind speed and gusts with conversions
-- UV Index categorization (Low, Moderate, High, Very High, Extreme)
 - Sunrise/sunset time formatting
 - Humidity, visibility, cloud cover
 - Graceful degradation with missing data
 
-#### 7. **HourlyForecast.test.tsx** - 64 tests
+#### 7. **HourlyForecast.test.tsx**
 - Component rendering with chart
 - Data type switching (temperature, precipitation, wind, humidity)
 - Period selection (12h, 24h, 48h)
@@ -314,7 +254,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Temperature and wind speed conversions
 - Edge cases (empty data, zero values, extreme values)
 
-#### 8. **ErrorBanner.test.tsx** - 45 tests
+#### 8. **ErrorBanner.test.tsx**
 - Basic rendering with error messages
 - Dismissal functionality
 - Details expansion (Show/Hide details button)
@@ -323,7 +263,7 @@ Prevents reoccurrence of 5 critical bugs:
 - Accessibility (alert role, ARIA attributes)
 - Edge cases (empty errors, long messages, newlines)
 
-#### 9. **ZipInput.test.tsx** - 46 tests
+#### 9. **ZipInput.test.tsx**
 - Initial rendering
 - ZIP code input validation (5-digit format)
 - Submission handling
@@ -333,25 +273,30 @@ Prevents reoccurrence of 5 critical bugs:
 - Accessibility (ARIA labels, keyboard navigation)
 - Edge cases (empty input, invalid formats)
 
-### Frontend Regression Tests (23 tests)
+#### 10. **WeatherIcon.test.tsx**
+- Icon rendering from NWS data
+- Icon URL generation
+- Fallback behavior for missing icons
 
-#### **src/regression.test.tsx** - 23 tests
+### Frontend Regression Tests (1 file)
+
+#### **src/regression.test.tsx**
 Prevents reoccurrence of 2 frontend critical bugs:
 
-1. **Bug #4: ThemeToggle Stale State** (7 tests)
+1. **Bug #4: ThemeToggle Stale State**
    - Icon matches theme (Sun in dark, Moon in light)
    - Icon updates immediately on toggle
    - State-based detection (not DOM-based)
    - Accessibility validation
 
-2. **Bug #5: ZipInput Validation** (13 tests)
+2. **Bug #5: ZipInput Validation**
    - Input restrictions (numeric only, 5 char limit)
    - Validation logic (5-digit requirement)
    - Error clearing when input becomes valid
    - Button state management
    - Accessibility attributes
 
-3. **Integration Tests** (2 tests)
+3. **Integration Tests**
    - Both components work together without conflicts
 
 ---
@@ -478,9 +423,9 @@ npm run test:coverage       # With coverage report
 
 ### Expected Results
 
-- **Frontend**: ~767 tests pass in 3-5 seconds
-- **Backend**: ~347 tests pass in 60-90 seconds (includes real API calls)
-- **Total**: ~1,114 tests
+- **Frontend**: 829 tests pass in 3-5 seconds
+- **Backend**: 179 tests pass in 60-90 seconds (includes real API calls)
+- **Total**: 1,008 tests
 
 **Note**: Backend tests take longer due to:
 - Real NWS API integration tests
@@ -523,15 +468,15 @@ npm run test:coverage       # With coverage report
 
 All 5 critical bugs that were manually fixed on 2025-09-30 now have automated regression tests:
 
-| Bug # | Description | Test File | Tests | Status |
-|-------|-------------|-----------|-------|--------|
-| 1 | SunCalc Import Error | server/src/regression.test.ts | 8 | ✅ COVERED |
-| 2 | Data Structure Mismatch | server/src/regression.test.ts | 14 | ✅ COVERED |
-| 3 | Health Check Endpoint | server/src/regression.test.ts | 3 | ✅ COVERED |
-| 4 | ThemeToggle Stale State | src/regression.test.tsx | 7 | ✅ COVERED |
-| 5 | ZipInput Validation | src/regression.test.tsx | 13 | ✅ COVERED |
+| Bug # | Description | Test File | Status |
+|-------|-------------|-----------|--------|
+| 1 | SunCalc Import Error | server/src/regression.test.ts | ✅ COVERED |
+| 2 | Data Structure Mismatch | server/src/regression.test.ts | ✅ COVERED |
+| 3 | Health Check Endpoint | server/src/regression.test.ts | ✅ COVERED |
+| 4 | ThemeToggle Stale State | src/regression.test.tsx | ✅ COVERED |
+| 5 | ZipInput Validation | src/regression.test.tsx | ✅ COVERED |
 
-**Total Regression Tests**: 48 tests across 2 files
+**Total Regression Tests**: 2 files (backend and frontend)
 
 These tests will catch any future code changes that reintroduce these bugs, ensuring the application remains stable.
 
@@ -539,12 +484,12 @@ These tests will catch any future code changes that reintroduce these bugs, ensu
 
 ## Conclusion
 
-A comprehensive, production-ready test suite has been established for the HAUS Weather Station application. With 1,100+ tests covering all critical functionality, the application is well-protected against regressions and bugs. The test suite follows best practices with real, substantive tests that validate actual functionality rather than relying on superficial mocks.
+A comprehensive, production-ready test suite has been established for the HAUS Weather Station application. With 1,008 tests covering all critical functionality, the application is well-protected against regressions and bugs. The test suite follows best practices with real, substantive tests that validate actual functionality rather than relying on superficial mocks.
 
 ### Key Achievements Summary
 
-- ✅ **1,114 tests** created (347 backend, 767 frontend)
-- ✅ **23 test files** across services, hooks, stores, components
+- ✅ **1,008 tests** created (179 backend, 829 frontend)
+- ✅ **21 test files** across services, hooks, stores, components
 - ✅ **Zero mocks** where possible - testing real functionality
 - ✅ **All 5 critical bugs** have regression tests
 - ✅ **CI/CD integration** complete - tests run on every commit
