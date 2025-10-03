@@ -8,6 +8,7 @@ import { nwsService } from '../services/nwsService.js';
 import { geocodeZip } from '../services/geocodingService.js';
 import { getSunTimes } from '../services/sunService.js';
 import { getBackgroundJobsStatus } from '../services/backgroundJobs.js';
+import { addZipCode } from '../services/zipCodeStorage.js';
 import type { WeatherPackage } from '../types/weather.types.js';
 
 // Route parameter schema
@@ -257,6 +258,9 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const { lat, lon } = coordinates;
+
+        // Track this ZIP code for background refresh
+        await addZipCode(zipcode);
 
         // Step 3: Get point data (grid coordinates)
         let pointData;
@@ -581,6 +585,9 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const { lat, lon } = coordinates;
+
+        // Track this ZIP code for background refresh
+        await addZipCode(zipcode);
 
         // Step 3: Clear cache for this location
         nwsService.clearLocationCache(lat, lon);

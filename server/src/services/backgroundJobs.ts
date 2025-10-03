@@ -7,9 +7,7 @@ import cron, { ScheduledTask } from 'node-cron';
 import { nwsService } from './nwsService.js';
 import { geocodeZip } from './geocodingService.js';
 import { logger } from '../utils/logger.js';
-
-// Configured ZIP codes to refresh (as specified in CLAUDE.md)
-const CACHED_ZIP_CODES = ['75454', '75070', '75035'];
+import { getAllZipCodes } from './zipCodeStorage.js';
 
 // Refresh interval: every 5 minutes
 const REFRESH_CRON_SCHEDULE = '*/5 * * * *';
@@ -35,20 +33,27 @@ async function refreshZipCode(zipCode: string): Promise<void> {
 }
 
 /**
- * Refresh all configured ZIP codes
+ * Refresh all tracked ZIP codes
  */
 async function refreshAllZipCodes(): Promise<void> {
-  logger.info('[Background] Starting scheduled refresh for cached ZIP codes');
+  const zipCodes = getAllZipCodes();
+
+  if (zipCodes.length === 0) {
+    logger.debug('[Background] No ZIP codes to refresh');
+    return;
+  }
+
+  logger.info(`[Background] Starting scheduled refresh for ${zipCodes.length} cached ZIP codes`);
   const startTime = Date.now();
 
   try {
     // Refresh all ZIP codes in parallel
     await Promise.allSettled(
-      CACHED_ZIP_CODES.map((zipCode) => refreshZipCode(zipCode))
+      zipCodes.map((zipCode) => refreshZipCode(zipCode))
     );
 
     const duration = Date.now() - startTime;
-    logger.info(`[Background] Completed refresh cycle in ${duration}ms`);
+    logger.info(`[Background] Completed refresh cycle for ${zipCodes.length} ZIP codes in ${duration}ms`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error(`[Background] Error during refresh cycle: ${errorMessage}`);
@@ -57,12 +62,14 @@ async function refreshAllZipCodes(): Promise<void> {
 
 /**
  * Initialize background jobs
- * - Starts the 5-minute refresh cycle for cached ZIP codes
+ * - Starts the 5-minute refresh cycle for all tracked ZIP codes
  * - Performs initial refresh on startup
  */
 export function initBackgroundJobs(): ScheduledTask {
+  const zipCodes = getAllZipCodes();
+
   logger.info('[Background] Initializing background jobs...');
-  logger.info(`[Background] Configured ZIP codes: ${CACHED_ZIP_CODES.join(', ')}`);
+  logger.info(`[Background] Tracked ZIP codes: ${zipCodes.length > 0 ? zipCodes.join(', ') : 'none'}`);
   logger.info(`[Background] Refresh schedule: every 5 minutes`);
 
   // Perform initial refresh on startup (non-blocking)
@@ -92,19 +99,15 @@ export function stopBackgroundJobs(task: ScheduledTask): void {
 }
 
 /**
- * Get configured ZIP codes (for monitoring/debugging)
- */
-export function getConfiguredZipCodes(): string[] {
-  return [...CACHED_ZIP_CODES];
-}
-
-/**
  * Get background jobs status information
  */
 export function getBackgroundJobsStatus() {
+  const zipCodes = getAllZipCodes();
+
   return {
     enabled: true,
-    cachedZipCodes: [...CACHED_ZIP_CODES],
+    cachedZipCodes: zipCodes,
+    totalZipCodes: zipCodes.length,
     refreshInterval: '5 minutes',
     schedule: REFRESH_CRON_SCHEDULE,
   };

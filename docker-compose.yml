@@ -34,10 +34,9 @@ services:
       # CORS Configuration (optional, defaults to localhost)
       # - CORS_ORIGIN=http://localhost,http://192.168.1.100
 
-    # Optional: Volume mounts for cache persistence
-    # Uncomment if you want to persist cache data across container restarts
-    # volumes:
-    #   - weather-cache:/app/backend/.cache
+    # Volume mounts for persistent ZIP code storage
+    volumes:
+      - weather-data:/data
 
     networks:
       - weather-network
@@ -63,7 +62,7 @@ networks:
   weather-network:
     driver: bridge
 
-# Optional: Named volume for cache persistence
-# volumes:
-#   weather-cache:
-#     driver: local
+# Named volume for persistent ZIP code storage
+volumes:
+  weather-data:
+    driver: local

@@ -10,6 +10,7 @@ import type { ScheduledTask } from 'node-cron';
 import weatherRoutes from './routes/weatherRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import { initBackgroundJobs, stopBackgroundJobs } from './services/backgroundJobs.js';
+import { initZipCodeStorage } from './services/zipCodeStorage.js';
 
 // Load environment variables
 config();
@@ -95,6 +96,9 @@ async function closeGracefully(signal: string) {
  */
 async function start() {
   try {
+    // Initialize ZIP code storage first
+    await initZipCodeStorage();
+
     // Register all plugins and routes
     await registerPlugins();
 

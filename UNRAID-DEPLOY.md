@@ -34,7 +34,15 @@ In UNRAID web UI: **Docker** → **Add Container**
 
 **Access URL**: `http://[UNRAID-IP]:[HOST-PORT]`
 
-### 4. Environment Variables
+### 4. Volume Mapping (Required)
+
+| Container Path | Host Path | Access Mode | Description |
+|----------------|-----------|-------------|-------------|
+| `/data` | `/mnt/user/appdata/haus-weather-station` | Read/Write | Persistent storage for cached ZIP codes |
+
+**Note**: The server tracks all user-entered ZIP codes in `/data/zip-codes.json` and automatically refreshes them every 5 minutes. This volume ensures ZIP codes persist across container restarts.
+
+### 5. Environment Variables
 
 #### Required
 | Variable | Value | Description |
@@ -43,7 +51,7 @@ In UNRAID web UI: **Docker** → **Add Container**
 | `PORT` | `3001` | Backend port (internal) |
 | `HOST` | `0.0.0.0` | Backend host (internal) |
 | `NWS_USER_AGENT` | `WeatherApp/1.0 (your-email@example.com)` | **CHANGE THIS** - NWS requires contact info |
-| `CACHED_ZIP_CODES` | `75454,75070,75035` | ZIP codes to pre-cache (comma-separated) |
+| `CACHED_ZIP_CODES` | `75454,75070,75035` | Initial ZIP codes (comma-separated). **Note**: Server auto-tracks all entered ZIPs. |
 
 #### Optional (Defaults Shown)
 | Variable | Default | Description |
@@ -56,14 +64,14 @@ In UNRAID web UI: **Docker** → **Add Container**
 | `CACHE_METADATA_DURATION` | `10080` | Metadata cache duration (minutes) |
 | `SERVER_REFRESH_INTERVAL` | `5` | Server refresh interval (minutes) |
 
-### 5. Resource Limits (Recommended)
+### 6. Resource Limits (Recommended)
 
 | Setting | Value |
 |---------|-------|
 | CPU | `1.0` cores max |
 | Memory | `512M` max |
 
-### 6. Health Check (Optional)
+### 7. Health Check (Optional)
 
 - **Test Command**: `wget --no-verbose --tries=1 --spider http://localhost/api/health || exit 1`
 - **Interval**: 30 seconds
@@ -76,15 +84,17 @@ In UNRAID web UI: **Docker** → **Add Container**
 ## Quick Start
 
 1. **Add container** with settings above
-2. **Change** `NWS_USER_AGENT` to include your email
-3. **Update** `CACHED_ZIP_CODES` with your ZIP codes
-4. **Start** container
-5. **Access** at `http://[UNRAID-IP]:[HOST-PORT]`
+2. **Configure volume** mapping: `/data` → `/mnt/user/appdata/haus-weather-station`
+3. **Change** `NWS_USER_AGENT` to include your email
+4. **Update** `CACHED_ZIP_CODES` with initial ZIP codes (optional)
+5. **Start** container
+6. **Access** at `http://[UNRAID-IP]:[HOST-PORT]`
 
 ## Notes
 
-- No volume mounts required (cache is memory-based)
+- **Volume mount required** for persistent ZIP code storage
 - Container runs nginx (frontend) and Node.js backend (API)
-- Backend auto-refreshes cached ZIP codes every 5 minutes
-- All data fetched from National Weather Service API
+- Backend auto-tracks and refreshes all user-entered ZIP codes every 5 minutes
+- ZIP codes persist in `/data/zip-codes.json` across restarts
+- All weather data fetched from National Weather Service API
 - Works only with US ZIP codes

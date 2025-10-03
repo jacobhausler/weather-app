@@ -55,8 +55,11 @@ FROM nginx:1.25-alpine AS production
 # Install Node.js runtime for backend server
 RUN apk add --no-cache nodejs npm
 
-# Create app directory
+# Create app directory and persistent data volume
 WORKDIR /app
+
+# Create data directory for persistent storage
+RUN mkdir -p /data && chmod 755 /data
 
 # Copy backend built files and dependencies from backend-builder
 COPY --from=backend-builder /app/backend/dist ./backend/dist
@@ -101,6 +104,9 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port 80 for nginx
 EXPOSE 80
+
+# Volume for persistent ZIP code storage
+VOLUME ["/data"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
