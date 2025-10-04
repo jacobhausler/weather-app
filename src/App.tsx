@@ -79,26 +79,6 @@ function App() {
               </Suspense>
             )}
 
-            {/* 7-Day Forecast Card - Same width as row below */}
-            {weatherData.forecast && weatherData.forecast.length > 0 && (
-              <Suspense fallback={
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-32" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                      {[...Array(7)].map((_, i) => (
-                        <Skeleton key={i} className="min-w-[140px] h-48" />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              }>
-                <SevenDayForecast forecast={weatherData.forecast} />
-              </Suspense>
-            )}
-
             {/* Current Conditions + Hourly Forecast - Side by side on larger screens */}
             <div className="grid gap-6 md:grid-cols-2">
               {/* Current Conditions + Daily Forecast Card */}
@@ -118,6 +98,26 @@ function App() {
                 </Suspense>
               )}
             </div>
+
+            {/* 7-Day Forecast Card - Full width at bottom */}
+            {weatherData.forecast && weatherData.forecast.length > 0 && (
+              <Suspense fallback={
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {[...Array(7)].map((_, i) => (
+                        <Skeleton key={i} className="min-w-[140px] h-48" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              }>
+                <SevenDayForecast forecast={weatherData.forecast} />
+              </Suspense>
+            )}
           </div>
         )}
       </main>
