@@ -85,7 +85,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
 
     return data.map((forecast) => {
       const time = format(new Date(forecast.startTime), 'ha')
-      const chartPoint: any = {
+      const chartPoint: { time: string; value: number; value2?: number } = {
         time,
         value: getValueForDataType(forecast, dataType),
       }
