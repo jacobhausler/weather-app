@@ -63,7 +63,9 @@ export function CurrentConditions({
     ? Math.round(convertTemp(observation.dewpoint.value, unitSystem))
     : null
 
-  const humidity = observation?.relativeHumidity.value
+  const humidity = observation?.relativeHumidity.value !== null && observation?.relativeHumidity.value !== undefined
+    ? Math.round(observation.relativeHumidity.value)
+    : null
 
   // Wind speed conversions (NWS provides m/s)
   const windSpeed = observation?.windSpeed.value
@@ -108,6 +110,16 @@ export function CurrentConditions({
         <CardTitle className="text-white dark:text-gray-100">Current Conditions</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Detailed Forecast */}
+        {todayForecast?.detailedForecast && (
+          <div className="mb-4 rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-3">
+            <h3 className="mb-1 text-sm font-semibold text-white dark:text-gray-100">Forecast</h3>
+            <p className="text-xs leading-relaxed text-gray-100 dark:text-gray-200">
+              {todayForecast.detailedForecast}
+            </p>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
           {/* Current Weather */}
           <div className="space-y-3">
@@ -206,32 +218,23 @@ export function CurrentConditions({
             />
 
             {sunTimes && (
-              <>
-                <WeatherDetailItem
-                  icon={<Sunrise className="h-3 w-3" />}
-                  label="Sunrise"
-                  value={formatTime(sunTimes.sunrise)}
-                />
-
-                <WeatherDetailItem
-                  icon={<Sunset className="h-3 w-3" />}
-                  label="Sunset"
-                  value={formatTime(sunTimes.sunset)}
-                />
-              </>
+              <div className="flex items-center gap-1.5 rounded-lg border p-2">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-1">
+                    <Sunrise className="h-3 w-3 text-muted-foreground" />
+                    <div className="text-[10px] text-muted-foreground">Sunrise</div>
+                    <div className="ml-auto truncate text-xs font-medium">{formatTime(sunTimes.sunrise)}</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Sunset className="h-3 w-3 text-muted-foreground" />
+                    <div className="text-[10px] text-muted-foreground">Sunset</div>
+                    <div className="ml-auto truncate text-xs font-medium">{formatTime(sunTimes.sunset)}</div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
-
-        {/* Detailed Forecast */}
-        {todayForecast?.detailedForecast && (
-          <div className="mt-4 rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-3">
-            <h3 className="mb-1 text-sm font-semibold text-white dark:text-gray-100">Forecast</h3>
-            <p className="text-xs leading-relaxed text-gray-100 dark:text-gray-200">
-              {todayForecast.detailedForecast}
-            </p>
-          </div>
-        )}
 
         {/* Tonight's Forecast */}
         {tonightForecast && (

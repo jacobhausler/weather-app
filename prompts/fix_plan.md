@@ -314,6 +314,44 @@ Unified all three forecast cards to use consistent styling while keeping AlertCa
 
 ---
 
+### ✓ Current Conditions Card Layout Refinements (P2)
+**Status**: COMPLETED (2025-10-05)
+**Priority**: P2 - Medium Priority (Visual/UX Improvement)
+
+**Implementation Summary**:
+All three proposed changes were successfully implemented:
+
+1. **Combined Sunrise/Sunset into Single Box**
+   - Refactored two separate WeatherDetailItem components into one unified component
+   - Displays both sunrise and sunset times with icons in a single bordered box
+   - Reduced visual clutter in the weather details grid
+
+2. **Rounded Humidity to Whole Percent**
+   - Added Math.round() to humidity display
+   - Improved readability without sacrificing meaningful precision
+
+3. **Moved Forecast Text Box Above Weather Details**
+   - Relocated "Forecast" box to appear immediately after CardHeader
+   - New visual hierarchy: Header → Forecast text → Current conditions/details grid → Tonight's forecast
+   - Provides forecast context before diving into granular data points
+
+**Testing**:
+- All 829 frontend tests passing
+- Visual testing completed at mobile and desktop breakpoints
+- Component structure and data presentation verified
+
+**Files Modified**:
+- src/components/CurrentConditions.tsx
+- specs/cards/current-conditions-card.md
+
+**Benefits Achieved**:
+- More compact and organized layout
+- Better visual hierarchy with forecast prominently placed
+- Improved scannability on mobile devices
+- Reduced grid complexity
+
+---
+
 ## Critical Issues (Fix Immediately)
 
 *No critical issues pending*

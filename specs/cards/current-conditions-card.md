@@ -98,6 +98,12 @@ interface SunTimes {
 ┌─────────────────────────────────────────────────────────────┐
 │  Current Conditions                                         │
 ├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Forecast                                           │   │
+│  │  Partly cloudy with a high near 85. Northwest       │   │
+│  │  wind around 10 mph...                              │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
 │  ┌──────────────────────────────┐  ┌────────────────────┐  │
 │  │  Current Weather             │  │  Weather Details   │  │
 │  │                              │  │  (2-column grid)   │  │
@@ -109,15 +115,10 @@ interface SunTimes {
 │  │                              │  │  ├──────┼──────┤  │  │
 │  └──────────────────────────────┘  │  │ Vis  │ Cloud│  │  │
 │                                     │  ├──────┼──────┤  │  │
-│                                     │  │ UV   │ Sun  │  │  │
-│                                     │  └──────┴──────┘  │  │
+│                                     │  │  Sunrise/    │  │  │
+│                                     │  │   Sunset     │  │  │
+│                                     │  └──────────────┘  │  │
 │                                     └────────────────────┘  │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  Forecast                                           │   │
-│  │  Partly cloudy with a high near 85. Northwest       │   │
-│  │  wind around 10 mph...                              │   │
-│  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  [Icon] Tonight                                     │   │
@@ -129,10 +130,10 @@ interface SunTimes {
 ### Card Hierarchy
 
 **Level 1**: Main card container with header "Current Conditions"
-- **Level 2**: Two-column responsive grid (`md:grid-cols-2`)
+- **Level 2**: Detailed forecast section (full-width, muted background, appears first)
+- **Level 3**: Two-column responsive grid (`md:grid-cols-2`)
   1. Left column: Current weather display (icon, temperature, feels like, high/low)
   2. Right column: Weather detail items in 2-column grid
-- **Level 3**: Detailed forecast section (full-width, muted background)
 - **Level 4**: Tonight's forecast section (full-width, bordered card)
 
 ### Styling Guidelines
@@ -158,6 +159,9 @@ Each detail uses `WeatherDetailItem` component with:
 - Label (text-xs, muted)
 - Value (text-sm, font-medium)
 - Bordered card container
+
+**Humidity Display**:
+- Values are rounded to whole percent using `Math.round()` (e.g., 67% instead of 67.3%)
 
 **Wind Display**:
 - Combines direction and speed: "NW 10 mph"
@@ -335,11 +339,11 @@ Uses Tailwind CSS responsive classes with mobile-first design:
 
 ### Screen Reader Experience
 - Reads "Current Conditions" heading first
+- Detailed forecast text (appears first in content)
 - Current temperature and conditions with icon alt text
 - Feels like temperature (if shown)
 - High/low temperatures with labels
-- Weather details in grid order: Dewpoint, Humidity, Wind, Gusts, Visibility, Cloud Cover, UV Index, Sunrise, Sunset
-- Detailed forecast text
+- Weather details in grid order: Dewpoint, Humidity, Wind, Gusts, Visibility, Cloud Cover, Sunrise/Sunset (combined)
 - Tonight's forecast with icon alt text
 
 ### Color Contrast
@@ -406,10 +410,10 @@ CurrentConditions (Main Component)
 │   ├── CardHeader
 │   │   └── CardTitle: "Current Conditions"
 │   └── CardContent
+│       ├── Forecast section (muted background, appears first)
 │       ├── Grid (2 columns on desktop)
 │       │   ├── Left: Current weather display
 │       │   └── Right: Weather details grid
-│       ├── Forecast section (muted background)
 │       └── Tonight section (bordered)
 
 ## Edge Cases
@@ -444,7 +448,7 @@ CurrentConditions (Main Component)
 
 7. **Optional Sun Times**:
    - Sunrise/sunset only shown if `sunTimes` prop provided
-   - Two separate detail items conditionally rendered
+   - Combined into a single detail item showing both sunrise and sunset times
 
 8. **Cloud Cover Variations**:
    - Uses first cloud layer's amount
