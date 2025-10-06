@@ -85,7 +85,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
 
     return data.map((forecast) => {
       const time = format(new Date(forecast.startTime), 'ha')
-      const chartPoint: { time: string; value: number; value2?: number } = {
+      const chartPoint: any = {
         time,
         value: getValueForDataType(forecast, dataType),
       }
@@ -290,14 +290,14 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
               <div className="text-center">
                 <div className="text-[10px] text-muted-foreground">{getDataTypeLabel(dataType2)} Min</div>
                 <div className="font-semibold">
-                  {Math.min(...chartData.map((d) => d.value2 ?? 0))}
+                  {Math.min(...chartData.map((d) => d.value2))}
                   {unit2}
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-[10px] text-muted-foreground">Max</div>
                 <div className="font-semibold">
-                  {Math.max(...chartData.map((d) => d.value2 ?? 0))}
+                  {Math.max(...chartData.map((d) => d.value2))}
                   {unit2}
                 </div>
               </div>
@@ -305,7 +305,7 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
                 <div className="text-[10px] text-muted-foreground">Avg</div>
                 <div className="font-semibold">
                   {Math.round(
-                    chartData.reduce((acc, d) => acc + (d.value2 ?? 0), 0) /
+                    chartData.reduce((acc, d) => acc + d.value2, 0) /
                       chartData.length
                   )}
                   {unit2}
