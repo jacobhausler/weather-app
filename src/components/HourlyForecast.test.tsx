@@ -108,7 +108,7 @@ describe('HourlyForecast', () => {
   })
 
   describe('Data type switching', () => {
-    it('should switch to precipitation view when Precip button is clicked', async () => {
+    it('should add precipitation as second dimension when Precip button is clicked', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
@@ -116,13 +116,13 @@ describe('HourlyForecast', () => {
       const precipButton = screen.getByRole('button', { name: 'Precip' })
       await user.click(precipButton)
 
-      // Verify localStorage was updated with precipitation
+      // Verify localStorage was updated with both temperature and precipitation
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('precipitation'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'precipitation']))
       })
     })
 
-    it('should switch to wind view when Wind button is clicked', async () => {
+    it('should add wind as second dimension when Wind button is clicked', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
@@ -131,11 +131,11 @@ describe('HourlyForecast', () => {
       await user.click(windButton)
 
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('wind'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'wind']))
       })
     })
 
-    it('should switch to humidity view when Humidity button is clicked', async () => {
+    it('should add humidity as second dimension when Humidity button is clicked', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
@@ -144,51 +144,52 @@ describe('HourlyForecast', () => {
       await user.click(humidityButton)
 
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('humidity'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'humidity']))
       })
     })
 
-    it('should switch between multiple data types consecutively', async () => {
+    it('should support dual y-axis with alternating replacement', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      // Click through all data types
+      // 1st click (already temperature by default)
+      // 2nd click: add precipitation
       await user.click(screen.getByRole('button', { name: 'Precip' }))
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('precipitation'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'precipitation']))
       })
 
+      // 3rd click: replace first (temperature with wind)
       await user.click(screen.getByRole('button', { name: 'Wind' }))
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('wind'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['wind', 'precipitation']))
       })
 
+      // 4th click: replace second (precipitation with humidity)
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('humidity'))
-      })
-
-      await user.click(screen.getByRole('button', { name: 'Temp' }))
-      await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('temperature'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['wind', 'humidity']))
       })
     })
 
-    it('should remain on same data type when clicked multiple times', async () => {
+    it('should deselect when clicking same type twice', async () => {
       const user = userEvent.setup()
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       const tempButton = screen.getByRole('button', { name: 'Temp' })
 
+      // Click temperature twice (first deselects it)
       await user.click(tempButton)
-      await user.click(tempButton)
-      await user.click(tempButton)
-
-      // Should still be temperature
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('temperature'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify([]))
+      })
+
+      // Click again to re-select
+      await user.click(tempButton)
+      await waitFor(() => {
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature']))
       })
     })
   })
@@ -241,8 +242,8 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
       await waitFor(() => {
-        const stored = localStorage.getItem('hourly-chart-dataType')
-        expect(stored).toBe(JSON.stringify('precipitation'))
+        const stored = localStorage.getItem('hourly-chart-dataTypes')
+        expect(stored).toBe(JSON.stringify(['temperature', 'precipitation']))
       })
     })
 
@@ -257,14 +258,14 @@ describe('HourlyForecast', () => {
       expect(localStorage.getItem('hourly-chart-period')).toBe(JSON.stringify('48'))
     })
 
-    it('should restore data type from localStorage on mount', () => {
-      localStorage.setItem('hourly-chart-dataType', JSON.stringify('wind'))
+    it('should restore data types from localStorage on mount', () => {
+      localStorage.setItem('hourly-chart-dataTypes', JSON.stringify(['wind', 'humidity']))
 
       const mockData = createMockHourlyForecast(24)
       render(<HourlyForecast hourlyForecast={mockData} />)
 
       // Verify it was loaded from localStorage
-      expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('wind'))
+      expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['wind', 'humidity']))
     })
 
     it('should restore period from localStorage on mount', () => {
@@ -289,7 +290,7 @@ describe('HourlyForecast', () => {
       localStorage.setItem('hourly-chart-period', JSON.stringify('12'))
 
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('humidity'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'humidity']))
         expect(localStorage.getItem('hourly-chart-period')).toBe(JSON.stringify('12'))
       })
     })
@@ -432,9 +433,9 @@ describe('HourlyForecast', () => {
       // Switch to wind view
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      // Should convert to km/h
-      const statsSection = screen.getByText('Min').closest('div')
-      expect(statsSection).toBeInTheDocument()
+      // Should convert to km/h - find the Wind Speed stats section
+      const windSection = screen.getByText('Wind Speed').parentElement
+      expect(windSection).toBeInTheDocument()
     })
 
     it('should parse wind speed from string format correctly', async () => {
@@ -450,9 +451,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      // Should parse first number from string
-      const minSection = screen.getByText('Min').parentElement
-      expect(minSection?.textContent).toContain('5')
+      // Should parse first number from string - find the Wind Speed section
+      const windSection = screen.getByText('Wind Speed').parentElement
+      expect(windSection?.textContent).toContain('5')
     })
 
     it('should handle missing wind speed data', async () => {
@@ -466,9 +467,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      // Should default to 0 for missing data
-      const minSection = screen.getByText('Min').parentElement
-      expect(minSection?.textContent).toContain('0')
+      // Should default to 0 for missing data - find the Wind Speed section
+      const windSection = screen.getByText('Wind Speed').parentElement
+      expect(windSection?.textContent).toContain('0')
     })
 
     it('should correctly convert 10 mph to 16 km/h', async () => {
@@ -490,8 +491,8 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const avgSection = screen.getByText('Avg').parentElement
-      expect(avgSection?.textContent).toContain('16')
+      const windSection = screen.getByText('Wind Speed').parentElement
+      expect(windSection?.textContent).toContain('16')
     })
   })
 
@@ -514,9 +515,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
-      // Check that percentage unit is used
-      const statsSection = screen.getByText('Max').parentElement
-      expect(statsSection?.textContent).toMatch(/%/)
+      // Check that percentage unit is used - find the Precipitation section
+      const precipSection = screen.getByText('Precipitation').parentElement
+      expect(precipSection?.textContent).toMatch(/%/)
     })
 
     it('should format humidity data with percentage unit', async () => {
@@ -528,9 +529,10 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
-      // Check that percentage unit is used
-      const statsSection = screen.getByText('Avg').parentElement
-      expect(statsSection?.textContent).toMatch(/%/)
+      // Check that percentage unit is used - find the Humidity stats section (not the button)
+      const humidityLabels = screen.getAllByText('Humidity')
+      const humiditySection = humidityLabels.find(el => el.className.includes('font-semibold'))?.parentElement
+      expect(humiditySection?.textContent).toMatch(/%/)
     })
 
     it('should handle null precipitation values', async () => {
@@ -545,8 +547,8 @@ describe('HourlyForecast', () => {
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
       // Should default to 0 for null/undefined values
-      const minSection = screen.getByText('Min').parentElement
-      expect(minSection).toBeInTheDocument()
+      const precipSection = screen.getByText('Precipitation').parentElement
+      expect(precipSection).toBeInTheDocument()
     })
 
     it('should format time correctly in chart data', () => {
@@ -635,13 +637,11 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
-      const avgSection = screen.getByText('Avg').parentElement
+      const precipSection = screen.getByText('Precipitation').parentElement
 
-      expect(minSection?.textContent).toContain('10')
-      expect(maxSection?.textContent).toContain('50')
-      expect(avgSection?.textContent).toContain('30') // Average of 10,20,30,40,50 = 30
+      expect(precipSection?.textContent).toContain('10')
+      expect(precipSection?.textContent).toContain('50')
+      expect(precipSection?.textContent).toContain('30') // Average of 10,20,30,40,50 = 30
     })
 
     it('should calculate stats for wind speed data', async () => {
@@ -659,11 +659,10 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
+      const windSection = screen.getByText('Wind Speed').parentElement
 
-      expect(minSection?.textContent).toContain('5')
-      expect(maxSection?.textContent).toContain('25')
+      expect(windSection?.textContent).toContain('5')
+      expect(windSection?.textContent).toContain('25')
     })
 
     it('should calculate stats for humidity data', async () => {
@@ -679,13 +678,12 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
-      const avgSection = screen.getByText('Avg').parentElement
+      const humidityLabels = screen.getAllByText('Humidity')
+      const humiditySection = humidityLabels.find(el => el.className.includes('font-semibold'))?.parentElement
 
-      expect(minSection?.textContent).toContain('50')
-      expect(maxSection?.textContent).toContain('90')
-      expect(avgSection?.textContent).toContain('70')
+      expect(humiditySection?.textContent).toContain('50')
+      expect(humiditySection?.textContent).toContain('90')
+      expect(humiditySection?.textContent).toContain('70')
     })
 
     it('should handle single data point correctly', () => {
@@ -765,8 +763,8 @@ describe('HourlyForecast', () => {
       // Second render - should restore selections
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      // Verify selections were persisted
-      expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('wind'))
+      // Verify selections were persisted (temperature + wind)
+      expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'wind']))
       expect(screen.getByRole('combobox')).toHaveTextContent('12 Hours')
     })
 
@@ -776,15 +774,15 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      // Rapid clicks
-      await user.click(screen.getByRole('button', { name: 'Precip' }))
-      await user.click(screen.getByRole('button', { name: 'Wind' }))
-      await user.click(screen.getByRole('button', { name: 'Humidity' }))
-      await user.click(screen.getByRole('button', { name: 'Temp' }))
+      // Rapid clicks - creates complex multi-select state
+      await user.click(screen.getByRole('button', { name: 'Precip' })) // temp + precip
+      await user.click(screen.getByRole('button', { name: 'Wind' })) // wind + precip (replaced temp)
+      await user.click(screen.getByRole('button', { name: 'Humidity' })) // wind + humidity (replaced precip)
+      await user.click(screen.getByRole('button', { name: 'Temp' })) // temp + humidity (replaced wind)
 
-      // Should end on temperature
+      // Should end with temp + humidity
       await waitFor(() => {
-        expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('temperature'))
+        expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'humidity']))
       })
     })
 
@@ -817,8 +815,8 @@ describe('HourlyForecast', () => {
 
       rerender(<HourlyForecast hourlyForecast={mockData2} />)
 
-      // Selection should persist
-      expect(localStorage.getItem('hourly-chart-dataType')).toBe(JSON.stringify('humidity'))
+      // Selection should persist (temperature + humidity)
+      expect(localStorage.getItem('hourly-chart-dataTypes')).toBe(JSON.stringify(['temperature', 'humidity']))
     })
   })
 
@@ -846,13 +844,15 @@ describe('HourlyForecast', () => {
       expect(screen.getByText('Hourly Forecast')).toBeInTheDocument()
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      expect(screen.getByText('Precipitation').parentElement?.textContent).toContain('0')
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      expect(screen.getByText('Wind Speed').parentElement?.textContent).toContain('0')
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
-      expect(screen.getByText('Min').parentElement?.textContent).toContain('0')
+      const humidityLabels = screen.getAllByText('Humidity')
+      const humiditySection = humidityLabels.find(el => el.className.includes('font-semibold'))?.parentElement
+      expect(humiditySection?.textContent).toContain('0')
     })
 
     it('should handle negative temperature values', () => {
@@ -865,8 +865,8 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const minSection = screen.getByText('Min').parentElement
-      expect(minSection).toBeInTheDocument()
+      const tempSection = screen.getByText('Temperature').parentElement
+      expect(tempSection).toBeInTheDocument()
       // Should handle negative values without error
     })
 
@@ -879,8 +879,8 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Precip' }))
 
-      const maxSection = screen.getByText('Max').parentElement
-      expect(maxSection?.textContent).toContain('100')
+      const precipSection = screen.getByText('Precipitation').parentElement
+      expect(precipSection?.textContent).toContain('100')
     })
 
     it('should handle 100% humidity', async () => {
@@ -892,8 +892,9 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Humidity' }))
 
-      const maxSection = screen.getByText('Max').parentElement
-      expect(maxSection?.textContent).toContain('100')
+      const humidityLabels = screen.getAllByText('Humidity')
+      const humiditySection = humidityLabels.find(el => el.className.includes('font-semibold'))?.parentElement
+      expect(humiditySection?.textContent).toContain('100')
     })
 
     it('should handle very high wind speeds', async () => {
@@ -907,8 +908,8 @@ describe('HourlyForecast', () => {
 
       await user.click(screen.getByRole('button', { name: 'Wind' }))
 
-      const maxSection = screen.getByText('Max').parentElement
-      expect(maxSection?.textContent).toContain('150')
+      const windSection = screen.getByText('Wind Speed').parentElement
+      expect(windSection?.textContent).toContain('150')
     })
 
     it('should handle extreme temperature values', () => {
@@ -920,11 +921,9 @@ describe('HourlyForecast', () => {
 
       render(<HourlyForecast hourlyForecast={mockData} />)
 
-      const minSection = screen.getByText('Min').parentElement
-      const maxSection = screen.getByText('Max').parentElement
+      const tempSection = screen.getByText('Temperature').parentElement
 
-      expect(minSection).toBeInTheDocument()
-      expect(maxSection).toBeInTheDocument()
+      expect(tempSection).toBeInTheDocument()
     })
 
     it('should handle malformed wind speed strings gracefully', async () => {

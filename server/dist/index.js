@@ -8,6 +8,7 @@ import { config } from 'dotenv';
 import weatherRoutes from './routes/weatherRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import { initBackgroundJobs, stopBackgroundJobs } from './services/backgroundJobs.js';
+import { initZipCodeStorage } from './services/zipCodeStorage.js';
 // Load environment variables
 config();
 // Server configuration
@@ -82,6 +83,8 @@ async function closeGracefully(signal) {
  */
 async function start() {
     try {
+        // Initialize ZIP code storage first
+        await initZipCodeStorage();
         // Register all plugins and routes
         await registerPlugins();
         // Start listening
