@@ -352,6 +352,88 @@ All three proposed changes were successfully implemented:
 
 ---
 
+### ✓ 7-Day Forecast Card Repositioned to Bottom (P3)
+**Status**: COMPLETED (2025-10-04)
+**Priority**: P3 - Layout/Visual Enhancement
+
+**Issue**: Card layout hierarchy needed optimization for better information flow.
+
+**Resolution**: Moved 7-day forecast card to bottom of layout:
+- New order: Alert → Current Conditions → Hourly Forecast → 7-Day Forecast
+- Improved visual hierarchy with most immediate/detailed info first
+- Better layout balance on desktop screens
+- 7-day forecast remains centered with max-width constraint
+
+**Files Modified**:
+- src/App.tsx - Reordered card rendering
+- specs/basic_layout.md - Updated layout documentation
+
+**Testing**:
+- All 829 frontend tests passing
+- Visual testing at all breakpoints
+
+---
+
+### ✓ Persistent ZIP Code Tracking with Dynamic Cache Building (P2)
+**Status**: COMPLETED (2025-10-02)
+**Priority**: P2 - Backend Enhancement
+
+**Issue**: Backend used static hardcoded ZIP codes (75454, 75070, 75035) for background refresh. Needed dynamic, usage-based caching.
+
+**Resolution**: Implemented persistent ZIP tracking system:
+- Created zipCodeStorage service for managing ZIP tracking in `/data/zip-codes.json`
+- All user-entered ZIPs automatically added to persistent storage on first request
+- Background refresh job dynamically loads and refreshes all tracked ZIPs
+- Cache grows organically based on actual usage patterns
+- Persistent storage survives container restarts
+
+**Files Created**:
+- server/src/services/zipCodeStorage.ts - ZIP tracking service
+
+**Files Modified**:
+- server/src/routes/weatherRoutes.ts - Auto-add ZIPs on request
+- server/src/services/backgroundJobs.ts - Dynamic ZIP loading
+- server/src/index.ts - Initialize ZIP storage on startup
+- Dockerfile - Added /data volume for persistent storage
+- docker-compose.yml - Volume mount configuration
+- UNRAID-DEPLOY.md - Deployment documentation
+
+**Testing**:
+- All 179 backend tests passing
+- ZIP persistence verified across container restarts
+- Background refresh confirmed for dynamically tracked ZIPs
+
+**Benefits Achieved**:
+- No manual ZIP configuration needed
+- Automatic optimization for frequently requested locations
+- Reduced server load through intelligent caching
+- Better user experience with pre-warmed cache
+
+---
+
+### ✓ Consistent Border Styling Across Forecast Cards (P3)
+**Status**: COMPLETED (2025-10-02)
+**Priority**: P3 - Visual Consistency
+
+**Issue**: Forecast cards had inconsistent border treatment in glassmorphism design.
+
+**Resolution**: Added explicit border styling to all three forecast cards:
+- SevenDayForecast: Added `border border-white/30 dark:border-white/15`
+- CurrentConditions: Added `border border-white/30 dark:border-white/15`
+- HourlyForecast: Added gradient prop and explicit border
+- AlertCard maintains distinct styling (severity-based borders)
+
+**Files Modified**:
+- src/components/SevenDayForecast.tsx
+- src/components/CurrentConditions.tsx
+- src/components/HourlyForecast.tsx
+
+**Testing**:
+- All 829 frontend tests passing
+- Visual verification in light and dark modes
+
+---
+
 ## Critical Issues (Fix Immediately)
 
 *No critical issues pending*

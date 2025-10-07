@@ -17,9 +17,10 @@ Self-hosted personal weather forecast application - a single-page React applicat
 
 ### Backend (Node.js)
 - Fetches data from NWS API endpoints
-- Maintains 5-minute server-side refresh cycle for cached ZIP codes
+- Maintains 5-minute server-side refresh cycle for all tracked ZIP codes
 - Serves cached data immediately while triggering background refresh
-- Initial cached ZIP codes: 75454, 75070, 75035 (configurable)
+- Dynamic ZIP tracking: All user-entered ZIPs are automatically added to persistent cache in `/data/zip-codes.json`
+- No pre-configured ZIP codes - cache builds organically based on usage
 
 ### Deployment
 - Docker container deployment to local server
@@ -118,23 +119,26 @@ docker-compose down          # Stop application
    - Multiple alerts stack vertically
    - Severity-based visual styling (Extreme/Severe/Moderate/Minor)
 
-2. **7-Day Forecast Card**
-   - Horizontal row layout (7 days)
-   - Each day shows: high/low temps, icons, precipitation probability, wind info
-   - Combined day/night forecast per day
-   - Click day to open modal with all available forecast information
-
-3. **Current Conditions + Daily Forecast Card**
-   - Grid layout with hierarchical nested cards
-   - Current: temperature, feels like, humidity, dewpoint, wind speed/direction/gusts, visibility, cloud cover, UV index, sunrise/sunset
+2. **Current Conditions + Daily Forecast Card**
+   - Responsive grid layout (side-by-side on md+ screens, stacked on mobile)
+   - Forecast text appears first for better hierarchy
+   - Current: temperature, feels like, humidity (rounded to whole %), dewpoint, wind speed/direction/gusts, visibility, cloud cover, UV index
+   - Combined sunrise/sunset display in single unified box
    - Includes today's high/low and tonight's forecast
-   - Detailed forecast text
 
-4. **Hourly Forecast Card**
+3. **Hourly Forecast Card**
+   - Responsive grid layout (side-by-side on md+ screens, stacked on mobile)
    - Bar charts for visualizations
    - Configurable period and data type (split button box)
    - Parameters: temperature, precipitation, wind, humidity
    - Mutually exclusive view switching (one chart at a time)
+
+4. **7-Day Forecast Card** (positioned at bottom)
+   - Centered with max-width for improved visual hierarchy
+   - Horizontal scrollable row layout (7 days)
+   - Each day shows: high/low temps, icons, precipitation probability, wind info
+   - Combined day/night forecast per day
+   - Click day to open modal with all available forecast information
 
 ## Data Handling
 
@@ -157,8 +161,9 @@ docker-compose down          # Stop application
 ### Refresh Behavior
 - Page loads: Fetch from server
 - Client-side: Background refresh every 1 minute (non-interrupting)
-- Server-side: Background refresh runs every 5 minutes for cached ZIP codes (75454, 75070, 75035)
+- Server-side: Background refresh runs every 5 minutes for all tracked ZIP codes (dynamically added when users request them)
 - Manual refresh available via button or `POST /api/weather/:zipcode/refresh` endpoint for cache clearing
+- ZIP code tracking: User-entered ZIPs automatically added to persistent storage (`/data/zip-codes.json`) and included in background refresh cycle
 
 ### Error Handling
 - Global error banner with details for API failures
@@ -212,4 +217,9 @@ When creating a new weather card/module:
 
 ## Icon Assets
 
-Use NWS-provided weather icons from their API endpoints.
+Uses local animated SVG weather icons from [Makin-Things/weather-icons](https://github.com/Makin-Things/weather-icons) repository:
+- 106 SVG files in `public/icons/` directory (37 conditions × day/night variants + special cases)
+- WeatherIcon component (`src/components/WeatherIcon.tsx`) for rendering
+- Icon mapper utility (`src/utils/weatherIconMapper.ts`) for NWS code translation
+- Offline-compatible, faster loading, consistent styling
+- MIT licensed
