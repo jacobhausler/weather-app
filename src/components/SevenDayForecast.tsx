@@ -155,9 +155,10 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
           <div className="relative">
             <div
               ref={scrollContainerRef}
-              className="overflow-x-auto"
+              className="overflow-x-auto md:overflow-x-auto"
             >
-              <div className="flex gap-4 pb-2">
+              {/* Desktop: horizontal row, Mobile: vertical column */}
+              <div className="flex flex-col md:flex-row gap-4 pb-2">
                 {sevenDays.map((dayForecast, index) => {
                 const highTemp = convertTemp(dayForecast.day.temperature)
                 const lowTemp = dayForecast.night?.temperature
@@ -168,55 +169,59 @@ export function SevenDayForecast({ forecast }: SevenDayForecastProps) {
                   <button
                     key={dayForecast.day.number}
                     onClick={(e) => handlePeriodClick(dayForecast.day, e.currentTarget)}
-                    className="flex min-w-[140px] flex-col items-center gap-2 rounded-lg border p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex min-w-[140px] md:min-w-[140px] w-full md:w-auto flex-row md:flex-col items-center gap-4 md:gap-2 rounded-lg border p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     aria-label={generateAriaLabel(dayForecast, index)}
                   >
-                    <div className="text-sm font-semibold">
-                      {index === 0 ? 'Today' : getDayName(dayForecast.day.name)}
-                    </div>
-
+                    {/* Mobile: icon on left, Desktop: icon in vertical flow */}
                     <WeatherIcon
                       nwsIconUrl={dayForecast.day.icon}
                       shortForecast={dayForecast.day.shortForecast}
                       size="md"
-                      className="h-16 w-16"
+                      className="h-16 w-16 shrink-0"
                     />
 
-                    <div className="text-center">
-                      <div className="text-xs text-muted-foreground">
-                        {dayForecast.day.shortForecast}
+                    {/* Mobile: text on right, Desktop: text in vertical flow */}
+                    <div className="flex flex-col items-start md:items-center gap-2 w-full md:w-auto">
+                      <div className="text-sm font-semibold">
+                        {index === 0 ? 'Today' : getDayName(dayForecast.day.name)}
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold">{highTemp}{tempUnit}</span>
-                      {lowTemp !== undefined && (
-                        <span className="text-sm text-muted-foreground">
-                          {lowTemp}{tempUnit}
-                        </span>
-                      )}
-                    </div>
+                      <div className="text-left md:text-center w-full">
+                        <div className="text-xs text-muted-foreground">
+                          {dayForecast.day.shortForecast}
+                        </div>
+                      </div>
 
-                    <div className="w-full space-y-1 text-xs text-muted-foreground">
-                      {dayForecast.day.probabilityOfPrecipitation?.value !==
-                        null &&
-                        dayForecast.day.probabilityOfPrecipitation?.value !==
-                          undefined && (
-                          <div className="flex items-center justify-center gap-1">
-                            <Droplets className="h-3 w-3" aria-hidden="true" />
-                            <span>
-                              {dayForecast.day.probabilityOfPrecipitation.value}
-                              %
-                            </span>
-                          </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold">{highTemp}{tempUnit}</span>
+                        {lowTemp !== undefined && (
+                          <span className="text-sm text-muted-foreground">
+                            / {lowTemp}{tempUnit}
+                          </span>
                         )}
+                      </div>
 
-                      <div className="flex items-center justify-center gap-1">
-                        <Wind className="h-3 w-3" aria-hidden="true" />
-                        <span className="text-[10px]">
-                          {dayForecast.day.windDirection}{' '}
-                          {convertWind(dayForecast.day.windSpeed)}
-                        </span>
+                      <div className="w-full flex md:flex-col gap-3 md:gap-1 text-xs text-muted-foreground">
+                        {dayForecast.day.probabilityOfPrecipitation?.value !==
+                          null &&
+                          dayForecast.day.probabilityOfPrecipitation?.value !==
+                            undefined && (
+                            <div className="flex items-center md:justify-center gap-1">
+                              <Droplets className="h-3 w-3" aria-hidden="true" />
+                              <span>
+                                {dayForecast.day.probabilityOfPrecipitation.value}
+                                %
+                              </span>
+                            </div>
+                          )}
+
+                        <div className="flex items-center md:justify-center gap-1">
+                          <Wind className="h-3 w-3" aria-hidden="true" />
+                          <span className="text-[10px]">
+                            {dayForecast.day.windDirection}{' '}
+                            {convertWind(dayForecast.day.windSpeed)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </button>
