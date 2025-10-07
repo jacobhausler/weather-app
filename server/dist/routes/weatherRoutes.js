@@ -6,6 +6,7 @@ import { nwsService } from '../services/nwsService.js';
 import { geocodeZip } from '../services/geocodingService.js';
 import { getSunTimes } from '../services/sunService.js';
 import { getBackgroundJobsStatus } from '../services/backgroundJobs.js';
+import { addZipCode } from '../services/zipCodeStorage.js';
 /**
  * Transform backend WeatherPackage to frontend WeatherData format
  * Converts nested API response structures to flattened arrays expected by frontend
@@ -234,6 +235,8 @@ const weatherRoutes = async (fastify) => {
                 throw error; // Re-throw other errors to be caught by outer try-catch
             }
             const { lat, lon } = coordinates;
+            // Track this ZIP code for background refresh
+            await addZipCode(zipcode);
             // Step 3: Get point data (grid coordinates)
             let pointData;
             try {
@@ -489,6 +492,8 @@ const weatherRoutes = async (fastify) => {
                 throw error;
             }
             const { lat, lon } = coordinates;
+            // Track this ZIP code for background refresh
+            await addZipCode(zipcode);
             // Step 3: Clear cache for this location
             nwsService.clearLocationCache(lat, lon);
             fastify.log.debug({ zipcode, lat, lon }, 'Cache cleared for location');

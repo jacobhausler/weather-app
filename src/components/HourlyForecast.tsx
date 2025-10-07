@@ -31,10 +31,9 @@ type Period = '12' | '24' | '48'
 
 export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
   const { unitSystem } = useUnitStore()
-  const [dataType, setDataType] = useLocalStorage<DataType>('hourly-chart-dataType', 'temperature')
-  const [dataType2, setDataType2] = useLocalStorage<DataType | null>('hourly-chart-dataType2', null)
-  const [nextToReplace, setNextToReplace] = useLocalStorage<'primary' | 'secondary'>('hourly-chart-nextToReplace', 'primary')
+  const [dataTypes, setDataTypes] = useLocalStorage<DataType[]>('hourly-chart-dataTypes', ['temperature'])
   const [period, setPeriod] = useLocalStorage<Period>('hourly-chart-period', '24')
+  const [clickCount, setClickCount] = useLocalStorage<number>('hourly-chart-clickCount', 0)
 
   const getPeriodData = () => {
     const hours = parseInt(period)
@@ -54,8 +53,8 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
     return Math.round(convertSpeedFromMph(speedMph, unitSystem))
   }
 
-  const getValueForDataType = (forecast: HourlyForecastType, type: DataType) => {
-    switch (type) {
+  const getDataValue = (forecast: HourlyForecastType, dataType: DataType) => {
+    switch (dataType) {
       case 'temperature':
         return convertTemp(forecast.temperature)
       case 'precipitation':
@@ -64,11 +63,13 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         return parseWindSpeed(forecast.windSpeed)
       case 'humidity':
         return forecast.relativeHumidity.value
+      default:
+        return 0
     }
   }
 
-  const getUnitForDataType = (type: DataType) => {
-    switch (type) {
+  const getDataUnit = (dataType: DataType) => {
+    switch (dataType) {
       case 'temperature':
         return getTempUnit(unitSystem)
       case 'precipitation':
@@ -77,6 +78,8 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         return getSpeedUnit(unitSystem)
       case 'humidity':
         return '%'
+      default:
+        return ''
     }
   }
 
@@ -85,25 +88,20 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
 
     return data.map((forecast) => {
       const time = format(new Date(forecast.startTime), 'ha')
-      const chartPoint: { time: string; value: number; value2?: number } = {
-        time,
-        value: getValueForDataType(forecast, dataType),
-      }
+      const dataPoint: Record<string, string | number> = { time }
 
-      if (dataType2) {
-        chartPoint.value2 = getValueForDataType(forecast, dataType2)
-      }
+      dataTypes.forEach((dataType) => {
+        dataPoint[dataType] = getDataValue(forecast, dataType)
+      })
 
-      return chartPoint
+      return dataPoint
     })
   }
 
   const chartData = formatChartData()
-  const unit = getUnitForDataType(dataType)
-  const unit2 = dataType2 ? getUnitForDataType(dataType2) : ''
 
-  const getBarColor = (type: DataType) => {
-    switch (type) {
+  const getBarColor = (dataType: DataType) => {
+    switch (dataType) {
       case 'temperature':
         return 'hsl(var(--chart-1))'
       case 'precipitation':
@@ -114,6 +112,49 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
         return 'hsl(var(--chart-4))'
       default:
         return 'hsl(var(--chart-1))'
+    }
+  }
+
+  const handleDataTypeClick = (clickedType: DataType) => {
+    if (dataTypes.length === 0) {
+      // First click: add as first dimension
+      setDataTypes([clickedType])
+      setClickCount(1)
+    } else if (dataTypes.length === 1) {
+      const firstType = dataTypes[0]
+      if (!firstType) return
+
+      if (firstType === clickedType) {
+        // Clicking same type: deselect
+        setDataTypes([])
+        setClickCount(0)
+      } else {
+        // Second click: add as second dimension
+        setDataTypes([firstType, clickedType])
+        setClickCount(2)
+      }
+    } else if (dataTypes.length === 2) {
+      if (dataTypes.includes(clickedType)) {
+        // Clicking one of the two selected: remove it
+        setDataTypes(dataTypes.filter((type) => type !== clickedType))
+        setClickCount(1)
+      } else {
+        // 3rd click replaces first, 4th replaces second, 5th replaces first, etc.
+        const newClickCount = clickCount + 1
+        setClickCount(newClickCount)
+
+        const replaceIndex = (newClickCount % 2) === 1 ? 0 : 1 // odd clicks (3,5,7...) replace first, even clicks (4,6,8...) replace second
+
+        if (replaceIndex === 0) {
+          const secondType = dataTypes[1]
+          if (!secondType) return
+          setDataTypes([clickedType, secondType])
+        } else {
+          const firstType = dataTypes[0]
+          if (!firstType) return
+          setDataTypes([firstType, clickedType])
+        }
+      }
     }
   }
 
@@ -153,40 +194,34 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
 
             {/* Data Type Buttons */}
             <div className="flex gap-1.5" role="group" aria-label="Data type selection">
-              {(['temperature', 'precipitation', 'wind', 'humidity'] as const).map((type) => {
-                const isSelected = dataType === type || dataType2 === type
-                const handleClick = () => {
-                  if (dataType === type || dataType2 === type) {
-                    // Already selected - do nothing (clicking selected items doesn't deselect)
-                    return
-                  } else if (!dataType2) {
-                    // No secondary selected - set as secondary
-                    setDataType2(type)
-                  } else {
-                    // Both slots filled - replace based on nextToReplace
-                    if (nextToReplace === 'primary') {
-                      setDataType(type)
-                      setNextToReplace('secondary')
-                    } else {
-                      setDataType2(type)
-                      setNextToReplace('primary')
-                    }
-                  }
-                }
-
-                return (
-                  <Button
-                    key={type}
-                    size="sm"
-                    variant={isSelected ? 'default' : 'outline'}
-                    onClick={handleClick}
-                  >
-                    {type === 'temperature' ? 'Temp' :
-                     type === 'precipitation' ? 'Precip' :
-                     type === 'wind' ? 'Wind' : 'Humidity'}
-                  </Button>
-                )
-              })}
+              <Button
+                size="sm"
+                variant={dataTypes.includes('temperature') ? 'default' : 'outline'}
+                onClick={() => handleDataTypeClick('temperature')}
+              >
+                Temp
+              </Button>
+              <Button
+                size="sm"
+                variant={dataTypes.includes('precipitation') ? 'default' : 'outline'}
+                onClick={() => handleDataTypeClick('precipitation')}
+              >
+                Precip
+              </Button>
+              <Button
+                size="sm"
+                variant={dataTypes.includes('wind') ? 'default' : 'outline'}
+                onClick={() => handleDataTypeClick('wind')}
+              >
+                Wind
+              </Button>
+              <Button
+                size="sm"
+                variant={dataTypes.includes('humidity') ? 'default' : 'outline'}
+                onClick={() => handleDataTypeClick('humidity')}
+              >
+                Humidity
+              </Button>
             </div>
           </div>
         </div>
@@ -201,25 +236,27 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
                 tick={{ fontSize: 12 }}
                 className="text-muted-foreground"
               />
-              <YAxis
-                yAxisId="left"
-                tick={{ fontSize: 12 }}
-                className="text-muted-foreground"
-                label={{
-                  value: unit,
-                  angle: -90,
-                  position: 'insideLeft',
-                  style: { fontSize: 12 },
-                }}
-              />
-              {dataType2 && (
+              {dataTypes.length > 0 && dataTypes[0] && (
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 12 }}
+                  className="text-muted-foreground"
+                  label={{
+                    value: getDataUnit(dataTypes[0]),
+                    angle: -90,
+                    position: 'insideLeft',
+                    style: { fontSize: 12 },
+                  }}
+                />
+              )}
+              {dataTypes.length > 1 && dataTypes[1] && (
                 <YAxis
                   yAxisId="right"
                   orientation="right"
                   tick={{ fontSize: 12 }}
                   className="text-muted-foreground"
                   label={{
-                    value: unit2,
+                    value: getDataUnit(dataTypes[1]),
                     angle: 90,
                     position: 'insideRight',
                     style: { fontSize: 12 },
@@ -234,86 +271,77 @@ export function HourlyForecast({ hourlyForecast }: HourlyForecastProps) {
                 }}
                 labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
                 itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                formatter={(value: number, name: string) => {
+                  const dataType = name as DataType
+                  const unit = getDataUnit(dataType)
+                  return [`${value}${unit}`, getDataTypeLabel(dataType)]
+                }}
               />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar
-                yAxisId="left"
-                dataKey="value"
-                fill={getBarColor(dataType)}
-                radius={[4, 4, 0, 0]}
-                name={getDataTypeLabel(dataType)}
-              />
-              {dataType2 && (
-                <Bar
-                  yAxisId="right"
-                  dataKey="value2"
-                  fill={getBarColor(dataType2)}
-                  radius={[4, 4, 0, 0]}
-                  name={getDataTypeLabel(dataType2)}
+              {dataTypes.length > 0 && (
+                <Legend
+                  wrapperStyle={{ fontSize: 12 }}
                 />
               )}
+              {dataTypes.map((dataType, index) => (
+                <Bar
+                  key={dataType}
+                  dataKey={dataType}
+                  fill={getBarColor(dataType)}
+                  radius={[4, 4, 0, 0]}
+                  name={dataType}
+                  yAxisId={index === 0 ? 'left' : 'right'}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="flex justify-around rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-2 text-xs">
-            <div className="text-center">
-              <div className="text-[10px] text-muted-foreground">{getDataTypeLabel(dataType)} Min</div>
-              <div className="font-semibold">
-                {Math.min(...chartData.map((d) => d.value))}
-                {unit}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-[10px] text-muted-foreground">Max</div>
-              <div className="font-semibold">
-                {Math.max(...chartData.map((d) => d.value))}
-                {unit}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-[10px] text-muted-foreground">Avg</div>
-              <div className="font-semibold">
-                {Math.round(
-                  chartData.reduce((acc, d) => acc + d.value, 0) /
-                    chartData.length
-                )}
-                {unit}
-              </div>
-            </div>
-          </div>
+        {dataTypes.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {dataTypes.map((dataType) => {
+              const values = chartData.map((d) => d[dataType] as number)
+              const unit = getDataUnit(dataType)
+              const min = Math.min(...values)
+              const max = Math.max(...values)
+              const avg = Math.round(values.reduce((acc, v) => acc + v, 0) / values.length)
 
-          {dataType2 && (
-            <div className="flex justify-around rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-2 text-xs">
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground">{getDataTypeLabel(dataType2)} Min</div>
-                <div className="font-semibold">
-                  {Math.min(...chartData.map((d) => d.value2!))}
-                  {unit2}
+              return (
+                <div
+                  key={dataType}
+                  className="flex justify-between items-center rounded-lg bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-2 text-xs"
+                >
+                  <div className="font-semibold text-[10px] text-muted-foreground">
+                    {getDataTypeLabel(dataType)}
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="text-center">
+                      <div className="text-[10px] text-muted-foreground">Min</div>
+                      <div className="font-semibold">
+                        {min}
+                        {unit}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[10px] text-muted-foreground">Max</div>
+                      <div className="font-semibold">
+                        {max}
+                        {unit}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[10px] text-muted-foreground">Avg</div>
+                      <div className="font-semibold">
+                        {avg}
+                        {unit}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground">Max</div>
-                <div className="font-semibold">
-                  {Math.max(...chartData.map((d) => d.value2!))}
-                  {unit2}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground">Avg</div>
-                <div className="font-semibold">
-                  {Math.round(
-                    chartData.reduce((acc, d) => acc + d.value2!, 0) /
-                      chartData.length
-                  )}
-                  {unit2}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </CardContent>
     </GlassCard>
   )

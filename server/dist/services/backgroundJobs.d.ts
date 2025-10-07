@@ -5,7 +5,7 @@
 import { ScheduledTask } from 'node-cron';
 /**
  * Initialize background jobs
- * - Starts the 5-minute refresh cycle for cached ZIP codes
+ * - Starts the 5-minute refresh cycle for all tracked ZIP codes
  * - Performs initial refresh on startup
  */
 export declare function initBackgroundJobs(): ScheduledTask;
@@ -14,15 +14,12 @@ export declare function initBackgroundJobs(): ScheduledTask;
  */
 export declare function stopBackgroundJobs(task: ScheduledTask): void;
 /**
- * Get configured ZIP codes (for monitoring/debugging)
- */
-export declare function getConfiguredZipCodes(): string[];
-/**
  * Get background jobs status information
  */
 export declare function getBackgroundJobsStatus(): {
     enabled: boolean;
     cachedZipCodes: string[];
+    totalZipCodes: number;
     refreshInterval: string;
     schedule: string;
 };
