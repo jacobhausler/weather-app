@@ -113,6 +113,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           zustand: ['zustand'],
           charts: ['recharts'],
+          map: ['leaflet', 'react-leaflet'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-switch', '@radix-ui/react-tabs'],
           utils: ['date-fns', 'clsx', 'tailwind-merge'],
         },
