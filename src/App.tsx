@@ -4,7 +4,6 @@ import { ErrorBanner } from './components/ErrorBanner'
 import { ThemeToggle } from './components/ThemeToggle'
 import { UnitToggle } from './components/UnitToggle'
 import { Skeleton } from './components/ui/skeleton'
-import { Card, CardContent, CardHeader } from './components/ui/card'
 import { useWeatherData } from './hooks/useWeatherData'
 
 // Lazy load heavy components (charts, modals)
@@ -12,6 +11,7 @@ const AlertCard = lazy(() => import('./components/AlertCard').then(m => ({ defau
 const SevenDayForecast = lazy(() => import('./components/SevenDayForecast').then(m => ({ default: m.SevenDayForecast })))
 const CurrentConditions = lazy(() => import('./components/CurrentConditions').then(m => ({ default: m.CurrentConditions })))
 const HourlyForecast = lazy(() => import('./components/HourlyForecast').then(m => ({ default: m.HourlyForecast })))
+const RadarMap = lazy(() => import('./components/RadarMap').then(m => ({ default: m.RadarMap })))
 
 function App() {
   const { weatherData, isLoading } = useWeatherData()
@@ -29,29 +29,17 @@ function App() {
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {[...Array(7)].map((_, i) => (
-                    <Skeleton key={i} className="min-w-[140px] h-48" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            <Skeleton className="h-64 w-full" />
-            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex flex-col gap-6 lg:w-2/3">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-96 w-full" />
+                <Skeleton className="h-80 w-full" />
+              </div>
+              <div className="lg:w-1/3">
+                <Skeleton className="h-[600px] w-full" />
+              </div>
+            </div>
           </div>
         )}
 
@@ -79,45 +67,39 @@ function App() {
               </Suspense>
             )}
 
-            {/* Current Conditions + Hourly Forecast - Side by side on larger screens */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Current Conditions + Daily Forecast Card */}
-              <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-                <CurrentConditions
-                  observation={weatherData.currentObservation}
-                  todayForecast={todayForecast}
-                  tonightForecast={tonightForecast}
-                  sunTimes={weatherData.sunTimes}
-                />
-              </Suspense>
-
-              {/* Hourly Forecast Card */}
-              {weatherData.hourlyForecast && weatherData.hourlyForecast.length > 0 && (
-                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                  <HourlyForecast hourlyForecast={weatherData.hourlyForecast} />
+            {/* Two-column layout: left stacked tiles, right 7-day forecast */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Left column: Current Conditions, Hourly Forecast, Radar */}
+              <div className="flex flex-col gap-6 lg:w-2/3">
+                <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                  <CurrentConditions
+                    observation={weatherData.currentObservation}
+                    todayForecast={todayForecast}
+                    tonightForecast={tonightForecast}
+                    sunTimes={weatherData.sunTimes}
+                  />
                 </Suspense>
+
+                {weatherData.hourlyForecast && weatherData.hourlyForecast.length > 0 && (
+                  <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                    <HourlyForecast hourlyForecast={weatherData.hourlyForecast} />
+                  </Suspense>
+                )}
+
+                <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+                  <RadarMap coordinates={weatherData.coordinates} />
+                </Suspense>
+              </div>
+
+              {/* Right column: 7-Day Forecast */}
+              {weatherData.forecast && weatherData.forecast.length > 0 && (
+                <div className="lg:w-1/3">
+                  <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
+                    <SevenDayForecast forecast={weatherData.forecast} />
+                  </Suspense>
+                </div>
               )}
             </div>
-
-            {/* 7-Day Forecast Card - Full width at bottom */}
-            {weatherData.forecast && weatherData.forecast.length > 0 && (
-              <Suspense fallback={
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-32" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                      {[...Array(7)].map((_, i) => (
-                        <Skeleton key={i} className="min-w-[140px] h-48" />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              }>
-                <SevenDayForecast forecast={weatherData.forecast} />
-              </Suspense>
-            )}
           </div>
         )}
       </main>
