@@ -1,0 +1,8 @@
+{
+  "schema": "estate-ci/budget-v0",
+  "mode": "observe",
+  "pr_gate_wall_s": 120,
+  "runner_min_per_pr": 3,
+  "runner_min_wk": 10,
+  "basis": "NEXTGEN-CI (b) row weather-app, cut-time interim: wall-min budget 2.0 (120 s) from measured 1.58 wall; runner-min/PR budget 3 (measured 2.9, target 2.8 after the P0 orphan-upload deletion); weekly 10 per the D18/D17 table (dormant four ~10/wk). Re-cut from the P1 observe week per budget basis law (S5): budget = measured p95 x 1.15 per component (provisioning p95 + suite p95)."
+}
