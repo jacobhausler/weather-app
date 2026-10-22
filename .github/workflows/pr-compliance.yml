@@ -14,7 +14,10 @@ on:
 permissions:
   contents: read
 jobs:
-  diagram-check:
+  # Emitter name is `gates` (estate CI gen-4, NEXTGEN-CI (d): single required
+  # name `gates` per repo; legacy `diagram-check` context retired 2026-10-21,
+  # ruleset protect-main requires exactly ['gates']).
+  gates:
     runs-on: ubuntu-latest
     env:
       BODY: ${{ github.event.pull_request.body }}
